@@ -1,0 +1,838 @@
+<!--accesscontrol.html-->
+<template id="tpl-accesscontrol">
+  <div class="page-root">
+    <div class="page-body">
+      <div class="d-flex justify-content-end">
+        <button type="button" class="btn-box btn-box-blue" data-ac-save>
+          <span class="text">저장</span>
+          <span class="icon"><i class="fa-solid fa-floppy-disk"></i></span>
+        </button>
+      </div>
+
+      <div class="sec fill" data-sec-tabs>
+        <div class="sec-header">
+          <div class="sec-tabs" role="tablist">
+            <button type="button" class="sec-tab is-active" data-tab="ac-user-list" role="tab" aria-selected="true">User(Account)</button>
+            <button type="button" class="sec-tab" data-tab="ac-role-list" role="tab" aria-selected="false">Role</button>
+            <button type="button" class="sec-tab" data-tab="ac-perm-list" role="tab" aria-selected="false">Permission</button>
+          </div>
+          <div class="sec-action" aria-label="탭 액션"></div>
+          <div class="sec-action-bank" hidden>
+            <div data-actions="ac-user-list">
+              <div class="d-flex gap-1">
+                <button type="button" class="btn-icon bubble btn-icon-s btn-icon-blue" data-tbl-action="add" data-clone="clear" aria-label="추가"><i class="fa-solid fa-plus"></i></button>
+                <button type="button" class="btn-icon bubble btn-icon-s btn-icon-red" data-tbl-action="delete" data-delete-keep="blank" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
+              </div>
+            </div>
+            <div data-actions="ac-role-list"></div>
+            <div data-actions="ac-perm-list">
+              <input type="text" class="input1" style="width: 150px" placeholder="type/desc search" data-ac-perm-q>
+            </div>
+          </div>
+        </div>
+        <div class="sec-body fill">
+          <div class="sec-panel is-active fill" data-panel="ac-user-list" role="tabpanel">
+            <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th><input type="checkbox" class="chk-anim" aria-label="전체선택" data-ac-check-all></th>
+                    <th style="min-width: 80px">사번</th>
+                    <th style="min-width: 80px">성명</th>
+                    <th style="min-width: 120px">이메일</th>
+                    <th style="min-width: 120px">계정권한</th>
+                    <th style="min-width: 100px">계정상태</th>
+                  </tr>
+                </thead>
+                <tbody data-ac-user-tbody>
+                  <tr>
+                    <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                    <td><input type="text" class="input-tbl"></td>
+                    <td><input type="text" class="input-tbl"></td>
+                    <td><input type="text" class="input-tbl"></td>
+                    <td>
+                      <select class="select-tbl">
+                        <option value="">선택</option>
+                        <option value="super admin">superadmin</option>
+                        <option value="admin">admin</option>
+                        <option value="user">user</option>
+                        <option value="payroll supervisor">payroll supervisor</option>
+                        <option value="leave supervisor">leave supervisor</option>
+                        <option value="workstudy supervisor">workstudy supervisor</option>
+                      </select>
+                    </td>
+                    <td>
+                      <select class="select-tbl">
+                        <option value="">선택</option>
+                            <option value="True">활성</option>
+                            <option value="False">비활성</option>
+                      </select>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="sec-panel fill" data-panel="ac-role-list" role="tabpanel">
+            <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Role</th>
+                    <th>Role_kr</th>
+                    <th>Role_desc</th>
+                    <th style="min-width: 100px;">Active</th>
+                  </tr>
+                </thead>
+                <tbody data-ac-role-tbody>
+                  <tr>
+                    <td><div class="text-tbl"></div></td>
+                    <td><div class="text-tbl"></div></td>
+                    <td><div class="text-tbl"></div></td>
+                    <td><div class="text-tbl"></div></td>
+                    <td>
+                      <select class="select-tbl">
+                        <option value="True">활성</option>
+                        <option value="False">비활성</option>
+                      </select>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div class="sec-panel fill" data-panel="ac-perm-list" role="tabpanel">
+            <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+              <table class="tbl">
+                <thead data-ac-perm-thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Permission_type</th>
+                    <th>Permission_desc</th>
+                    <th style="min-width: 100px;">Active</th>
+                  </tr>
+                </thead>
+                <tbody data-ac-perm-tbody>
+                  <tr>
+                    <td><div class="text-tbl"></div></td>
+                    <td><div class="text-tbl"></div></td>
+                    <td><div class="text-tbl"></div></td>
+                    <td>
+                      <select class="select-tbl">
+                        <option value="True">활성</option>
+                        <option value="False">비활성</option>
+                      </select>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!--<div class="d-flex" style="min-width: 0; height: 300px">
+        <div style="flex: 5; min-width: 0" class="col-fill">
+          <div class="sec fill">
+            <div class="sec-header">Role</div>
+            <div class="sec-body">
+              <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>Role</th>
+                      <th>Role_kr</th>
+                      <th>Role_desc</th>
+                      <th style="min-width: 100px;">Active</th>
+                    </tr>
+                  </thead>
+                  <tbody data-ac-role-tbody>
+                    <tr>
+                      <td><div class="text-tbl"></div></td>
+                      <td><div class="text-tbl"></div></td>
+                      <td><div class="text-tbl"></div></td>
+                      <td><div class="text-tbl"></div></td>
+                      <td>
+                        <select class="select-tbl">
+                          <option value="True">활성</option>
+                          <option value="False">비활성</option>
+                        </select>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="flex: 5; min-width: 0" class="col-fill">
+          <div class="sec fill">
+            <div class="sec-header">
+              <div>Permission</div>
+              <input type="text" class="input1" style="width: 150px" placeholder="type/desc search" data-ac-perm-q>
+            </div>
+            <div class="sec-body">
+              <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>Permission_type</th>
+                      <th>Permission_desc</th>
+                      <th>Active</th>
+                    </tr>
+                  </thead>
+                  <tbody data-ac-perm-tbody>
+                    <tr>
+                      <td><div class="text-tbl"></div></td>
+                      <td><div class="text-tbl"></div></td>
+                      <td><div class="text-tbl"></div></td>
+                      <td>
+                        <select class="select-tbl">
+                          <option value="True">활성</option>
+                          <option value="False">비활성</option>
+                        </select>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sec fill" style="min-height: 0">
+        <div class="sec-header">
+          <div>User(Accout)</div>
+          <div class="d-flex gap-1">
+            <button type="button" class="btn-icon bubble btn-icon-s btn-icon-blue" data-tbl-action="add" data-clone="clear" aria-label="추가"><i class="fa-solid fa-plus"></i></button>
+            <button type="button" class="btn-icon bubble btn-icon-s btn-icon-red" data-tbl-action="delete" data-delete-keep="blank" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
+          </div>
+        </div>
+        <div class="sec-body">
+          <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" class="chk-anim" aria-label="전체선택" data-ac-check-all></th>
+                  <th style="min-width: 80px">사번</th>
+                  <th style="min-width: 80px">성명</th>
+                  <th style="min-width: 120px">이메일</th>
+                  <th style="min-width: 120px">계정권한</th>
+                  <th style="min-width: 100px">계정상태</th>
+                </tr>
+              </thead>
+              <tbody data-ac-user-tbody>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl"></td>
+                  <td><input type="text" class="input-tbl"></td>
+                  <td><input type="text" class="input-tbl"></td>
+                  <td>
+                    <select class="select-tbl">
+                      <option value="">선택</option>
+                      <option value="super admin">superadmin</option>
+                      <option value="admin">admin</option>
+                      <option value="user">user</option>
+                      <option value="payroll supervisor">payroll supervisor</option>
+                      <option value="leave supervisor">leave supervisor</option>
+                      <option value="workstudy supervisor">workstudy supervisor</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select class="select-tbl">
+                      <option value="">선택</option>
+                          <option value="True">활성</option>
+                          <option value="False">비활성</option>
+                    </select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>-->
+    </div>
+  </div>
+</template>
+
+<script>
+(function(){
+
+  // ---- bool helpers (True/False, TRUE/FALSE, 활성/비활성 혼용 대비) ----
+  function isTrue_(v){
+    if (v === true) return true;
+    var s = String(v ?? '').trim();
+    if (!s) return false;
+    var up = s.toUpperCase();
+    if (up === 'TRUE') return true;
+    if (up === 'FALSE') return false;
+    if (s === 'True') return true;
+    if (s === 'False') return false;
+    if (s === '활성') return true;
+    if (s === '비활성') return false;
+    return false;
+  }
+
+  function setSelectBool_(sel, b){
+    if (!sel) return;
+    // 셀렉트가 어떤 value 세트를 쓰는지( TRUE/FALSE or True/False )를 옵션 존재로 판단
+    var hasUpper = !!sel.querySelector('option[value="TRUE"]');
+    var hasCap   = !!sel.querySelector('option[value="True"]');
+    if (hasUpper) sel.value = b ? 'TRUE' : 'FALSE';
+    else if (hasCap) sel.value = b ? 'True' : 'False';
+    else sel.value = b ? 'TRUE' : 'FALSE'; // fallback
+  }
+
+  function getSelectBool_(sel){
+    if (!sel) return false;
+    return isTrue_(sel.value);
+  }
+
+  function getSelectRaw_(sel){
+    return sel ? String(sel.value ?? '').trim() : '';
+  }
+
+  // 값 주입 후 UI( has-value 등 ) 갱신
+  function refreshUi_(scope){
+    if (!scope) return;
+    if (typeof refreshFloatingInputs === 'function'){
+      refreshFloatingInputs(scope);
+      return;
+    }
+    // fallback: input/change 이벤트로 트리거
+    scope.querySelectorAll('input, textarea').forEach(function(el){
+      el.dispatchEvent(new Event('input', { bubbles:true }));
+      el.dispatchEvent(new Event('change', { bubbles:true }));
+    });
+    scope.querySelectorAll('select').forEach(function(el){
+      el.dispatchEvent(new Event('change', { bubbles:true }));
+    });
+  }
+
+  function AccessControl_init(scopeEl){
+    var root = (scopeEl && scopeEl.querySelector) ? (scopeEl.querySelector('.page-root') || scopeEl) : document;
+
+    var saveBtn   = root.querySelector('[data-ac-save]');
+    var roleTbody = root.querySelector('[data-ac-role-tbody]');
+    var permTbody = root.querySelector('[data-ac-perm-tbody]');
+    var userTbody = root.querySelector('[data-ac-user-tbody]');
+    var checkAll  = root.querySelector('[data-ac-check-all]');
+
+    if (!saveBtn || !roleTbody || !permTbody || !userTbody) return;
+
+    // ---- 템플릿(서식행) 확보: tbody의 "첫 tr"을 템플릿으로 사용 ----
+    var ROLE_TR_TPL = roleTbody.querySelector('tr') ? roleTbody.querySelector('tr').cloneNode(true) : null;
+    var PERM_TR_TPL = permTbody.querySelector('tr') ? permTbody.querySelector('tr').cloneNode(true) : null;
+    var USER_TR_TPL = userTbody.querySelector('tr') ? userTbody.querySelector('tr').cloneNode(true) : null;
+
+    var state = {
+      roles: [],
+      permissions: [],
+      snapshotUsers: [], // 서버에서 가져온 "원본 email" 목록(삭제 감지용)
+      snapshot: null
+    };
+
+    function showMsg(msg){
+      if (typeof showAlert === 'function') showAlert(msg);
+      else alert(msg);
+    }
+
+    // ---- Role option 만들기 (User의 role select에 사용) ----
+    function escapeHtml_(s){
+      s = String(s||'');
+      return s.replace(/[&<>"']/g, function(m){
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]);
+      });
+    }
+
+    function roleOptionsHtml_(roles){
+      var html = '<option value="">선택</option>';
+      (roles || []).forEach(function(r){
+        var val = String(r.role||'').trim();
+        if (!val) return;
+
+        var active = isTrue_(r.active);
+        var label = (r.role_kr ? (r.role_kr + ' ('+val+')') : val);
+        if (!active) label = '[비활성] ' + label;
+
+        html += '<option value="'+escapeHtml_(val)+'">'+escapeHtml_(label)+'</option>';
+      });
+      return html;
+    }
+
+    // ---- 렌더: Role (Active만 select) ----
+    function renderRoles(rows){
+      roleTbody.innerHTML = '';
+      if (!ROLE_TR_TPL) return;
+
+      (rows || []).forEach(function(r, idx){
+        var tr = ROLE_TR_TPL.cloneNode(true);
+        tr.dataset.roleId = String(r.role_id || '');
+
+        var textCells = tr.querySelectorAll('div.text-tbl'); // No, Role, Role_kr, Role_desc
+        if (textCells[0]) textCells[0].textContent = String(idx + 1);
+        if (textCells[1]) textCells[1].textContent = (r.role || '');
+        if (textCells[2]) textCells[2].textContent = (r.role_kr || '');
+        if (textCells[3]) textCells[3].textContent = (r.role_desc || '');
+
+        // ✅ Active는 5번째 td
+        var sel = tr.querySelector('td:nth-child(5) select.select-tbl');
+        setSelectBool_(sel, isTrue_(r.active));
+
+        roleTbody.appendChild(tr);
+      });
+    }
+
+    function buildPermRoleHeader_(){
+      var thead = root.querySelector('[data-ac-perm-thead]');
+      if (!thead) return;
+
+      var tr = thead.querySelector('tr');
+      if (!tr) return;
+
+      // ✅ 현재 HTML 헤더의 "기본 컬럼수"를 기억(처음엔 4개)
+      var baseCols = tr.dataset.baseCols ? Number(tr.dataset.baseCols) : tr.children.length;
+      if (!tr.dataset.baseCols) tr.dataset.baseCols = String(baseCols);
+
+      // ✅ 이전에 동적으로 붙였던 role th 제거
+      while (tr.children.length > baseCols) tr.removeChild(tr.lastElementChild);
+
+      // ✅ 활성 Role만 헤더로 추가
+      (state.roles || []).forEach(function(r){
+        if (!isTrue_(r.active)) return;
+
+        var roleKey = String(r.role || '').trim();
+        if (!roleKey) return;
+
+        var th = document.createElement('th');
+        th.style.minWidth = '120px';
+        th.textContent = (r.role_kr ? r.role_kr : roleKey);
+        th.title = roleKey;
+        tr.appendChild(th);
+      });
+    }
+
+    function renderPermsWithRoles_(rows){
+      permTbody.innerHTML = '';
+      if (!PERM_TR_TPL) return;
+
+      var rolesActive = (state.roles || []).filter(function(r){
+        return isTrue_(r.active) && String(r.role || '').trim();
+      });
+
+      (rows || []).forEach(function(p, idx){
+        var tr = PERM_TR_TPL.cloneNode(true);
+        tr.dataset.permissionId = String(p.permission_id || '').trim();
+
+        // ✅ 검색/필터용 데이터(화면에 안 보여도 됨)
+        tr.dataset.permType = String(p.permission_type || '').toLowerCase();
+        tr.dataset.permKey  = String(p.permission_key  || '').toLowerCase();
+        tr.dataset.permDesc = String(p.permission_desc || '').toLowerCase();
+
+        // ✅ 4칼럼 템플릿 기준: div.text-tbl은 3개(No, type, desc)
+        var textCells = tr.querySelectorAll('div.text-tbl');
+        if (textCells[0]) textCells[0].textContent = String(idx + 1);
+        if (textCells[1]) textCells[1].textContent = String(p.permission_type || '');
+        if (textCells[2]) {
+          textCells[2].textContent = String(p.permission_desc || '');
+
+          // ✅ key/ui_deny는 툴팁으로 제공(원하면 desc 텍스트에 합쳐도 됨)
+          var tip = [];
+          if (p.permission_key) tip.push(String(p.permission_key));
+          if (p.ui_deny) tip.push('ui_deny: ' + String(p.ui_deny));
+          textCells[2].title = tip.join(' · ');
+        }
+
+        // ✅ Active select(4번째 td 안에 있음)
+        var sel = tr.querySelector('td:nth-child(4) select.select-tbl');
+        setSelectBool_(sel, isTrue_(p.active));
+
+        // ✅ Role별 체크박스(td) 동적 추가
+        rolesActive.forEach(function(r){
+          var roleCol = 'role_' + String(r.role).trim(); // 예: role_admin
+          var allow = isTrue_(p[roleCol]);
+
+          var td = document.createElement('td');
+          td.style.textAlign = 'left';
+          td.style.paddingLeft = '12px';
+          td.style.minWidth = '120px';
+
+          var selR = document.createElement('select');
+          selR.className = 'select-tbl';
+
+          // Active select과 동일한 value 세트(True/False)로 맞춤
+          selR.innerHTML =
+            '<option value="True">활성</option>' +
+            '<option value="False">비활성</option>';
+
+          setSelectBool_(selR, !!allow);
+
+          // 저장용 메타
+          selR.dataset.acPermRole = '1';
+          selR.dataset.roleCol = roleCol;
+
+          td.appendChild(selR);
+          tr.appendChild(td);
+        });
+
+        permTbody.appendChild(tr);
+      });
+    }
+
+
+    // ---- 렌더: Permission (Active만 select) ----
+    function renderPerms(rows){
+      permTbody.innerHTML = '';
+      if (!PERM_TR_TPL) return;
+
+      (rows || []).forEach(function(p, idx){
+        var tr = PERM_TR_TPL.cloneNode(true);
+        tr.dataset.permissionId = String(p.permission_id || '');
+
+        var type = (p.permission_type || '');
+        var desc = (p.permission_desc || '');
+
+        // ✅ 필터용 텍스트 저장 (나중에 input이 이걸로 검색)
+        tr.dataset.permType = String(type).toLowerCase();
+        tr.dataset.permDesc = String(desc).toLowerCase();
+
+        var textCells = tr.querySelectorAll('div.text-tbl'); // No, type, desc
+        if (textCells[0]) textCells[0].textContent = String(idx + 1);
+        if (textCells[1]) textCells[1].textContent = (p.permission_type || '');
+        if (textCells[2]) textCells[2].textContent = (p.permission_desc || '');
+
+        var sel = tr.querySelector('td:nth-child(4) select.select-tbl');
+        setSelectBool_(sel, isTrue_(p.active));
+
+        permTbody.appendChild(tr);
+      });
+    }
+
+    /*Permission데이터 필터링*/
+    function applyPermFilter_(){
+      // ✅ 현재 화면에 있는 input을 매번 다시 찾기
+      var permQEl = root.querySelector('[data-ac-perm-q]');
+      var q = permQEl ? String(permQEl.value || '').trim().toLowerCase() : '';
+      var tokens = q ? q.split(/\s+/).filter(Boolean) : [];
+
+      var visibleNo = 0;
+
+      permTbody.querySelectorAll('tr').forEach(function(tr){
+        var hay = ((tr.dataset.permType || '') + ' ' + (tr.dataset.permKey || '') + ' ' + (tr.dataset.permDesc || '')).trim();
+        if (!hay){
+          var cells = tr.querySelectorAll('div.text-tbl');
+          var t = cells[1] ? cells[1].textContent : '';
+          var d = cells[2] ? cells[2].textContent : '';
+          hay = (t + ' ' + d).toLowerCase();
+        }
+
+        var ok = true;
+        for (var i=0; i<tokens.length; i++){
+          if (hay.indexOf(tokens[i]) === -1){ ok = false; break; }
+        }
+
+        tr.hidden = !ok;
+
+        if (ok){
+          visibleNo++;
+          var cells2 = tr.querySelectorAll('div.text-tbl');
+          if (cells2[0]) cells2[0].textContent = String(visibleNo);
+        }
+      });
+    }
+
+    // perm 검색 input: 이벤트 위임 (sec-tabs가 clone/move 해도 항상 동작)
+    if (!root.__acPermQBound){
+      root.__acPermQBound = true;
+
+      root.addEventListener('input', function(e){
+        var t = e.target;
+        if (t && t.matches && t.matches('[data-ac-perm-q]')){
+          applyPermFilter_();
+        }
+      });
+    }
+
+    // ---- User row 생성/초기화 ----
+    function clearUserRow_(tr){
+      if (!tr) return;
+      var chk = tr.querySelector('input.chk-anim[type="checkbox"]');
+      if (chk) chk.checked = false;
+
+      tr.querySelectorAll('input.input-tbl').forEach(function(inp){
+        inp.value = '';
+      });
+
+      var sels = tr.querySelectorAll('select.select-tbl');
+      if (sels[0]) sels[0].value = ''; // role
+      if (sels[1]) sels[1].value = ''; // active
+      tr.dataset.originEmail = '';
+    }
+
+    function fillUserRow_(tr, u){
+      if (!tr) return;
+      var inputs = tr.querySelectorAll('input.input-tbl'); // emp_id, emp_name, email
+      if (inputs[0]) inputs[0].value = String(u.emp_id || '');
+      if (inputs[1]) inputs[1].value = String(u.emp_name || '');
+      if (inputs[2]) inputs[2].value = String(u.email || '');
+
+      var sels = tr.querySelectorAll('select.select-tbl'); // role, active
+      if (sels[0]) sels[0].value = String(u.role || '').trim();
+      if (sels[1]) setSelectBool_(sels[1], isTrue_(u.active));
+
+      tr.dataset.originEmail = String(u.email || '').trim(); // rename/삭제 추적용
+    }
+
+    function newUserRow_(baseTr){
+      // "마지막 행 clone" 우선, 없으면 템플릿 사용
+      var base = baseTr || userTbody.lastElementChild || USER_TR_TPL;
+      if (!base) return null;
+
+      var tr = base.cloneNode(true);
+      clearUserRow_(tr);
+
+      // role options는 최신 roles로 덮어쓰기
+      var sels = tr.querySelectorAll('select.select-tbl');
+      if (sels[0]) sels[0].innerHTML = roleOptionsHtml_(state.roles);
+
+      return tr;
+    }
+
+    function renderUsers(rows){
+      userTbody.innerHTML = '';
+      if (!USER_TR_TPL) return;
+
+      (rows || []).forEach(function(u){
+        var tr = USER_TR_TPL.cloneNode(true);
+
+        // role options 최신화
+        var sels = tr.querySelectorAll('select.select-tbl');
+        if (sels[0]) sels[0].innerHTML = roleOptionsHtml_(state.roles);
+
+        fillUserRow_(tr, u);
+        userTbody.appendChild(tr);
+      });
+
+      // 항상 빈 1행 유지(추가 편의)
+      if (!userTbody.children.length){
+        var blank = newUserRow_(USER_TR_TPL);
+        if (blank) userTbody.appendChild(blank);
+      }
+    }
+
+    // ---- 전체선택 ----
+    if (checkAll){
+      checkAll.addEventListener('change', function(){
+        var on = !!checkAll.checked;
+        userTbody.querySelectorAll('input.chk-anim[type="checkbox"]').forEach(function(chk){
+          chk.checked = on;
+        });
+      });
+    }
+
+    // ✅ 공용 add 실행 후, 새로 생긴 마지막 행 후처리 (중복 실행 방지용)
+    root.addEventListener('click', function(e){
+      var btnAdd = e.target.closest('[data-tbl-action="add"]');
+      if (!btnAdd) return;
+
+      // 캡처링 단계에서 걸고, setTimeout으로 공용 add가 끝난 뒤 후처리
+      setTimeout(function(){
+        var tr = userTbody.lastElementChild;
+        if (!tr) return;
+
+        // clone으로 originEmail이 복사되는 경우가 많아서 반드시 초기화
+        tr.dataset.originEmail = '';
+
+        // 체크박스도 초기화(공용 clear가 안 해줄 수도 있으니)
+        var chk = tr.querySelector('input.chk-anim[type="checkbox"]');
+        if (chk) chk.checked = false;
+
+        // has-value 같은 UI 갱신(있으면)
+        if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(root);
+      }, 0);
+
+    }, true);
+
+
+    // ---- 로드 ----
+    function load(){
+      google.script.run
+        .withSuccessHandler(function(res){
+          if (!res || !res.ok){
+            console.warn(res);
+            showMsg(res && res.message ? res.message : '접근제어 데이터를 불러오지 못했습니다.');
+            return;
+          }
+
+          state.roles = (res.roles || []).slice();
+          state.permissions = (res.permissions || []).slice();
+
+          renderRoles(res.roles || []);
+          buildPermRoleHeader_();
+          renderPermsWithRoles_(res.permissions||[]);
+          applyPermFilter_();
+          renderUsers(res.users || []);
+
+          // snapshot (삭제 감지)
+          state.snapshotUsers = (res.users || [])
+            .map(function(u){ return String(u.email||'').trim().toLowerCase(); })
+            .filter(Boolean);
+
+          refreshUi_(root);
+        })
+        .withFailureHandler(function(err){
+          console.error(err);
+          showMsg('접근제어 로드 실패: ' + (err && err.message ? err.message : err));
+        })
+        .AC_getInit();
+    }
+
+    // ---- 저장 ----
+    function doSave_(){
+      // 1) roles payload
+      var rolesPayload = [];
+      roleTbody.querySelectorAll('tr').forEach(function(tr){
+        var id = String(tr.dataset.roleId || '').trim();
+        var sel = tr.querySelector('td:nth-child(4) select.select-tbl');
+        if (!id || !sel) return;
+        rolesPayload.push({ role_id: id, active: getSelectBool_(sel) });
+      });
+
+      // 2) permissions payload
+      var permsPayload = [];
+      permTbody.querySelectorAll('tr').forEach(function(tr){
+        var id = String(tr.dataset.permissionId || '').trim();
+        if (!id) return;
+
+        // 4번째 칼럼 Active select
+        var activeSel = tr.querySelector('td:nth-child(4) select.select-tbl');
+        if (!activeSel) return;
+
+        var rowObj = {
+          permission_id: id,
+          active: getSelectBool_(activeSel)
+        };
+
+        // 동적으로 추가된 role select들 수집
+        tr.querySelectorAll('select[data-ac-perm-role="1"]').forEach(function(selR){
+          var roleCol = String(selR.dataset.roleCol || '').trim(); // 예: role_admin
+          if (!roleCol) return;
+          rowObj[roleCol] = getSelectBool_(selR);
+        });
+
+        permsPayload.push(rowObj);
+      });
+
+      // 3) users payload (+ deleteEmails)
+      var usersPayload = [];
+      var currentOriginEmails = [];
+      var deleteEmails = [];
+      var invalid = [];
+
+      userTbody.querySelectorAll('tr').forEach(function(tr, idx){
+        var inputs = tr.querySelectorAll('input.input-tbl');
+        var sels   = tr.querySelectorAll('select.select-tbl');
+
+        var emp_id = inputs[0] ? inputs[0].value.trim() : '';
+        var emp_nm = inputs[1] ? inputs[1].value.trim() : '';
+        var email  = inputs[2] ? inputs[2].value.trim() : '';
+        var role   = sels[0] ? String(sels[0].value||'').trim() : '';
+        var activeRaw = sels[1] ? String(sels[1].value||'').trim() : '';
+
+        var originEmail = String(tr.dataset.originEmail || '').trim().toLowerCase();
+        if (originEmail) currentOriginEmails.push(originEmail);
+
+        // 완전 빈 행은 무시
+        if (!email && !emp_id && !emp_nm && !role && !activeRaw) return;
+
+        // 필수값 체크
+        if (!email) { invalid.push((idx+1) + '행: 이메일 없음'); return; }
+        if (!role)  { invalid.push((idx+1) + '행: 계정권한 없음'); return; }
+        if (activeRaw === '') { invalid.push((idx+1) + '행: 계정상태 선택 필요'); return; }
+
+        // rename 처리
+        if (originEmail && originEmail !== email.toLowerCase()){
+          deleteEmails.push(originEmail);
+        }
+
+        usersPayload.push({
+          email: email,
+          emp_id: emp_id,
+          emp_name: emp_nm,
+          role: role,
+          active: isTrue_(activeRaw),
+          origin_email: originEmail || ''
+        });
+      });
+
+      if (invalid.length){
+        showAlertWarn('저장 불가:\n' + invalid.join('\n'), '입력 확인');
+        return;
+      }
+
+      // 삭제된 행 감지(snapshot)
+      state.snapshotUsers.forEach(function(em){
+        if (currentOriginEmails.indexOf(em) === -1){
+          deleteEmails.push(em);
+        }
+      });
+
+      deleteEmails = Array.from(new Set(deleteEmails.filter(Boolean)));
+
+      // 4) 서버 저장
+      google.script.run
+        .withSuccessHandler(function(res){
+          if (!res || !res.ok){
+            console.warn(res);
+            showAlertError(res && res.message ? res.message : '저장 실패', '오류');
+            return;
+          }
+          // ✅ 저장 성공 알림 (너가 이미 만들어둔 함수)
+          if (typeof alertSaveDone === 'function') alertSaveDone();
+          else showAlertSuccess('저장되었습니다.', '저장 완료');
+
+          load(); // 저장 후 재로드
+        })
+        .withFailureHandler(function(err){
+          console.error(err);
+          showAlertError('저장 실패: ' + (err && err.message ? err.message : err), '오류');
+        })
+        .AC_save({
+          roles: rolesPayload,
+          permissions: permsPayload,
+          users: usersPayload,
+          deleteEmails: deleteEmails
+        });
+    }
+
+    // ✅ 저장 버튼 클릭: confirm → ok면 doSave_ 실행
+    if (!saveBtn.__acSaveBound){
+      saveBtn.__acSaveBound = true;
+
+      saveBtn.addEventListener('click', function(){
+        showConfirmInfo(
+          '변경사항을 저장하시겠습니까?',
+          '저장 확인',
+          function onOk(){ doSave_(); },
+          function onCancel(){ /* 취소: 아무 동작 없음 */ }
+        );
+      });
+    }
+
+    load();
+  }
+
+  window.AccessControl_init = AccessControl_init;
+
+})();
+</script>
+
+
+

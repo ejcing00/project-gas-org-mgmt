@@ -1,0 +1,132 @@
+<!--sidebar.html-->
+<style>
+  /*사이드바 유저카드*/
+  .sidebar-user-card {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    margin: 0 0 0.5rem 0;
+    border-radius: var(--bd-radius1);
+    background: rgba(247, 251, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    box-shadow: var(--box-sha-card);
+  }
+  /*사이드바 유저카드-좌측*/
+  .sidebar-user-avatar { display: flex; align-items: center; padding: 0 0.25rem; margin-right: 0.3rem; }
+  .sidebar-user-avatar i{ font-size: var(--i-size); color: var(--accent-color) }
+  /*사이드바 유저카드-우측*/
+  .sidebar-user-meta { min-width: 0; flex: 1 1 auto; }
+  .sidebar-user-name { font-size: var(--t-size); font-weight: var(--t-weight2); color: var(--t-color-on); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sidebar-user-email { font-size: var(--t-size-2); color: var(--t-color1); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  //사이드바 메뉴
+  #sidebar .sidebar-nav { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+  #sidebar .sidebar-nav-top{ flex:1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+  #sidebar .sidebar-nav-bottom{ flex:0 0 auto; margin-top:auto; }
+
+  //사이드바 메뉴-상위메뉴
+  #sidebar .sidebar-section-label {
+    text-transform: uppercase;
+    color: var(--t-color-1);
+    font-weight: var(--t-weight2);
+    margin: 1rem 0 0.25rem;
+  }
+  //사이드바 메뉴-하위메뉴
+  #sidebar a {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 0.35rem 0.5rem;
+    margin: 0.125rem 0;
+    border-radius: var(--bd-radius);
+    /*border: var(--bd-size) transparent;*/
+    color: var(--t-color);
+    font-size: var(--t-size2);
+    font-weight: var(--t-weight2);
+    transition: all 0.14ms ease-out;
+    user-select: none;
+  }
+
+  #sidebar .sidebar-nav-icon { flex: 0 0 1.6rem; display: flex; justify-content: center; align-items: center; margin-right: 0.4rem; }
+  /* 아이콘 자체 크기 */
+  #sidebar .sidebar-nav-icon i { font-size: var(--i-size-1); }
+  
+  /* 텍스트 칸 */
+  #sidebar .sidebar-nav-label { flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  // 사이드바 메뉴-하위메뉴 작동
+  #sidebar a:hover,
+  #sidebar a.is-active {
+    background: #fff;
+    color: var(--t-color-on);
+    font-weight: var(--t-weight3);
+    border-radius: var(--bd-radius);
+    /*border: var(--bd-size) var(--bd-color-main);*/
+  }
+  
+  #sidebar .hr-in-bar { border: none; height: 0; padding: 0; margin: 1rem 0.5rem; border-top: 2px solid rgba(0, 0, 0, 0.2); border-bottom: 3px solid #fff; border-radius: 999px; box-shadow: 0 -1px 2px rgba(15, 23, 42, 0.15);}
+
+  /* ✅ hidden 속성은 전부 숨김 */
+  #sidebar [hidden] { display: none !important; }
+
+  /* ✅ 기본: 메뉴 링크는 안 보이게 (FOUC 방지) */
+  #sidebar a[data-page] { display: none; }
+
+  /* ✅ 권한 허용된 링크만 보이게 */
+  #sidebar a[data-page].is-allowed { display: flex; }
+</style>
+
+<aside id="sidebar">
+  <div class="sidebar-user-card">
+    <div class="sidebar-user-avatar">
+      <i class="fa-solid fa-user"></i>
+    </div>
+    <div class="sidebar-user-meta">
+      <div class="sidebar-user-name"  data-user-name>로그인 사용자</div>
+      <div class="sidebar-user-email" data-user-email>email@example.com</div>
+    </div>
+  </div>
+  <hr class="hr-in-bar">
+  <div class="sidebar-nav">  
+    <div class="sidebar-nav-top">
+      <a href="#" data-page="dashboard">
+        <span class="sidebar-nav-icon"><i class="fa-solid fa-chart-line"></i></span>
+        <span class="sidebar-nav-label">대시보드</span>
+      </a>
+      <a href="#" data-page="project">
+        <span class="sidebar-nav-icon"><i class="fa-solid fa-pager"></i></span>
+        <span class="sidebar-nav-label">프로젝트</span>
+      </a>
+      <a href="#" data-page="employee">
+        <span class="sidebar-nav-icon"><i class="fa-solid fa-user-group"></i></span>
+        <span class="sidebar-nav-label">소속인력</span>
+      </a>
+      <a href="#" data-page="payroll">
+        <span class="sidebar-nav-icon"><i class="fa-solid fa-file-invoice-dollar"></i></span>
+        <span class="sidebar-nav-label">근태/급여</span>
+      </a>
+      <a href="#" data-page="overtime">
+        <span class="sidebar-nav-icon"><i class="fa-solid fa-business-time"></i></span>
+        <span class="sidebar-nav-label">초과근무</span>
+      </a>
+      <a href="#" data-page="leave">
+        <span class="sidebar-nav-icon"><i class="fa-solid fa-leaf"></i></span>
+        <span class="sidebar-nav-label">연차</span>
+      </a>
+      <a href="#" data-page="workstudy">
+        <span class="sidebar-nav-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+        <span class="sidebar-nav-label">근로장학생</span>
+      </a>
+    </div>
+    <div class="sidebar-nav-bottom">
+      <a href="#" data-page="accesscontrol">
+        <span class="sidebar-nav-icon"><i class="fa-solid fa-sliders"></i></span>
+        <span class="sidebar-nav-label">접근제어</span>
+      </a>
+      <a href="#" data-page="styleguide">
+        <span class="sidebar-nav-icon"><i class="fa-solid fa-sliders"></i></span>
+        <span class="sidebar-nav-label">스타일가이드</span>
+      </a>
+    </div>
+  </div>
+</aside>

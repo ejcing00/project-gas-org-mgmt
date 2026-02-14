@@ -1,0 +1,2765 @@
+<!--leave.html-->
+<template id="tpl-leave">
+  <div class="page-root" id="leave-root">
+    <div class="hr-opt">
+      <hr class="hr-out-bar">
+      <div class="hr-txt hr-left">
+        <div class="d-flex align-items-center gap-1">
+          <div>연차적용연도</div>
+          <select class="select1" style="width: 100px" data-leave-year-select></select>
+        </div>
+      </div>
+      <div class="hr-txt hr-right">
+        <button type="button" class="btn-circle" onclick="leaveSetPageModal()" data-acl="btn:leave:set">
+          <span class="icon"><i class="fa-solid fa-gear"></i></span>
+          <span class="text">연차 설정</span>
+        </button>
+      </div>  
+    </div>
+    <div class="page-body">
+      <div class="d-flex fill gap-2" style="min-height: 0">
+        <div style="flex: 3" class="col-fill">
+          <div class="sec fill">
+            <div class="sec-header">
+              <div>직원명단</div>
+              <button type="button" class="btn-icon bubble" aria-label="연차신청" onclick="leaveApplyPageModal()" data-leave-apply-btn disabled><i class="fa-solid fa-calendar-plus"></i></button>
+            </div>
+            <div class="sec-body" style="min-height: 0">
+              <div class="wrap wrap-list fill" data-leave-emp-wrap></div>
+            </div>
+          </div>
+        </div>
+        <div style="flex: 7; min-width: 0;" class="col-fill">
+          <div class="sec fill">
+            <div class="sec-header">
+              <div>연차정보</div>
+              <div class="d-flex align-items-center gap-1">
+                <select class="select1" style="width: 100px; min-width: 100px; max-width: 100px; " data-leave-info-status-filter>
+                  <option value="전체">전체</option>
+                  <option value="신청">신청</option>
+                  <option value="승인">승인</option>
+                  <option value="미승인">미승인</option>
+                </select>
+                <button type="button" class="btn-icon bubble btn-icon-violet" aria-label="승인관리" data-approval-hide onclick="leaveToggleApprovalMode(true)" data-acl="btn:leave:approval">
+                  <i class="fa-solid fa-list-check"></i>
+                </button>
+                <button class="btn-box btn-box-blue" data-approval-only onclick="leaveSaveApprovalStatus()">
+                  <span class="text">상태저장</span>
+                  <span class="icon"><i class="fa-solid fa-floppy-disk"></i></span>
+                </button>
+                <button class="btn-box btn-box-red" data-approval-only onclick="leaveDeleteSelectedRows()">
+                  <span class="text">선택삭제</span>
+                  <span class="icon"><i class="fa-solid fa-trash-can"></i></span>
+                </button>
+                <button class="btn-box btn-box-grey" data-approval-only onclick="leaveToggleApprovalMode(false)">
+                  <span class="text">취소</span>
+                  <span class="icon"><i class="fa-solid fa-xmark"></i></span>
+                </button>
+              </div>
+            </div>
+            <div class="sec-body">
+              <div class="sum-grid flex-row justify-between gap-3 mb-2" style="width: 100%">
+                <div class="sum-row" style="flex: 1 1 auto">
+                  <div class="sum-item is-accent1"><div class="sum-item-label" style="color: var(--color-navy)">부여연차</div><div class="sum-item-value" data-leave-sum="grant">-</div></div>
+                  <div class="sum-item is-accent1"><div class="sum-item-label">사용연차(신청)</div><div class="sum-item-value" data-leave-sum="used_req">-</div></div>
+                  <div class="sum-item is-accent1"><div class="sum-item-label" style="color: var(--color-blue)">사용연차(승인)</div><div class="sum-item-value" data-leave-sum="used_appr">-</div></div>
+                  <div class="sum-item is-accent1"><div class="sum-item-label" style="color: var(--color-red)">잔여연차</div><div class="sum-item-value" data-leave-sum="remain">-</div></div>
+                </div>
+                <div class="sum-row" style="flex: 0 0 auto" data-approval-only>
+                  <div class="sum-item" style="width: 100px; background: var(--bg-color-sum)"><div class="sum-item-label" style="color: var(--color-navy)">신청</div><div class="sum-item-value" data-leave-sum="cnt_req"></div></div>
+                  <div class="sum-item" style="width: 100px; background: var(--bg-color-sum)"><div class="sum-item-label" style="color: var(--color-blue)">승인</div><div class="sum-item-value" data-leave-sum="cnt_appr">00건</div></div>
+                  <div class="sum-item" style="width: 100px; background: var(--bg-color-sum)"><div class="sum-item-label" style="color: var(--color-red)">미승인</div><div class="sum-item-value" data-leave-sum="cnt_rej">00건</div></div>
+                </div>
+              </div>
+              <div class="sec fill" style="padding: 0">
+                <div class="sec-body">
+                  <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+                    <table class="tbl" data-leave-info-table>
+                      <colgroup>
+                        <col>
+                        <col style="min-width: 80px;">
+                        <col style="min-width: 100px;">
+                        <col>
+                        <col>
+                        <col>
+                        <col>
+                        <col>
+                        <col style="width: 100px;">
+                        <col>
+                        <col>
+                        <col>
+                        <col>
+                      </colgroup>
+                      <thead>
+                        <tr>
+                          <th><input type="checkbox" class="chk-anim" aria-label="전체선택" disabled></th>
+                          <th style="min-width: 80px">사번</th>
+                          <th style="min-width: 100px">성명</th>
+                          <th>연차구분</th>
+                          <th>일자</th>
+                          <th>시작시간</th>
+                          <th>종료시간</th>
+                          <th>사용일수</th>
+                          <th style="min-width: 100px; max-width: 120px;">상태</th>
+                          <th>신청일자</th>
+                          <th>신청자</th>
+                          <th>처리일자</th>
+                          <th>처리자</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!--페이지모달: 연차신청-->
+<template id="leave-apply-page-modal">
+  <div class="d-flex flex-column gap-2" data-leave-apply-root>
+    <div class="d-flex align-items-center" style="font-size: var(--t-size1); font-weight: var(--t-weight2);">
+      <div style="color: var(--accent-color)">연차신청직원&nbsp;:&ensp;</div>
+      <div style="color: var(--accent-color)">00000 가나다</div>
+    </div>
+
+    <div class="d-flex align-items-center gap-1">
+      <div class="inputgroup1">
+        <select data-la-type>
+          <option value=""></option>
+          <option value="일">일</option>
+          <option value="시간">시간</option>
+        </select>
+        <label>연차구분</label>
+      </div>
+      <div class="inputgroup1">
+        <input type="text" class="input-date" autocomplete="off" data-la-date disabled>
+        <label>일자</label>
+      </div>
+      <div class="inputgroup1">
+        <input type="text" class="input-time" autocomplete="off" data-la-start disabled>
+        <label>시작시간</label>
+      </div>
+      <div class="inputgroup1">
+        <input type="text" class="input-time" autocomplete="off" data-la-end disabled>
+        <label>종료시간</label>
+      </div>
+      <div class="inputgroup1">
+        <input type="text" data-la-usage disabled>
+        <label>사용일수</label>
+      </div>
+    </div>
+  </div>
+</template>
+
+
+<script>
+  // =========================================================
+  // ✅ google.script.run payload 안전화
+  // - Apps Script iFrame 런타임에서 비직렬화 객체(DOM/Event/Set 등)가 섞이면
+  //   'Uncaught ps' 같은 내부 오류가 날 수 있어서, 전송 전 JSON-safe로 정규화
+  // =========================================================
+  function _leaveToWire_(obj){
+    try{
+      return JSON.parse(JSON.stringify(obj == null ? {} : obj));
+    }catch(e){
+      // 마지막 안전장치: 최소 필드만
+      return {};
+    }
+  }
+
+  // =========================================================
+  // ✅ 전역 fallback (protected function / 다른 스코프에서 호출될 때 ReferenceError 방지)
+  // - Leave_init 내부에만 있던 변수/함수를 전역에서도 안전하게 접근 가능하게 만듦
+  // =========================================================
+  if (typeof window._leaveApplyAll === 'undefined') window._leaveApplyAll = [];
+  if (typeof window._grantUnofficialDays === 'undefined') window._grantUnofficialDays = 0;
+  // 전역 변수로도 제공 (어딘가에서 var _leaveApplyAll 직접 참조하는 경우 대응)
+  if (typeof _leaveApplyAll === 'undefined') var _leaveApplyAll = window._leaveApplyAll;
+  if (typeof _grantUnofficialDays === 'undefined') var _grantUnofficialDays = window._grantUnofficialDays;
+
+  // parseYearNum_가 로컬에만 있으면 protected function에서 못 찾음 → 전역 fallback 제공
+  if (typeof parseYearNum_ !== 'function'){
+    function parseYearNum_(v){
+      if (v == null) return NaN;
+      var s = String(v).trim();
+      var m = s.match(/(\d{4})/);
+      return m ? Number(m[1]) : Number(s);
+    }
+  }
+
+  function LeaveApply_init(scopeEl){
+    if (!scopeEl) return;
+
+    var root  = scopeEl.querySelector('[data-leave-apply-root]') || scopeEl;
+    var sel   = root.querySelector('[data-la-type]');
+    var date  = root.querySelector('[data-la-date]');
+    var sTime = root.querySelector('[data-la-start]');
+    var eTime = root.querySelector('[data-la-end]');
+    var usage = root.querySelector('[data-la-usage]');
+    if (!sel || !date || !sTime || !eTime || !usage) return;
+
+    // ===== helpers =====
+    function isValidDateStr(v){
+      v = String(v || '').trim();
+      
+      // 1) YYYY-MM-DD...
+      var m =
+        v.match(/^(\d{4})-(\d{2})-(\d{2})/) ||
+        // 2) YYYY.MM.DD...
+        v.match(/^(\d{4})\.(\d{2})\.(\d{2})/) ||
+        // 3) YYYYMMDD...
+        v.match(/^(\d{4})(\d{2})(\d{2})/);
+
+      if (!m) return false;
+
+      var y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+      if (mo < 1 || mo > 12) return false;
+
+      var dt = new Date(y, mo - 1, d);
+      return dt.getFullYear() === y && (dt.getMonth() + 1) === mo && dt.getDate() === d;
+    }
+    
+    function toMin(hhmm){
+      hhmm = String(hhmm || '').trim();
+      var m = /^(\d{1,2}):(\d{2})$/.exec(hhmm);
+      if (!m) return NaN;
+      var h = Number(m[1]), mm = Number(m[2]);
+      if (h < 0 || h > 23 || mm < 0 || mm > 59) return NaN;
+      return h * 60 + mm;
+    }
+
+    function fmtMinutes(min){
+      min = Math.max(0, Math.floor(min || 0));
+      var h = Math.floor(min / 60);
+      var m = min % 60;
+      if (h === 0 && m === 0) return '0시간';
+      if (m === 0) return h + '시간';
+      if (h === 0) return m + '분';
+      return h + '시간 ' + m + '분';
+    }
+
+    // 09:00~12:00, 13:00~18:00만 인정 (12~13 제외)
+    function calcWorkMinutes(startMin, endMin){
+      if (!isFinite(startMin) || !isFinite(endMin)) return 0;
+      if (endMin <= startMin) return 0;
+
+      var intervals = [
+        [9*60, 12*60],
+        [13*60, 18*60]
+      ];
+
+      var sum = 0;
+      for (var i=0; i<intervals.length; i++){
+        var a = intervals[i][0], b = intervals[i][1];
+        var overlap = Math.min(endMin, b) - Math.max(startMin, a);
+        if (overlap > 0) sum += overlap;
+      }
+      return sum;
+    }
+
+    function setDisabled(el, disabled){
+      if (!el) return;
+      el.disabled = !!disabled;
+      if (disabled) el.value = ''; // 비활성화 시 값도 정리(원하면 제거 가능)
+    }
+
+    function recalc(){
+      var type = sel.value;
+
+      if (type === '일'){
+        usage.value = isValidDateStr(date.value) ? '1일' : '0일';
+        if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(root);
+        return;
+      }
+
+      if (type === '시간'){
+        var sm = toMin(sTime.value);
+        var em = toMin(eTime.value);
+        var mins = calcWorkMinutes(sm, em);
+        usage.value = fmtMinutes(mins);
+        if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(root);
+        return;
+      }
+
+      usage.value = '';
+      if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(root);
+    }
+
+    function applyMode(){
+      var type = sel.value;
+
+      if (type === '일'){
+        setDisabled(date, false);
+        setDisabled(sTime, true);
+        setDisabled(eTime, true);
+        usage.value = '';
+        recalc();
+        return;
+      }
+
+      if (type === '시간'){
+        setDisabled(date, false);    // ✅ 일자/시간 활성
+        setDisabled(sTime, false);
+        setDisabled(eTime, false);
+        recalc();                    // 초기 0시간 표시
+        return;
+      }
+
+      // 미선택
+      setDisabled(date, true);
+      setDisabled(sTime, true);
+      setDisabled(eTime, true);
+      usage.value = '';
+    }
+
+    // ===== bind (중복 바인딩 방지) =====
+    if (root.__leaveApplyBound) return;
+    root.__leaveApplyBound = true;
+
+    sel.addEventListener('change', function(){
+      applyMode();
+      if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(root);
+    });
+
+    [date, sTime, eTime].forEach(function(el){
+      el.addEventListener('input', recalc);
+      el.addEventListener('change', recalc);
+    });
+
+    // 최초 상태 반영
+    applyMode();
+    if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(root);
+  }
+</script>
+
+
+
+
+
+<!-- 페이지모달: 연차설정-->
+<template id="leave-set-page-modal">
+  <div class="d-flex fill">
+    <div style="flex: 1; min-width: 0;" class="col-fill">
+      <div class="sec fill">
+        <div class="sec-header" style="height: 40px"><div class="text">적용연도</div></div>
+        <div class="sec-body">
+          <div class="wrap wrap-list fill" data-leave-set-year-list>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="flex: 3; min-width: 0;" class="col-fill">
+      <div class="sec fill">
+        <div class="sec-header" style="height: 40px">
+          <div class="text">직원명단</div>
+          <div class="d-flex align-items-center gap-1">
+            <select class="select1" style="width: 100px" data-leave-set-status-filter>
+              <option value="전체">전체</option>
+              <option value="재직">재직</option>
+              <option value="퇴직">퇴직</option>
+            </select>
+            <button type="button" class="btn-icon bubble btn-icon-s btn-icon-blue" aria-label="선택추가"><i class="fa-solid fa-user-plus"></i></button>
+          </div>
+        </div>
+        <div class="sec-body">
+          <div class="wrap wrap-list fill" data-leave-set-emp-list>
+            <button type="button" class="wrap-list-item">
+              <div class="wrap-list-icon"><i class="fa-solid fa-user"></i></div>
+              <div class="wrap-list-main">
+                <div class="wrap-list-name">00001 가가가</div>
+                <div class="wrap-list-sub">00개월 00일(00년 00개월 00일) · 00년차</div>
+              </div>
+              <div class="wrap-list-badge">재직</div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="flex: 6; min-width: 0;" class="col-fill">
+      <div class="sec fill">
+        <div class="sec-header" style="height: 40px">
+          <div class="text">연차정보</div>
+          <button type="button" class="btn-icon bubble btn-icon-s btn-icon-red" aria-label="선택삭제"><i class="fa-solid fa-user-minus"></i></button>
+        </div>
+        <div class="sec-body">
+          <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" class="chk-anim" aria-label="전체선택"></th>
+                  <th style="min-width: 80px">사번</th>
+                  <th style="min-width: 100px">성명</th>
+                  <th style="min-width: 140px">총근무연수</th>
+                  <th style="min-width: 110px">총근무연차</th>
+                  <th>법정연차</th>
+                  <th style="min-width: 80px">부여연차</th>
+                  <th style="min-width: 80px">공식연차</th>
+                  <th style="min-width: 80px">비공식연차</th>
+                  <th style="min-width: 150px">비고</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+
+
+<script>
+/*연차신청 페이지모달*/
+function leaveApplyPageModal() {
+  // ✅ 선택 직원 확인
+  var leaveRoot = document.getElementById('leave-root');
+  var selEmp = leaveRoot ? (leaveRoot.__leaveSelectedEmp || null) : null;
+  if (!selEmp || !selEmp.employee_id){
+    if (typeof showAlertWarn === 'function') showAlertWarn('직원을 선택해 주세요.', '연차신청');
+    return;
+  }
+
+  var _applyModalEl = null;
+  openPageModal({
+    title: '연차신청',
+    size: 'md',
+    templateId: 'leave-apply-page-modal',
+    // ✅ 닫기(취소) 버튼 제거: 저장만 노출
+    footerButtons: [
+      { action:'save', text:'저장', icon:'fa-floppy-disk', className:'btn-box btn-box-blue' }
+    ],
+    onOpen: function(modalEl, bodyHost){
+      _applyModalEl = modalEl;
+
+      // ✅ 상단 "연차신청직원 : 00000 가나다" 세팅
+      try{
+        var root = bodyHost.querySelector('[data-leave-apply-root]') || bodyHost;
+        // 템플릿 상단의 두번째 <div>(사번/성명 표시 영역)를 찾아 업데이트
+        var headRow = root.closest('[data-leave-apply-root]') ? root.parentElement : bodyHost;
+        // 가장 안전: 템플릿 첫 줄의 "연차신청직원" 라인에서 마지막 div를 찾음
+        var labelLine = bodyHost.querySelector('[data-leave-apply-root]')?.previousElementSibling;
+        // 위가 실패하면 템플릿 내 첫번째 d-flex에서 마지막 div 찾기
+        var topLine = bodyHost.querySelector('.d-flex.align-items-center');
+        if (topLine){
+          var dvs = topLine.querySelectorAll('div');
+          if (dvs && dvs.length){
+            dvs[dvs.length - 1].textContent = selEmp.employee_id + ' ' + (selEmp.name || '');
+          }
+        }
+      }catch(e){}
+
+      // ✅ 선택 직원 값을 bodyHost에 보관(저장 시 사용)
+      bodyHost.__leaveApplyEmp = { employee_id: selEmp.employee_id, name: selEmp.name || '' };
+
+      LeaveApply_init(bodyHost);
+    },
+    onSave: function () {
+      var bodyHost = document.querySelector('#appPageModal [data-role="page-modal-body"]');
+      if (!bodyHost) return false;
+
+      var emp = bodyHost.__leaveApplyEmp || null;
+      if (!emp || !emp.employee_id){
+        if (typeof showAlertWarn === 'function') showAlertWarn('직원을 선택해 주세요.', '연차신청');
+        return false;
+      }
+
+      var root = bodyHost.querySelector('[data-leave-apply-root]') || bodyHost;
+      var sel   = root.querySelector('[data-la-type]');
+      var date  = root.querySelector('[data-la-date]');
+      var sTime = root.querySelector('[data-la-start]');
+      var eTime = root.querySelector('[data-la-end]');
+      var usage = root.querySelector('[data-la-usage]');
+
+      var category = sel ? String(sel.value || '').trim() : '';
+      var dateVal  = date ? String(date.value || '').trim() : '';
+      var stVal    = sTime ? String(sTime.value || '').trim() : '';
+      var etVal    = eTime ? String(eTime.value || '').trim() : '';
+      var usageVal = usage ? String(usage.value || '').trim() : '';
+
+      function normDate_(v){
+        v = String(v || '').trim();
+        // input-date 커스텀으로 "YYYY-MM-DD 요일"이 될 수 있으므로 앞의 날짜만 사용
+        var m = v.match(/(\d{4})-(\d{2})-(\d{2})/);
+        if (m) return m[1] + '-' + m[2] + '-' + m[3];
+        m = v.match(/(\d{4})\.(\d{2})\.(\d{2})/);
+        if (m) return m[1] + '-' + m[2] + '-' + m[3];
+        m = v.match(/(\d{4})(\d{2})(\d{2})/);
+        if (m) return m[1] + '-' + m[2] + '-' + m[3];
+        return v;
+      }
+
+      function isValidDateStr(v){
+        v = String(v || '').trim();
+        var m = v.match(/^(\d{4})-(\d{2})-(\d{2})/) || v.match(/^(\d{4})\.(\d{2})\.(\d{2})/) || v.match(/^(\d{4})(\d{2})(\d{2})/);
+        if (!m) return false;
+        var y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+        if (mo < 1 || mo > 12) return false;
+        var dt = new Date(y, mo-1, d);
+        return dt.getFullYear()===y && (dt.getMonth()+1)===mo && dt.getDate()===d;
+      }
+
+      // ✅ 필수값 검증
+      if (!category){
+        if (typeof showAlertWarn === 'function') showAlertWarn('연차구분을 선택해 주세요.', '연차신청');
+        return false;
+      }
+      dateVal = normDate_(dateVal); // ✅ 요일 제거 후 저장/검증
+      if (!isValidDateStr(dateVal)){
+        if (typeof showAlertWarn === 'function') showAlertWarn('일자를 입력해 주세요. (yyyy-mm-dd)', '연차신청');
+        return false;
+      }
+      if (category === '시간'){
+        if (!stVal || !etVal){
+          if (typeof showAlertWarn === 'function') showAlertWarn('시작시간/종료시간을 입력해 주세요.', '연차신청');
+          return false;
+        }
+      }else{
+        // '일'이면 시간은 비워 저장
+        stVal = '';
+        etVal = '';
+      }
+
+      // ✅ days 정규화: "0일" 또는 "n시간" 또는 "1일"
+      function normalizeDays_(cat, usageTxt){
+        usageTxt = String(usageTxt || '').trim();
+        if (cat === '일'){
+          // usage가 '1일' 또는 '0일'로 들어옴
+          return usageTxt || '0일';
+        }
+        // '시간': usage가 "0시간" 또는 "2시간 30분" 같은 형태일 수 있음
+        // -> DB요구: 0시간/1시간..8시간, 8시간 이상이면 1일
+        var mh = usageTxt.match(/(\d+)\s*시간/);
+        var mm = usageTxt.match(/(\d+)\s*분/);
+        var h = mh ? Number(mh[1]) : 0;
+        var m = mm ? Number(mm[1]) : 0;
+        if (!isFinite(h)) h = 0;
+        if (!isFinite(m)) m = 0;
+        var totalMin = (h * 60) + m;
+        if (totalMin <= 0) return '0시간';
+        if (totalMin >= 8*60) return '1일';
+        // 분이 있으면 올림해서 시간으로 저장(요구사항: 시간 단위)
+        var hh = Math.ceil(totalMin / 60);
+        if (hh >= 8) return '1일';
+        return hh + '시간';
+      }
+      var daysTxt = normalizeDays_(category, usageVal);
+
+      var payload = {
+        employee_id: emp.employee_id,
+        category: category,
+        date: dateVal, // ✅ 항상 yyyy-mm-dd만 저장
+        start_time: stVal,
+        end_time: etVal,
+        days: daysTxt
+      };
+
+      try{ if (typeof showLoading === 'function') showLoading(true); }catch(e){}
+      google.script.run
+        .withSuccessHandler(function(res){
+          try{ if (typeof showLoading === 'function') showLoading(false); }catch(e){}
+          var ok = !!(res && (res.ok === true || res.success === true));
+          if (!ok){
+            var em = (res && (res.error || res.message)) || '저장에 실패했습니다.';
+            if (typeof showAlertError === 'function') showAlertError(em, '연차신청');
+            return;
+          }
+          if (typeof showAlertSuccess === 'function') showAlertSuccess('신청되었습니다.', '연차신청');
+
+          // ✅ 모달 닫기
+          try{
+            if (_applyModalEl && window.bootstrap){
+              var inst = window.bootstrap.Modal.getInstance(_applyModalEl);
+              if (inst) inst.hide();
+            }
+          }catch(e){}
+
+           // ✅ 연차신청 저장 후: 메인 연차정보(Leave_Apply) 재조회
+           // (직원명단은 재로드 불필요: 부여는 설정모달, 사용/잔여는 승인건만 반영)
+           try{
+             if (typeof reloadLeaveInfo_ === 'function') reloadLeaveInfo_();
+           }catch(e){}
+
+          // ✅ 저장 완료 알림 직후, 메인페이지 연차정보 즉시 최신화
+          // - 전체 새로고침(location.reload) 대신
+          // - 메인 연차페이지의 연차적용연도 select change를 트리거해서
+          //   직원명단/연차정보(테이블+요약) 재로드
+          try{
+            var rootEl = window._leaveRoot || document.getElementById('leave-root') || document;
+            var ys = (rootEl && rootEl.querySelector) ? rootEl.querySelector('[data-leave-year-select]') : null;
+            if (ys){
+              ys.dispatchEvent(new Event('change'));
+            }
+          }catch(e){}
+        })
+        .withFailureHandler(function(err){
+          try{ if (typeof showLoading === 'function') showLoading(false); }catch(e){}
+          if (typeof showAlertError === 'function') {
+            showAlertError((err && err.message) ? err.message : String(err), '연차신청');
+          }
+        })
+        .LEAVE_applyLeave(_leaveToWire_(payload));
+
+      // ✅ async 저장이므로 모달 자동닫힘 방지
+      return false;
+    }
+  });
+}
+
+/*연차설정 페이지모달*/
+function leaveSetPageModal() {
+  var _leaveSetModalEl  = null; // ✅ 저장버튼 enable/disable 제어용
+  openPageModal({
+    title: '연차설정',
+    size: 'full',
+    templateId: 'leave-set-page-modal',
+    // ✅ 취소버튼 제거: 저장만 노출
+    footerButtons: [
+      { action:'save', text:'저장', icon:'fa-floppy-disk', className:'btn-box btn-box-blue' }
+    ],
+    onOpen: function(modalEl, bodyHost){
+      _leaveSetBodyHost = bodyHost;
+      _leaveSetModalEl  = modalEl;
+      LeaveSet_init(bodyHost);
+    },
+    onSave: function () {
+      // ✅ 저장버튼 비활성화(중복 저장 방지) + 완료 시 반드시 복구
+      var _btnSave = null;
+      try{
+        _btnSave = (_leaveSetModalEl && _leaveSetModalEl.querySelector)
+          ? (_leaveSetModalEl.querySelector('button[data-action="save"], button[data-pm-action="save"], .modal-footer button.btn-primary') 
+             || document.querySelector('#appPageModal .modal-footer button[data-action="save"], #appPageModal .modal-footer button[data-pm-action="save"], #appPageModal .modal-footer button.btn-primary'))
+          : null;
+      }catch(e){}
+      function _setSaveDisabled_(v){
+        try{
+          if (_btnSave){
+            _btnSave.disabled = !!v;
+            _btnSave.classList.toggle('disabled', !!v);
+          }
+        }catch(e){}
+      }
+
+      _setSaveDisabled_(true);
+
+      // ✅ async 저장: false를 리턴해서 모달 자동닫힘 방지 후,
+      //    성공 시 직접 모달을 닫는다.
+      var payload = (typeof LeaveSet_collectSavePayload_ === 'function')
+        ? LeaveSet_collectSavePayload_()
+        : null;
+
+      if (!payload || !payload.year){
+        if (typeof showAlertWarn === 'function') showAlertWarn('적용연도를 선택해 주세요.', '연차설정');
+        _setSaveDisabled_(false);
+        return false;
+      }
+      if (!payload.rows || payload.rows.length === 0){
+        if (typeof showAlertWarn === 'function') showAlertWarn('저장할 연차정보가 없습니다.', '연차설정');
+        _setSaveDisabled_(false);
+        return false;
+      }
+
+      try{ if (typeof showLoading === 'function') showLoading(true); }catch(e){}
+      google.script.run
+        .withSuccessHandler(function(res){
+          try{ if (typeof showLoading === 'function') showLoading(false); }catch(e){}
+          var ok = !!(res && (res.ok === true || res.success === true));
+          if (!ok){
+            var em = (res && (res.error || res.message)) || '저장에 실패했습니다.';
+            if (typeof showAlertError === 'function') showAlertError(em, '연차설정');
+            _setSaveDisabled_(false);
+            return;
+          }
+          if (typeof showAlertSuccess === 'function') showAlertSuccess('저장되었습니다.', '연차설정');
+          // ✅ 저장 완료 후 저장버튼 다시 활성화(모달은 닫지 않음)
+          _setSaveDisabled_(false);
+          // ✅ 저장 후 모달을 닫지 않고 재조회
+          try{
+            if (_leaveSetBodyHost && _leaveSetBodyHost.__leaveSetApi && typeof _leaveSetBodyHost.__leaveSetApi.reload === 'function'){
+              _leaveSetBodyHost.__leaveSetApi.reload();
+            }else{
+              // fallback: bodyHost를 못 잡았을 때도 재조회 시도
+              var bh = document.querySelector('#appPageModal [data-role="page-modal-body"]');
+              if (bh && bh.__leaveSetApi && typeof bh.__leaveSetApi.reload === 'function') bh.__leaveSetApi.reload();
+            }
+          }catch(e){}
+          // ✅ [중요] 연차설정 저장 후 메인 연차페이지 최신화
+          // - 직원명단의 부여/사용/잔여 텍스트(grant_txt/used_txt/remain_txt)
+          // - 요약카드의 부여연차(Leave unofficial_days 합계)
+          // 를 모두 최신으로 반영하려면 메인 연도 셀렉트 change를 트리거하면 됨.
+          try{
+            var mainRoot = window._leaveRoot || document.getElementById('leave-root');
+            var mainYearSel = mainRoot ? mainRoot.querySelector('[data-leave-year-select]') : null;
+            if (mainYearSel){
+              // ✅ 저장 후 메인페이지는 "조용히 갱신"(스피너/로딩문구 없이)
+              try{ mainRoot.__leaveSilentReload = true; }catch(e){}
+              mainYearSel.dispatchEvent(new Event('change'));
+            }
+          }catch(e){}
+        })
+        .withFailureHandler(function(err){
+          try{ if (typeof showLoading === 'function') showLoading(false); }catch(e){}
+          if (typeof showAlertError === 'function') {
+            showAlertError((err && err.message) ? err.message : String(err), '연차설정');
+          }
+          _setSaveDisabled_(false);
+        })
+        .LEAVE_saveLeaveSettings(_leaveToWire_(payload));
+
+      return false;
+    }
+  });
+}
+// =========================================================
+// Leave Page Init
+// =========================================================
+function Leave_init(container){
+  // leave 페이지 진입 시 기본 승인모드 UI 잠금
+  try{ leaveInitApprovalUI(); }catch(e){}
+
+  var root = null;
+  if (container && container.querySelector){
+    root = container.querySelector('#leave-root') || container;
+    // ✅ 전역 루트(요약카드/유틸 함수에서 참조)
+    window._leaveRoot = root;
+  }else{
+    root = document.getElementById('leave-root');
+  }
+  if (!root) return;
+
+  // =========================================================
+  // ✅ 1회 부팅 로딩(빈 UI 노출 방지): meta 공용 UI_Loading 사용
+  // =========================================================
+  var _bootDone = false;
+  function _showBootLoading_(){
+    if (_bootDone) return;
+    try{ root.style.display = 'none'; }catch(e){}
+    try{
+      if (window.UI_Loading) UI_Loading.show(container || root, { key:'leave-boot', boot:true, text:'' });
+    }catch(e){}
+  }
+  function _hideBootLoading_(){
+    if (_bootDone) return;
+    _bootDone = true;
+    try{
+      if (window.UI_Loading) UI_Loading.hide(container || root, { key:'leave-boot' });
+    }catch(e){}
+    try{ root.style.display = ''; }catch(e){}
+  }
+
+  // ✅ init 시작 즉시 부팅 로딩 표시
+  _showBootLoading_();
+  var yearSel = root.querySelector('[data-leave-year-select]') || root.querySelector('.hr-opt select.select1');
+  var empWrap = root.querySelector('[data-leave-emp-wrap]');
+  var btnApply = root.querySelector('[data-leave-apply-btn]');
+  var infoTbl  = root.querySelector('[data-leave-info-table]') || root.querySelector('table.tbl');
+  var infoTbody = (infoTbl && infoTbl.tBodies) ? infoTbl.tBodies[0] : null;
+  var statusSel = root.querySelector('[data-leave-info-status-filter]');
+  var cbAllInfo = infoTbl ? infoTbl.querySelector('thead input[type="checkbox"].chk-anim') : null;
+
+  // 연차정보(Leave_Apply) 캐시: 연도별
+  var _leaveApplyAll = [];   // 현재 연도의 전체 rows
+  var _leaveApplyYear = '';  // "2025년" 같은 label
+  // ✅ 전역 미러링(다른 스코프/보호함수에서 접근하는 경우 대비)
+  window._leaveApplyAll = _leaveApplyAll;
+  var _grantUnofficialDays = 0;
+  // ✅ Leave(발생연차) 캐시(연도별): { employee_id: unofficial_days }, total
+  // - 연도 변경 시 1번만 서버 호출해서 캐시하고, 직원 선택 시 즉시 반영
+  window._leaveGrantYear = window._leaveGrantYear || '';
+  window._leaveGrantMap  = window._leaveGrantMap  || {};
+  window._leaveGrantTotal = window._leaveGrantTotal || 0;
+
+  if (!yearSel || !empWrap) return;
+  // =========================================================
+  // ✅ 메인(직원명단/요약/연차정보테이블) "동시 로드 후 한번에 표시" 유틸
+  // =========================================================
+  var _mainBatchSeq = 0; // 연도 전환 중복 호출 방지용 토큰
+  function _setMainLoading_(on){
+    try{
+      if (!window.UI_Loading) return;
+      if (on) UI_Loading.show(root, { key:'leave-main', text:'' });
+      else    UI_Loading.hide(root, { key:'leave-main' });
+    }catch(e){}
+  }  function _hideMainParts_(){
+    // 직원명단/연차정보테이블은 확실히 잡힘
+    try{ if (empWrap) empWrap.style.visibility = 'hidden'; }catch(e){}
+    try{
+      if (infoTbl){
+        var w = infoTbl.closest('.wrap-tbl') || infoTbl.parentElement;
+        if (w) w.style.visibility = 'hidden';
+      }
+    }catch(e){}
+    // 요약카드 영역은 data-leave-sum 기준으로 최대한 안전하게 찾음
+    try{
+      var anySum = root.querySelector('[data-leave-sum]');
+      var sumWrap = anySum ? (anySum.closest('.wrap-sum') || anySum.closest('.sec') || anySum.parentElement) : null;
+      if (sumWrap) sumWrap.style.visibility = 'hidden';
+    }catch(e){}
+  }
+  function _showMainParts_(){
+    try{ if (empWrap) empWrap.style.visibility = ''; }catch(e){}
+    try{
+      if (infoTbl){
+        var w = infoTbl.closest('.wrap-tbl') || infoTbl.parentElement;
+        if (w) w.style.visibility = '';
+      }
+    }catch(e){}
+    try{
+      var anySum = root.querySelector('[data-leave-sum]');
+      var sumWrap = anySum ? (anySum.closest('.wrap-sum') || anySum.closest('.sec') || anySum.parentElement) : null;
+      if (sumWrap) sumWrap.style.visibility = '';
+    }catch(e){}
+  }
+
+  function _pRun_(runner){
+    return new Promise(function(resolve, reject){
+      try{ runner(resolve, reject); }catch(e){ reject(e); }
+    });
+  }
+  function fetchEmployeesForYear_(yearLabel){
+    return _pRun_(function(resolve, reject){
+      google.script.run
+        .withSuccessHandler(function(res){ resolve(res); })
+        .withFailureHandler(function(err){ reject(err); })
+        .LEAVE_listLeaveEmployees({ year: yearLabel });
+    });
+  }
+  function fetchLeaveAppliesForYear_(yearLabel){
+    return _pRun_(function(resolve, reject){
+      google.script.run
+        .withSuccessHandler(function(res){ resolve(res); })
+        .withFailureHandler(function(err){ reject(err); })
+        .LEAVE_listLeaveApplies(_leaveToWire_({ year: yearLabel }));
+    });
+  }
+  function fetchGrantCacheForYear_(yearLabel){
+    // 기존 loadGrantCacheForYear_의 서버호출만 Promise화
+    return _pRun_(function(resolve, reject){
+      google.script.run
+        .withSuccessHandler(function(res){ resolve(res); })
+        .withFailureHandler(function(err){ reject(err); })
+        .LEAVE_listLeaveGrantsByYear(_leaveToWire_({ year: yearLabel }));
+    });
+  }
+
+  function loadMainForYearBatch_(yearLabel, opts){
+    opts = opts || {};
+    var silent = !!opts.silent;
+    var seq = ++_mainBatchSeq;
+    var y = String(yearLabel || '').trim();
+    if (!y){
+      // 비정상 값이면 기존 표시 유지 + 상태만 정리
+      try{ showEmpStatus_('데이터 없음'); }catch(e){}
+      try{ showInfoStatusRow_('데이터 없음'); }catch(e){}
+      return;
+    }
+
+    // ✅ 배치 로드 시작: 기본은 스피너/숨김
+    // silent면 기존 UI 유지한 채로 조용히 갱신
+    if (!silent){
+      _hideMainParts_();
+      _setMainLoading_(true);
+    }
+
+    // 내부 상태 초기화
+    // silent면 "로딩중..." 노출/선택초기화는 UX상 깜빡임이라 스킵
+    if (!silent){
+      try{ setSelectedEmployee_('', ''); }catch(e){}
+      try{ leaveToggleApprovalMode(false); }catch(e){}
+    }
+    _leaveApplyYear = y;
+    _leaveApplyAll = [];
+    window._leaveApplyAll = _leaveApplyAll;
+    if (!silent){
+      try{ showEmpStatus_('로딩중...'); }catch(e){}
+      try{ showInfoStatusRow_('로딩중...'); }catch(e){}
+    }
+
+    Promise.all([
+      fetchEmployeesForYear_(y),
+      fetchLeaveAppliesForYear_(y),
+      fetchGrantCacheForYear_(y)
+    ]).then(function(results){
+      // ✅ 연도 변경 중간에 이전 요청이 늦게 끝나면 무시
+      if (seq !== _mainBatchSeq) return;
+
+      var resEmp   = results[0] || {};
+      var resApply = results[1] || {};
+      var resGrant = results[2] || {};
+
+      // 1) 직원명단
+      var okEmp = !!(resEmp && (resEmp.ok === true || resEmp.success === true));
+      var empRows = okEmp ? (resEmp.rows || []) : [];
+      renderEmployees_(empRows);
+
+      // 2) 연차정보(테이블 + 요약카드 계산용 캐시)
+      var okApply = !!(resApply && (resApply.ok === true || resApply.success === true));
+      _leaveApplyAll = okApply ? (resApply.rows || []) : [];
+      window._leaveApplyAll = _leaveApplyAll;
+      renderLeaveApplyRows_(_leaveApplyAll);
+
+      // 3) 발생연차 캐시(요약카드용)
+      var okGrant = !!(resGrant && (resGrant.ok === true || resGrant.success === true));
+      if (!okGrant){
+        window._leaveGrantMap = {};
+        window._leaveGrantTotal = 0;
+      }else{
+        var map = {};
+        var total = 0;
+        (resGrant.rows || []).forEach(function(r){
+          var eid = String((r && r.employee_id) || '').trim();
+          if (!eid) return;
+          var n = Number((r && r.unofficial_days) || 0) || 0;
+          map[eid] = n;
+          total += n;
+        });
+        if (resGrant.total_unofficial_days != null){
+          var t = Number(resGrant.total_unofficial_days);
+          if (isFinite(t)) total = t;
+        }
+        window._leaveGrantMap = map;
+        window._leaveGrantTotal = total;
+      }
+      try{ syncGrantUnofficialDaysFromCache_(); }catch(e){}
+      updateLeaveSummary_(); // ✅ 최종 1회 갱신
+
+      // ✅ 표시/스피너 해제
+      if (!silent){
+        _setMainLoading_(false);
+        _showMainParts_();
+      }
+
+      // ✅ 최초 1회: 부팅 로딩 종료 + UI 노출
+      _hideBootLoading_();
+
+      // 체크박스/셀렉트 디자인/연결 갱신(기존 로직 유지 성격)
+      try{ refreshSelectTbl_(); }catch(e){}
+    }).catch(function(err){
+      if (seq !== _mainBatchSeq) return;
+      if (!silent){
+        _setMainLoading_(false);
+        _showMainParts_();
+      }
+
+      // ✅ 실패여도 UI는 노출(무한 로딩 방지)
+      _hideBootLoading_();
+      
+      if (typeof showAlertError === 'function'){
+        showAlertError((err && err.message) ? err.message : String(err), '연차');
+      }
+      // 실패 시도 최소한 기본 렌더 상태로 맞춤
+      try{ renderEmployees_([]); }catch(e){}
+      try{ renderLeaveApplyRows_([]); }catch(e){}
+      _leaveApplyAll = [];
+      window._leaveApplyAll = _leaveApplyAll;
+      window._leaveGrantMap = {};
+      window._leaveGrantTotal = 0;
+      try{ syncGrantUnofficialDaysFromCache_(); }catch(e){}
+      try{ updateLeaveSummary_(); }catch(e){}
+    });
+  }
+  function showEmpStatus_(msg){
+    empWrap.innerHTML = '';
+    var box = document.createElement('div');
+    box.className = 'text-muted';
+    box.style.padding = '0.5rem';
+    box.textContent = msg || '로딩중...';
+    empWrap.appendChild(box);
+  }
+
+  function parseYearNum_(v){
+    if (v == null) return NaN;
+    var s = String(v).trim();
+    var m = s.match(/(\d{4})/);
+    return m ? Number(m[1]) : Number(s);
+  }
+
+  function renderEmployees_(rows){
+    empWrap.innerHTML = '';
+    if (!rows || !rows.length){
+      showEmpStatus_('데이터 없음');
+      return;
+    }
+
+    rows.forEach(function(r){
+      var eid = String(r.employee_id || '').trim();
+      var name = String(r.name || '').trim();
+      var grant = String(r.grant_txt || '').trim();    // "0일"
+      var used  = String(r.used_txt  || '').trim();    // "0일 0시간"
+      var rem   = String(r.remain_txt|| '').trim();    // "0일 0시간"
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'wrap-list-item';
+      btn.dataset.employeeId = eid;
+      btn.innerHTML =
+        '<div class="wrap-list-icon"><i class="fa-solid fa-user"></i></div>' +
+        '<div class="wrap-list-main">' +
+          '<div class="wrap-list-name">' + (eid ? (eid + ' ') : '') + name + '</div>' +
+          '<div class="wrap-list-sub">부여 ' + (grant || '0일') + ' · 사용 ' + (used || '0일 0시간') + ' · 잔여 ' + (rem || '0일 0시간') + '</div>' +
+        '</div>';
+      empWrap.appendChild(btn);
+    });
+  }
+
+  // ======================================================
+  // ✅ 직원 선택(1명) -> 연차신청 버튼 활성화 + 선택 직원 저장
+  // ======================================================
+  function setSelectedEmployee_(eid, name){
+    eid = String(eid || '').trim();
+    name = String(name || '').trim();
+    if (!eid){
+      root.__leaveSelectedEmp = null;
+      // ✅ 전역 미러링(어느 스코프에서든 필터 읽기 가능)
+      window._leaveSelectedEmp = null;
+      if (btnApply) btnApply.disabled = true;
+      empWrap.querySelectorAll('.wrap-list-item.is-active').forEach(function(b){ b.classList.remove('is-active'); });
+      // ✅ 직원 선택 해제 -> 연차정보/요약카드 전체로 복원
+      try{ renderLeaveApplyRows_(_leaveApplyAll); }catch(e){}
+      try{ updateLeaveSummary_(); }catch(e){}
+      try{ loadGrantUnofficialDaysForYear_(yearSel ? yearSel.value : ''); }catch(e){}
+      return;
+    }
+    root.__leaveSelectedEmp = { employee_id: eid, name: name };
+    // ✅ 전역 미러링(어느 스코프에서든 필터 읽기 가능)
+    window._leaveSelectedEmp = { employee_id: eid, name: name };
+    if (btnApply) btnApply.disabled = false;
+    // ✅ 직원 선택 -> 연차정보/요약카드 해당 직원만
+    try{ renderLeaveApplyRows_(_leaveApplyAll); }catch(e){}
+    try{ updateLeaveSummary_(); }catch(e){}
+    try{ loadGrantUnofficialDaysForYear_(yearSel ? yearSel.value : ''); }catch(e){}
+  }
+
+  if (!empWrap.__leavePickBound){
+    empWrap.__leavePickBound = true;
+    empWrap.addEventListener('click', function(e){
+      var item = e.target.closest('button.wrap-list-item');
+      if (!item || !empWrap.contains(item)) return;
+      if (item.disabled) return;
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+
+      // 단일선택 토글
+      var eid = String(item.dataset.employeeId || '').trim();
+      var nm = '';
+      try{
+        var t = item.querySelector('.wrap-list-name');
+        // "00001 가나다" 형태에서 name만 분리 시도(실패해도 ok)
+        if (t){
+          var s = String(t.textContent || '').trim();
+          nm = s.replace(/^\d+\s+/, '').trim();
+        }
+      }catch(_e){}
+
+      var isOn = item.classList.contains('is-active');
+      empWrap.querySelectorAll('.wrap-list-item.is-active').forEach(function(b){ b.classList.remove('is-active'); });
+      if (isOn){
+        setSelectedEmployee_('', '');
+      }else{
+        item.classList.add('is-active');
+        setSelectedEmployee_(eid, nm);
+      }
+    });
+  }
+
+  // ======================================================
+  // ✅ 연차정보(Leave_Apply) 테이블 렌더/로드
+  // - Leave_Apply에는 year 컬럼이 없으므로 date(yyyy-mm-dd)의 yyyy로 필터
+  // - Employee name은 서버에서 매핑하여 내려준다.
+  // ======================================================
+  function _dowKo_(d){
+    // 0:일 ~ 6:토
+    var w = ['일','월','화','수','목','금','토'];
+    return w[d] || '';
+  }
+
+  function fmtDateWithDow_(dateStr){
+    // dateStr: "YYYY-MM-DD"
+    dateStr = String(dateStr || '').trim();
+    var m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return dateStr;
+    var y = Number(m[1]), mo = Number(m[2]), da = Number(m[3]);
+    var dt = new Date(y, mo-1, da);
+    if (!isFinite(dt.getTime())) return dateStr;
+    return m[1] + '-' + m[2] + '-' + m[3] + ' ' + _dowKo_(dt.getDay());
+  }
+
+  function fmtKoreanDateTimeToDateDow_(v){
+    // "2026. 2. 11 오후 9:01:54" -> "2026-02-11 수"
+    v = String(v || '').trim();
+    var m = v.match(/(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})/);
+    if (!m) return v;
+    var y = Number(m[1]), mo = Number(m[2]), da = Number(m[3]);
+    if (!isFinite(y) || !isFinite(mo) || !isFinite(da)) return v;
+    var mm = String(mo).padStart(2,'0');
+    var dd = String(da).padStart(2,'0');
+    return fmtDateWithDow_(y + '-' + mm + '-' + dd);
+  }
+
+  // ✅ 신청일자/처리일자 표시용: 어떤 타입이 오든 "YYYY-MM-DD 요일"로 통일
+  function fmtAnyToDateDow_(v){
+    if (v == null) return '';
+    // Date 객체
+    if (Object.prototype.toString.call(v) === '[object Date]' && !isNaN(v.getTime())){
+      var yy = v.getFullYear();
+      var mm = String(v.getMonth()+1).padStart(2,'0');
+      var dd = String(v.getDate()).padStart(2,'0');
+      return fmtDateWithDow_(yy + '-' + mm + '-' + dd);
+    }
+    var s = String(v).trim();
+    if (!s) return '';
+
+    // ISO 날짜/일시: "2026-02-11" or "2026-02-11 09:01:54"
+    var mi = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (mi) return fmtDateWithDow_(mi[1] + '-' + mi[2] + '-' + mi[3]);
+
+    // 한글 일시: "2026. 2. 11 오후 9:01:54"
+    var mk = s.match(/(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})/);
+    if (mk) return fmtKoreanDateTimeToDateDow_(s);
+
+    return s;
+  }
+
+  function showInfoStatusRow_(msg){
+    if (!infoTbody) return;
+    infoTbody.innerHTML = '';
+    var colN = 1;
+    try{
+      var ths = infoTbl ? infoTbl.querySelectorAll('thead tr:last-child th') : null;
+      if (ths && ths.length) colN = ths.length;
+    }catch(e){}
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-empty-row', '1');
+    var td = document.createElement('td');
+    td.colSpan = colN;
+    td.className = 'text-muted';
+    td.style.padding = '0.75rem';
+    td.textContent = msg || '로딩중...';
+    tr.appendChild(td);
+    infoTbody.appendChild(tr);
+  }
+
+  function refreshSelectTbl_(scope){
+    scope = scope || root;
+    try{
+      scope.querySelectorAll('select.select-tbl').forEach(function(sel){
+        sel.classList.toggle('has-value', !!String(sel.value || '').trim());
+      });
+    }catch(e){}
+  }
+
+  function renderLeaveApplyRows_(rows){
+    if (!infoTbody) return;
+    infoTbody.innerHTML = '';
+
+    if (!rows || !rows.length){
+      showInfoStatusRow_('데이터 없음');
+      if (cbAllInfo) cbAllInfo.disabled = true;
+      return;
+    }
+
+    var list = getFilteredLeaveApplyRows_(rows);
+    if (!list.length){
+      showInfoStatusRow_('데이터 없음');
+      if (cbAllInfo) cbAllInfo.disabled = true;
+      return;
+    }
+
+    // 정렬: 1) 일자 오름차순(1/1, 1/2, ...)  2) 사번 오름차순(1,2,3,...)
+    list.sort(function(a,b){
+      var ad = String((a && a.date) || '');
+      var bd = String((b && b.date) || '');
+      if (ad !== bd) return ad.localeCompare(bd); // ✅ date ASC
+
+      // employee_id는 숫자 정렬 우선(문자면 문자열 정렬 fallback)
+      var ae = String((a && a.employee_id) || '').trim();
+      var be = String((b && b.employee_id) || '').trim();
+      var an = Number(ae), bn = Number(be);
+      if (isFinite(an) && isFinite(bn) && an !== bn) return an - bn; // ✅ employee_id ASC
+      if (ae !== be) return ae.localeCompare(be);
+
+      // (선택) 동일 일자+사번이면 신청일자(created_at) 오름차순으로 고정
+      var ac = String((a && a.created_at) || '');
+      var bc = String((b && b.created_at) || '');
+      return ac.localeCompare(bc);
+  });
+
+    var approvalOn = !!(root.__leaveApprovalMode === true);
+
+    list.forEach(function(r){
+      var tr = document.createElement('tr');
+      tr.dataset.leaveApplyId = String(r.leave_apply_id || '');
+      tr.dataset.employeeId   = String(r.employee_id || '');
+
+      // 1) 체크박스
+      var td0 = document.createElement('td');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'chk-anim';
+      cb.setAttribute('aria-label','선택');
+      cb.disabled = !approvalOn;
+      td0.appendChild(cb);
+      tr.appendChild(td0);
+
+      function tdText_(txt){
+        var td = document.createElement('td');
+        var dv = document.createElement('div');
+        dv.className = 'text-tbl';
+        dv.textContent = (txt == null ? '' : String(txt));
+        td.appendChild(dv);
+        return td;
+      }
+
+      tr.appendChild(tdText_(r.employee_id || ''));
+      tr.appendChild(tdText_(r.employee_name || ''));
+      tr.appendChild(tdText_(r.category || ''));
+      tr.appendChild(tdText_(fmtDateWithDow_(r.date || '')));
+      tr.appendChild(tdText_(r.start_time || ''));
+      tr.appendChild(tdText_(r.end_time || ''));
+      tr.appendChild(tdText_(r.days || ''));
+
+      // 상태(승인모드에서만 변경)
+      var tdStat = document.createElement('td');
+      var sel = document.createElement('select');
+      sel.className = 'select-tbl';
+      ['신청','승인','미승인'].forEach(function(v){
+        var o = document.createElement('option');
+        o.value = v;
+        o.textContent = v;
+        sel.appendChild(o);
+      });
+      sel.value = String(r.status || '신청');
+      // ✅ 상태저장용: 렌더 시점 상태를 저장(체크박스와 무관하게 변경여부 비교)
+      tr.dataset.origStatus = sel.value;
+      sel.disabled = !approvalOn;
+      tdStat.appendChild(sel);
+      tr.appendChild(tdStat);
+
+      // ✅ 신청일자: "일자"와 동일한 형식(YYYY-MM-DD 요일)
+      tr.appendChild(tdText_(fmtDateWithDow_(r.created_at || '')));
+      tr.appendChild(tdText_(r.created_by || ''));
+      // ✅ 처리일자: "일자"와 동일한 형식(YYYY-MM-DD 요일)
+      tr.appendChild(tdText_(fmtDateWithDow_(r.applied_at || '')));
+      tr.appendChild(tdText_(r.applied_by || ''));
+
+      infoTbody.appendChild(tr);
+
+      // ✅ DB로 렌더된 행도 커스텀 체크박스 초기화(표시/애니메이션)
+      try{
+        if (typeof initAnimatedCheckboxes === 'function') initAnimatedCheckboxes(tr);
+      }catch(e){}
+    });
+
+    // ✅ 헤더/행 체크박스(전체선택 등) 동작 재연결 + 커스텀 표시 초기화
+    try{ if (window.initTableRowCheckboxes) window.initTableRowCheckboxes(infoTbl); }catch(e){}
+    try{ if (typeof initAnimatedCheckboxes === 'function') initAnimatedCheckboxes(infoTbl); }catch(e){}
+
+    if (cbAllInfo) cbAllInfo.disabled = !approvalOn;
+    refreshSelectTbl_();
+  }
+
+  function loadLeaveAppliesForYear_(yearLabel){
+    if (!infoTbody) return;
+    _leaveApplyYear = String(yearLabel || '').trim();
+    _leaveApplyAll = [];
+    showInfoStatusRow_('로딩중...');
+
+    google.script.run
+      .withSuccessHandler(function(res){
+        var ok = !!(res && (res.ok === true || res.success === true));
+        if (!ok){
+          var em = (res && (res.error || res.message)) || '연차정보를 불러오지 못했습니다.';
+          if (typeof showAlertError === 'function') showAlertError(em, '연차');
+          renderLeaveApplyRows_([]);
+          _leaveApplyAll = [];
+          updateLeaveSummary_();
+          return;
+        }
+        _leaveApplyAll = (res.rows || []);
+        window._leaveApplyAll = _leaveApplyAll; // ✅ 전역 갱신
+        renderLeaveApplyRows_(_leaveApplyAll);
+        updateLeaveSummary_();
+      })
+      .withFailureHandler(function(err){
+        if (typeof showAlertError === 'function') {
+          showAlertError((err && err.message) ? err.message : String(err), '연차');
+        }
+        renderLeaveApplyRows_([]);
+        _leaveApplyAll = [];
+        updateLeaveSummary_();
+      })
+      .LEAVE_listLeaveApplies(_leaveToWire_({ year: yearLabel }));
+  }
+
+  function loadEmployeesForYear_(yearLabel){
+    var yNum = parseYearNum_(yearLabel);
+    if (!isFinite(yNum)){
+      showEmpStatus_('데이터 없음');
+      return;
+    }
+
+    showEmpStatus_('로딩중...');
+    try{ setSelectedEmployee_('', ''); }catch(e){}
+    try{ leaveToggleApprovalMode(false); }catch(e){}
+    google.script.run
+      .withSuccessHandler(function(res){
+        var ok = !!(res && (res.ok === true || res.success === true));
+        if (!ok){
+          var em = (res && (res.error || res.message)) || '직원명단을 불러오지 못했습니다.';
+          if (typeof showAlertError === 'function') showAlertError(em, '연차');
+          renderEmployees_([]);
+          return;
+        }
+        renderEmployees_(res.rows || []);
+      })
+      .withFailureHandler(function(err){
+        if (typeof showAlertError === 'function') {
+          showAlertError((err && err.message) ? err.message : String(err), '연차');
+        }
+        renderEmployees_([]);
+      })
+      .LEAVE_listLeaveEmployees({ year: yearLabel });
+  }
+
+  function loadYears_(){
+    yearSel.innerHTML = '';
+    showEmpStatus_('로딩중...');
+    google.script.run
+      .withSuccessHandler(function(res){
+        var ok = !!(res && (res.ok === true || res.success === true));
+        if (!ok){
+          var em = (res && (res.error || res.message)) || '적용연도를 불러오지 못했습니다.';
+          if (typeof showAlertError === 'function') showAlertError(em, '연차');
+          yearSel.innerHTML = '<option value="">-</option>';
+          showEmpStatus_('데이터 없음');
+          return;
+        }
+
+        var years = res.years || [];
+        if (!years.length){
+          yearSel.innerHTML = '<option value="">-</option>';
+          showEmpStatus_('데이터 없음');
+          return;
+        }
+
+        years.forEach(function(y){
+          var opt = document.createElement('option');
+          opt.value = String(y);
+          opt.textContent = String(y);
+          yearSel.appendChild(opt);
+        });
+
+        // ✅ 기본 선택: "오늘 연도"가 있으면 그 연도, 없으면 "마지막 연도"
+        // - years는 "2025년" 같은 라벨 배열
+        var nowY = (new Date()).getFullYear();
+        var nowLabel = String(nowY) + '년';
+        var picked = '';
+        try{
+          if (years.indexOf(nowLabel) >= 0) picked = nowLabel;
+          else picked = String(years[years.length - 1] || '');
+        }catch(e){
+          picked = String(years[0] || '');
+        }
+        // (기존) 기본연도 선택 로직은 유지(너가 이미 "오늘연도 우선"으로 패치함)
+        // ✅ 실제 select에 반영
+        yearSel.value = picked;
+
+        // ✅ 선택된 연도 기준으로 3개를 "동시 로드 후 한번에 표시"
+        loadMainForYearBatch_(yearSel.value);
+      })
+      .withFailureHandler(function(err){
+        if (typeof showAlertError === 'function') {
+          showAlertError((err && err.message) ? err.message : String(err), '연차');
+        }
+        yearSel.innerHTML = '<option value="">-</option>';
+        showEmpStatus_('데이터 없음');
+      })
+      .LEAVE_listYears(_leaveToWire_({ only_active:true }));
+  }
+
+  if (!yearSel.__leaveYearBound){
+    yearSel.__leaveYearBound = true;
+    yearSel.addEventListener('change', function(){
+      // ✅ 연도 변경도 동일하게 "동시 로드 후 한번에 표시"
+      // 단, 연차설정 저장 후에는 silent reload로 스피너/로딩문구 없이 갱신
+      var silent = false;
+      try{
+        silent = !!(root && root.__leaveSilentReload === true);
+        if (root) root.__leaveSilentReload = false;
+      }catch(e){}
+      loadMainForYearBatch_(yearSel.value, { silent: silent });
+    });
+  }
+  if (statusSel && !statusSel.__leaveBound){
+    statusSel.__leaveBound = true;
+    statusSel.addEventListener('change', function(){
+      renderLeaveApplyRows_(_leaveApplyAll);
+      updateLeaveSummary_();
+    });
+  }
+
+  loadYears_();
+}
+
+// =========================================================
+// Leave Setting Modal
+// - 적용연도: 2025 시작, 매년 10/1 이후 다음년도 자동 생성
+// - 직원명단: Employee 시트에서 category(고용구분) 있는 직원만 렌더
+//   * 표시: 사번+성명 / 총근무연수+총근무연차+manage / status
+// =========================================================
+function LeaveSet_init(scopeEl){
+  if (!scopeEl) return;
+
+  var root = scopeEl; // pageModal bodyHost 자체가 scope
+  var yearList = root.querySelector('[data-leave-set-year-list]');
+  var empList  = root.querySelector('[data-leave-set-emp-list]');
+  var selStat  = root.querySelector('[data-leave-set-status-filter]');
+  var btnAdd   = root.querySelector('button[aria-label="선택추가"]');
+  var infoTbl  = root.querySelector('[data-leave-set-info-table]') || root.querySelector('.sec .wrap-tbl table.tbl');
+  var infoTbody = infoTbl && infoTbl.tBodies ? infoTbl.tBodies[0] : null;
+  var btnDel   = root.querySelector('button[aria-label="선택삭제"]');
+  var cbAll    = infoTbl ? infoTbl.querySelector('thead input[type="checkbox"].chk-anim') : null;
+
+  if (!yearList || !empList) return;
+  if (!btnAdd || !infoTbody) return;
+  if (!btnDel) return;
+
+  // ✅ 다중선택 상태 + rowsAll 캐시(전체 1회 로드)
+  var selectedIds = new Set();       // employee_id set
+  var addedIds    = new Set();       // ✅ 연차정보에 이미 추가된 employee_id set
+  var rowsById = {};                 // employee_id -> row
+
+  // ======================================================
+  // ✅ 연차정보 테이블 템플릿 행 확보 (tbody가 비어도 추가 가능)
+  // - 기존 "빈행"은 템플릿 용도로만 쓰고, 필요하면 제거 가능
+  // ======================================================
+  var infoTplTr = null;
+  (function initInfoTemplateRow_(){
+    var first = infoTbody.querySelector('tr');
+    // ✅ 서식행을 HTML에서 주석/삭제해도 동작하도록:
+    //    tbody에 첫 tr이 없으면 "템플릿 tr"을 코드로 생성한다.
+    if (!first){
+      function buildDaySelectHtml_(){
+        var html = '<select class="select-tbl"><option value="">선택</option>';
+        for (var i=0;i<=25;i++){
+          html += '<option value="'+i+'일">'+i+'일</option>';
+        }
+        html += '</select>';
+        return html;
+      }
+      var tr = document.createElement('tr');
+      tr.innerHTML = ''
+        + '<td><input type="checkbox" class="chk-anim" aria-label="선택"></td>'
+        + '<td><div class="text-tbl"></div></td>'  /* 사번 */
+        + '<td><div class="text-tbl"></div></td>'  /* 성명 */
+        + '<td><div class="text-tbl"></div></td>'  /* 총근무연수 */
+        + '<td><div class="text-tbl"></div></td>'  /* 총근무연차 */
+        + '<td><div class="text-tbl"></div></td>'  /* 법정연차 */
+        + '<td>' + buildDaySelectHtml_() + '</td>'  /* 부여연차 */
+        + '<td>' + buildDaySelectHtml_() + '</td>'  /* 공식연차 */
+        + '<td><div class="text-tbl" data-unofficial-days>-</div></td>' /* ✅ 비공식연차(자동계산) */
+        + '<td><input type="text" class="input-tbl" autocomplete="off"></td>';
+      infoTplTr = tr;
+      return;
+    }
+    infoTplTr = first.cloneNode(true);
+
+    // "빈행" 여부 판단: dataset.employeeId 없고, 직원/근무/법정연차 텍스트가 비어있으면 빈행으로 간주
+    var hasEid = first.dataset && String(first.dataset.employeeId || '').trim();
+    var tNo = first.children[1] ? (first.children[1].innerText || '').trim() : '';
+    var tNm = first.children[2] ? (first.children[2].innerText || '').trim() : '';
+    var tWp = first.children[3] ? (first.children[3].innerText || '').trim() : '';
+    var tWy = first.children[4] ? (first.children[4].innerText || '').trim() : '';
+    var tLaw = first.children[5] ? (first.children[5].innerText || '').trim() : '';
+    var isBlank = !hasEid && !tNo && !tNm && !tWp && !tWy && !tLaw;
+
+    // ✅ 네가 말한 "빈행"은 삭제해도 정상 동작하도록 여기서 제거해도 됨
+    if (isBlank){
+      first.remove();
+    }
+  })();
+
+  // ✅ 전체 로드 캐시(서버는 최초 1회)
+  var rowsAll = null;
+  var _batchSeq = 0; // ✅ 연도 변경 중복요청 무시용 토큰
+
+  function _pRun_(runner){
+    return new Promise(function(resolve, reject){
+      try{ runner(resolve, reject); }catch(e){ reject(e); }
+    });
+  }
+  function fetchEmployeesAll_(year){
+    return _pRun_(function(resolve, reject){
+      google.script.run
+        .withSuccessHandler(function(res){ resolve(res); })
+        .withFailureHandler(function(err){ reject(err); })
+        .LEAVE_listEmployeesForSetting({ year: year, status: '전체' });
+    });
+  }
+  function fetchLeaveSettings_(year){
+    return _pRun_(function(resolve, reject){
+      google.script.run
+        .withSuccessHandler(function(res){ resolve(res); })
+        .withFailureHandler(function(err){ reject(err); })
+        .LEAVE_getLeaveSettings({ year: year });
+    });
+  }
+
+  function loadAllForYearBatch_(year){
+    year = Number(year);
+    if (!isFinite(year)) year = getSelectedYear();
+    var seq = ++_batchSeq;
+
+    // UI는 일단 둘 다 "로딩중"으로 맞추고, 완료 시 동시에 갱신
+    showEmpListStatus_('로딩중...');
+    showInfoTableStatus_('로딩중...');
+
+    // 연도 전환 시 상태 초기화(연도별 독립)
+    selectedIds.clear();
+    addedIds.clear();
+    rowsById = {};
+    rowsAll = null;
+
+    Promise.all([
+      fetchEmployeesAll_(year),
+      fetchLeaveSettings_(year)
+    ]).then(function(results){
+      if (seq !== _batchSeq) return; // ✅ 중간에 연도 바뀌면 무시
+
+      var resEmp = results[0] || {};
+      var resSet = results[1] || {};
+
+      // 1) 직원명단 캐시 세팅(이게 있어야 DB 렌더에서 이름/근무/법정 계산 가능)
+      var okEmp = !!(resEmp && (resEmp.ok === true || resEmp.success === true));
+      rowsAll = okEmp ? (resEmp.rows || []) : [];
+      rowsById = {};
+      (rowsAll || []).forEach(function(r){
+        var eid = String((r && r.employee_id) || '').trim();
+        if (eid) rowsById[eid] = r;
+      });
+
+      // 2) 직원명단 렌더(필터 적용)
+      applyEmployeeFilter(); // 내부에서 renderEmployees 호출
+
+      // 3) 연차설정 테이블 렌더(직원 캐시 준비된 상태에서 1번에)
+      var okSet = !!(resSet && (resSet.ok === true || resSet.success === true));
+      renderLeaveSettingsRows_(okSet ? (resSet.rows || []) : []);
+
+    }).catch(function(err){
+      if (seq !== _batchSeq) return;
+      rowsAll = [];
+      rowsById = {};
+      renderEmployees([]);
+      renderLeaveSettingsRows_([]);
+      if (typeof showAlertError === 'function'){
+        showAlertError((err && err.message) ? err.message : String(err), '연차설정');
+      }
+    });
+  }
+  // ----- Year logic -----
+  function buildYears(){
+    var start = 2025;
+    var now = new Date();
+    var years = [start];
+
+    // 매년 "해당년도 10/1"이 지나면 다음년도 생성
+    // (일반화: start년도부터 now가 (y,10,1) 이상이면 y+1을 추가)
+    var y = start;
+    while (now >= new Date(y, 9, 1)) { // 9=October
+      if (years.indexOf(y+1) < 0) years.push(y+1);
+      y++;
+      if (y - start > 10) break; // 안전장치
+    }
+    return years;
+  }
+
+  function renderYearList(years){
+    yearList.innerHTML = '';
+    years.forEach(function(y, idx){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'wrap-list-item' + (idx === 0 ? ' is-active' : '');
+      btn.dataset.year = String(y);
+      btn.innerHTML =
+        '<div class="wrap-list-main">' +
+          '<div class="wrap-list-name">' + y + '년</div>' +
+        '</div>';
+      btn.addEventListener('click', function(e){
+        // ✅ meta.html 전역 wrap-list 클릭 토글 핸들러와 충돌 방지
+        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
+        yearList.querySelectorAll('.wrap-list-item').forEach(function(b){ b.classList.remove('is-active'); });
+        btn.classList.add('is-active');
+
+        // ✅ 연도 변경 시 '추가됨/선택됨' 상태를 초기화 (연도별로 독립)
+        selectedIds.clear();
+        addedIds.clear();
+        // 기존 렌더 상태(비활성/선택)도 즉시 해제
+        empList.querySelectorAll('button.wrap-list-item').forEach(function(b){
+          b.disabled = false;
+          b.removeAttribute('aria-disabled');
+          b.classList.remove('is-disabled');
+          b.classList.remove('is-active');
+        });
+
+        // ✅ 연도 변경 시: 직원/DB 동시 로드 → 동시 표시
+        loadAllForYearBatch_(getSelectedYear());
+      });
+      yearList.appendChild(btn);
+    });
+  }
+
+  // ✅ year 변경 시에도 호출될 수 있도록 wrapper 제공
+  function loadEmployees(force){
+    if (force){
+      rowsAll = null;   // 캐시 초기화 → 다음 loadEmployeesOnce()에서 서버 재조회
+      rowsById = {};
+    }
+    loadEmployeesOnce();
+  }
+
+  function getSelectedYear(){
+    var a = yearList.querySelector('.wrap-list-item.is-active');
+    var y = a ? a.dataset.year : '';
+    return y ? Number(y) : 2025;
+  }
+
+  // ----- Employee list -----
+  function fmtWork(work){
+    // work: { working_period, working_yearcount }
+    // ✅ 표기 통일: "총근무연수 · 총근무연차"
+    if (!work) return '-';
+    var p = (work.working_period || '').trim();
+    var y = (work.working_yearcount || '').trim();
+    if (!p && !y) return '-';
+    if (p && y) return p + ' · ' + y;
+    return p || y;
+  }
+
+  function fmtWorkPeriod_(work){
+    if (!work) return '-';
+    var p = (work.working_period || '').trim();
+    return p || '-';
+  }
+
+  function fmtWorkYearcount_(work){
+    if (!work) return '-';
+    var y = (work.working_yearcount || '').trim();
+    return y || '-';
+  }
+
+  function renderEmployees(list){
+    empList.innerHTML = '';
+
+    if (!list || !list.length){
+      var empty = document.createElement('div');
+      empty.className = 'text-muted';
+      empty.style.padding = '0.5rem';
+      empty.textContent = '데이터 없음';
+      empList.appendChild(empty);
+      return;
+    }
+
+    list.forEach(function(r){
+      var empNo = r.emp_no || r.employee_no || r.no || '';
+      var name  = r.name || r.employee_name || '';
+      var manage = r.manage || '';
+      var status = r.status || '';
+      var sub = fmtWork(r.work);
+      // 요구사항: 총근무연수 + 총근무연차 + 관리주체(manage)
+      // => sub 뒤에 manage를 붙여 표시
+      if (manage) sub += ' · ' + manage;
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      // ✅ employee_id 기준으로 다중 선택 토글
+      var eid = String((r && (r.employee_id || r.emp_no || '')) || '').trim();
+      // ✅ 이미 추가된 직원은 선택 불가 + 선택 UI 제거
+      if (eid && addedIds.has(eid)) selectedIds.delete(eid);
+      btn.className =
+        'wrap-list-item'
+        + (eid && selectedIds.has(eid) ? ' is-active' : '')
+        + (eid && addedIds.has(eid) ? ' is-disabled' : '');
+      if (eid) btn.dataset.employeeId = eid;
+      if (eid && addedIds.has(eid)){
+        btn.disabled = true;
+        btn.setAttribute('aria-disabled', 'true');
+      }
+      btn.innerHTML =
+        '<div class="wrap-list-icon"><i class="fa-solid fa-user"></i></div>' +
+        '<div class="wrap-list-main">' +
+          '<div class="wrap-list-name">' + (empNo ? (empNo + ' ') : '') + name + '</div>' +
+          '<div class="wrap-list-sub">' + sub + '</div>' +
+        '</div>' +
+        '<div class="wrap-list-badge">' + (status || '-') + '</div>';
+      empList.appendChild(btn);
+    });
+  }
+
+  // ======================================================
+  // ✅ 로딩/빈데이터 표기 유틸
+  // - 직원명단(empList) / 연차정보(infoTbody)
+  // ======================================================
+  function showEmpListStatus_(msg){
+    try{
+      empList.innerHTML = '';
+      var box = document.createElement('div');
+      box.className = 'text-muted';
+      box.style.padding = '0.5rem';
+      box.textContent = msg || '로딩중...';
+      empList.appendChild(box);
+    }catch(e){}
+  }
+
+  function showInfoTableStatus_(msg){
+    try{
+      infoTbody.innerHTML = '';
+      var colN = 1;
+      try{
+        if (infoTbl){
+          var ths = infoTbl.querySelectorAll('thead tr:last-child th');
+          if (ths && ths.length) colN = ths.length;
+        }else if (infoTplTr && infoTplTr.children && infoTplTr.children.length){
+          colN = infoTplTr.children.length;
+        }
+      }catch(e){}
+      var tr = document.createElement('tr');
+      tr.setAttribute('data-empty-row', '1');
+      var td = document.createElement('td');
+      td.colSpan = colN;
+      td.className = 'text-muted';
+      td.style.padding = '0.75rem';
+      td.textContent = msg || '로딩중...';
+      tr.appendChild(td);
+      infoTbody.appendChild(tr);
+    }catch(e){}
+  }
+
+  function setEmpPickable_(eid, pickable){
+    eid = String(eid || '').trim();
+    if (!eid) return;
+    var btn = empList.querySelector('button.wrap-list-item[data-employee-id="' + eid.replace(/"/g,'&quot;') + '"]')
+           || empList.querySelector('button.wrap-list-item[data-employee-id="' + eid + '"]')
+           || empList.querySelector('button.wrap-list-item[data-employee-id]');
+    // 위 fallback은 안전장치(대부분 첫 번째 셀렉터로 잡힘)
+    btn = empList.querySelector('button.wrap-list-item[data-employee-id="' + eid + '"]');
+    if (!btn) return;
+
+    if (pickable){
+      btn.disabled = false;
+      btn.removeAttribute('aria-disabled');
+      btn.classList.remove('is-disabled');
+    }else{
+      btn.disabled = true;
+      btn.setAttribute('aria-disabled', 'true');
+      btn.classList.add('is-disabled');
+      btn.classList.remove('is-active');
+      selectedIds.delete(eid);
+    }
+  }
+
+  function pickStatusFilter(){
+    return selStat ? (selStat.value || '전체') : '전체';
+  }
+
+  function applyEmployeeFilter(){
+    var stat = pickStatusFilter();
+    var list = rowsAll || [];
+    if (stat && stat !== '전체'){
+      list = list.filter(function(r){ return (r && r.status === stat); });
+    }
+    // ✅ rowsById는 rowsAll(전체 기준)로 유지 (필터로 숨겨도 선택추가 가능)
+    rowsById = {};
+    (rowsAll || []).forEach(function(r){
+      var eid = String((r && r.employee_id) || '').trim();
+      if (eid) rowsById[eid] = r;
+    });
+    renderEmployees(list);
+  }
+
+  function loadEmployeesOnce(done){
+    if (rowsAll) { applyEmployeeFilter(); if (typeof done === 'function') done(); return; }
+    var y = getSelectedYear();
+
+    // ✅ 서버는 최초 1회만: 전체 목록을 받아 캐시에 저장
+    showEmpListStatus_('로딩중...');
+    google.script.run
+      .withSuccessHandler(function(res){
+        var ok = !!(res && (res.ok === true || res.success === true));
+        if (!ok){
+          var em = (res && (res.error || res.message)) || '직원명단을 불러오지 못했습니다.';
+          if (typeof showAlertError === 'function') showAlertError(em, '연차설정');
+          rowsAll = [];
+          renderEmployees([]);
+          return;
+        }
+        rowsAll = (res.rows || []);
+        applyEmployeeFilter();
+        if (typeof done === 'function') done();
+      })
+      .withFailureHandler(function(err){
+        if (typeof showAlertError === 'function') {
+          showAlertError((err && err.message) ? err.message : String(err), '연차설정');
+        }
+        rowsAll = [];
+        renderEmployees([]);
+      })
+      .LEAVE_listEmployeesForSetting({ year: y, status: '전체' });
+  }
+
+  if (selStat && !selStat.__leaveBound){
+    selStat.__leaveBound = true;
+    // ✅ 필터는 서버 재조회 없이 UI만
+    selStat.addEventListener('change', function(e){
+      if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+      applyEmployeeFilter();
+    });
+  }
+
+  // ======================================================
+  // ✅ 직원명단 다중선택 토글 (meta 전역 토글과 충돌 방지)
+  // ======================================================
+  if (!empList.__leavePickBound){
+    empList.__leavePickBound = true;
+    empList.addEventListener('click', function(e){
+      var item = e.target.closest('button.wrap-list-item');
+      if (!item || !empList.contains(item)) return;
+      if (item.disabled || item.classList.contains('is-disabled')) return;
+      if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
+      var eid = String(item.dataset.employeeId || '').trim();
+      if (!eid) return;
+      if (selectedIds.has(eid)){
+        selectedIds.delete(eid);
+        item.classList.remove('is-active');
+      }else{
+        selectedIds.add(eid);
+        item.classList.add('is-active');
+      }
+    });
+  }
+
+  // ======================================================
+  // ✅ 법정연차 계산(근무연차 기반)
+  // - 1년차: 11일
+  // - 2년차+: 15일 + 매 2년마다 1일 가산(최대 25일)
+  // ======================================================
+  function parseYearNo_(work){
+    var s = (work && work.working_yearcount) ? String(work.working_yearcount) : '';
+    var m = s.match(/(\d+)/);
+    return m ? Number(m[1]) : NaN;
+  }
+  function calcStatutoryDays_(work){
+    var yno = parseYearNo_(work);
+    if (!isFinite(yno) || yno <= 0) return 0;
+    if (yno === 1) return 11;
+    var days = 15 + Math.floor((yno - 1) / 2);
+    return Math.min(days, 25);
+  }
+
+  // ======================================================
+  // ✅ 연도별 DB 조회 + 렌더(직원명/근무/법정연차는 Employee 캐시로 계산)
+  // - 트리거: 모달 진입, 연도 변경, 저장 후 재조회
+  // ======================================================
+  function _dayVal_(v){
+    v = String(v == null ? '' : v).trim();
+    if (!v) return '';
+    var m = v.match(/(\d+)/);
+    return m ? (Number(m[1]) + '일') : v;
+  }
+  function _setText_(td, txt){
+    if (!td) return;
+    var el = td.querySelector('.text-tbl') || td;
+    el.textContent = (txt == null ? '' : String(txt));
+  }
+  function _setSelect_(td, val){
+    if (!td) return;
+    var sel = td.querySelector('select') || td.querySelector('.select-tbl');
+    if (!sel) return;
+    sel.value = val || '';
+  }
+  function _setNote_(td, val){
+    if (!td) return;
+    var inp = td.querySelector('input') || td.querySelector('.input-tbl');
+    if (!inp) return;
+    inp.value = (val == null ? '' : String(val));
+  }
+  function _setUnoff_(td, val){
+    if (!td) return;
+    var el = td.querySelector('[data-unofficial-days]') || td.querySelector('.text-tbl') || td;
+    el.textContent = val || '0일';
+  }
+
+  function renderLeaveSettingsRows_(rows){
+    // 초기화
+    infoTbody.innerHTML = '';
+    addedIds.clear();
+    selectedIds.clear();
+    // 직원명단 클릭 UI 제거
+    empList.querySelectorAll('.wrap-list-item.is-active').forEach(function(b){ b.classList.remove('is-active'); });
+
+    if (!rows || !rows.length){
+      showInfoTableStatus_('데이터 없음');
+      return;
+    }
+
+    // ✅ DB 조회/렌더 시 사번(employee_id) 오름차순 정렬 (00001, 00002, ...)
+    var sorted = (rows || []).slice().sort(function(a,b){
+      var aa = String((a && a.employee_id) || '');
+      var bb = String((b && b.employee_id) || '');
+      return aa.localeCompare(bb, 'ko', { numeric:true });
+    });
+
+    sorted.forEach(function(x){
+      var eid = String((x && x.employee_id) || '').trim();
+      if (!eid) return;
+
+      if (!infoTplTr){
+        if (typeof showAlertError === 'function') showAlertError('연차정보 테이블 템플릿 행이 없습니다.', '연차설정');
+        return;
+      }
+
+      var r = rowsById[eid] || null; // ✅ 직원 캐시
+      var empNoTxt = eid;
+      var empNameTxt = String((r && r.name) || '');
+      var workPeriodTxt = (r ? fmtWorkPeriod_(r.work) : '-');
+      var workYearTxt   = (r ? fmtWorkYearcount_(r.work) : '-');
+      var statTxt = (calcStatutoryDays_(r ? r.work : null) || 0) + '일';
+
+      var tr = infoTplTr.cloneNode(true);
+      if (tr.dataset) tr.dataset.employeeId = eid;
+
+      // 체크박스 활성
+      var cb = tr.querySelector('input[type="checkbox"].chk-anim');
+      if (cb){
+        cb.disabled = false;
+        cb.checked = false;
+        cb.indeterminate = false;
+      }
+
+      // ✅ 현재 템플릿 컬럼:
+      // 0:checkbox, 1:사번, 2:성명, 3:총근무연수, 4:총근무연차, 5:법정연차, 6:부여(select), 7:공식(select), 8:비공식(text), 9:비고(input)
+      _setText_(tr.children[1], empNoTxt);
+      _setText_(tr.children[2], empNameTxt);
+      _setText_(tr.children[3], workPeriodTxt);
+      _setText_(tr.children[4], workYearTxt);
+      _setText_(tr.children[5], statTxt);
+
+      var grantV   = _dayVal_(x.grant_days);
+      var official = _dayVal_(x.official_days);
+      var unoffV   = _dayVal_(x.unofficial_days);
+      _setSelect_(tr.children[6], grantV);
+      _setSelect_(tr.children[7], official);
+
+      // 비공식연차: 저장값 없으면 grant-official
+      if (!unoffV){
+        var gN = parseInt((grantV||'').replace(/[^\d]/g,''),10);
+        var oN = parseInt((official||'').replace(/[^\d]/g,''),10);
+        if (isFinite(gN) && isFinite(oN)) unoffV = Math.max(0, gN - oN) + '일';
+      }
+      _setUnoff_(tr.children[8], unoffV || '0일');
+      _setNote_(tr.children[9], x.note);
+
+      infoTbody.appendChild(tr);
+
+      // ✅ DB로 렌더된 행도 "선택추가"와 동일하게 UI 스코프 초기화
+      // (chk-anim 표시/has-value/행체크 로직 등)
+      try{
+        if (typeof initAnimatedCheckboxes === 'function') initAnimatedCheckboxes(tr);
+        if (window.initInputDateFields) window.initInputDateFields(tr);
+        if (window.initInputTimeFields) window.initInputTimeFields(tr);
+        if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(tr);
+        if (window.initUnitInputs) window.initUnitInputs(tr);
+        if (window.initUnitTextTbl) window.initUnitTextTbl(tr);
+      }catch(e){}
+
+      addedIds.add(eid);
+      setEmpPickable_(eid, false); // ✅ 이미 추가된 직원은 선택 불가
+    });
+
+    // ✅ 헤더/행 체크박스 동작(전체선택 등) 재연결
+    try{ if (window.initTableRowCheckboxes) window.initTableRowCheckboxes(infoTbl); }catch(e){}
+    try{ if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(root); }catch(e){}
+  }
+
+  function loadLeaveSettingsForYear_(year){
+    year = Number(year);
+    if (!isFinite(year)) year = getSelectedYear();
+    showInfoTableStatus_('로딩중...');
+    google.script.run
+      .withSuccessHandler(function(res){
+        var ok = !!(res && (res.ok === true || res.success === true));
+        if (!ok){
+          var em = (res && (res.error || res.message)) || '연차설정 데이터를 불러오지 못했습니다.';
+          if (typeof showAlertError === 'function') showAlertError(em, '연차설정');
+          renderLeaveSettingsRows_([]);
+          return;
+        }
+        renderLeaveSettingsRows_(res.rows || []);
+      })
+      .withFailureHandler(function(err){
+        if (typeof showAlertError === 'function') {
+          showAlertError((err && err.message) ? err.message : String(err), '연차설정');
+        }
+        renderLeaveSettingsRows_([]);
+      })
+      .LEAVE_getLeaveSettings({ year: year });
+  }
+
+  // ======================================================
+  // ✅ 선택추가: 우측 연차정보 테이블에 행 생성
+  // - 중복 추가 방지 (tbody tr[data-employee-id])
+  // - 직원: "employee_id name"
+  // - 총근무연수/연차: fmtWork(row.work)
+  // - 법정연차: calcStatutoryDays_(row.work)
+  // ======================================================
+  if (!btnAdd.__leaveAddBound){
+    btnAdd.__leaveAddBound = true;
+    btnAdd.addEventListener('click', function(e){
+      if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
+      if (selectedIds.size === 0){
+        if (typeof showAlertWarn === 'function') showAlertWarn('직원을 선택해 주세요.', '연차설정');
+        return;
+      }
+
+      // ✅ "데이터 없음/로딩중" 상태 행(placeholder)이 남아있으면 제거
+      // - showInfoTableStatus_()가 tbody에 data-empty-row=1 행을 1개 추가함
+      try{
+        var emptyRows = infoTbody.querySelectorAll('tr[data-empty-row="1"]');
+        if (emptyRows && emptyRows.length){
+          emptyRows.forEach(function(tr){ try{ tr.remove(); }catch(_e){} });
+        }
+      }catch(_e){}
+
+      // template row: 최초 확보한 템플릿을 사용 (tbody가 비어도 OK)
+      if (!infoTplTr){
+        if (typeof showAlertError === 'function') showAlertError('연차정보 테이블 템플릿 행이 없습니다.', '연차설정');
+        return;
+      }
+
+      // 이미 추가된 직원
+      var exists = new Set();
+      infoTbody.querySelectorAll('tr').forEach(function(tr){
+        var eid = tr.dataset ? String(tr.dataset.employeeId || '').trim() : '';
+        if (eid) exists.add(eid);
+      });
+
+      var added = 0;
+      selectedIds.forEach(function(eid){
+        if (!eid || exists.has(eid)) return;
+        var r = rowsById[eid] || null;
+        if (!r) return;
+
+        var tr = infoTplTr.cloneNode(true);
+        // ✅ 중복방지/식별용 employeeId 저장
+        if (tr.dataset) tr.dataset.employeeId = String(eid);
+
+        // 체크박스 초기화
+        var cb = tr.querySelector('input[type="checkbox"].chk-anim');
+        if (cb){
+          cb.disabled = false;
+          cb.checked = false;
+          cb.indeterminate = false;
+        }
+
+        // 1) 사번 (col 1)
+        var tdEmpNo = tr.children[1];
+        if (tdEmpNo){
+          var elNo = tdEmpNo.querySelector('.text-tbl') || tdEmpNo;
+          elNo.textContent = String(r.employee_id || '');
+        }
+
+        // 2) 성명 (col 2)
+        var tdName = tr.children[2];
+        if (tdName){
+          var elNm = tdName.querySelector('.text-tbl') || tdName;
+          elNm.textContent = String(r.name || '');
+        }
+
+        // 3) 총근무연수 (col 3)
+        var tdWorkP = tr.children[3];
+        if (tdWorkP){
+          var elP = tdWorkP.querySelector('.text-tbl') || tdWorkP;
+          elP.textContent = fmtWorkPeriod_(r.work);
+        }
+
+        // 4) 총근무연차 (col 4)
+        var tdWorkY = tr.children[4];
+        if (tdWorkY){
+          var elY = tdWorkY.querySelector('.text-tbl') || tdWorkY;
+          elY.textContent = fmtWorkYearcount_(r.work);
+        }
+
+        // 5) 법정연차 (col 5)
+        var tdLaw = tr.children[5];
+        if (tdLaw){
+          var el3 = tdLaw.querySelector('.text-tbl') || tdLaw;
+          el3.textContent = calcStatutoryDays_(r.work) + '일';
+        }
+
+        // ✅ 비공식연차(col 8): select가 있으면 제거하고 text-tbl로 교체
+        var tdUnoff = tr.children[8];
+        if (tdUnoff){
+          var sel = tdUnoff.querySelector('select');
+          if (sel) sel.remove();
+          var box = tdUnoff.querySelector('[data-unofficial-days]') || tdUnoff.querySelector('.text-tbl');
+          if (!box){
+            box = document.createElement('div');
+            box.className = 'text-tbl';
+            box.setAttribute('data-unofficial-days','');
+            tdUnoff.innerHTML = '';
+            tdUnoff.appendChild(box);
+          }
+          box.textContent = '-';
+        }
+        infoTbody.appendChild(tr);
+        added++;
+
+        // ✅ 신규행 UI 재초기화(체크박스/has-value/단위표시 등 meta의 initUiScope 규칙과 동일)
+        try{
+          if (typeof initAnimatedCheckboxes === 'function') initAnimatedCheckboxes(tr);
+          if (window.initInputDateFields) window.initInputDateFields(tr);
+          if (window.initInputTimeFields) window.initInputTimeFields(tr);
+          if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(tr);
+          if (window.initTableRowCheckboxes) window.initTableRowCheckboxes(infoTbl);
+          if (window.initUnitInputs) window.initUnitInputs(tr);
+          if (window.initUnitTextTbl) window.initUnitTextTbl(tr);
+        }catch(err){}
+      });
+
+      if (added === 0){
+        if (typeof showAlertInfo === 'function') showAlertInfo('추가할 직원이 없습니다. (이미 추가된 직원)', '연차설정');
+      }
+      // ✅ 추가된 직원은 직원명단에서 선택 불가 처리 + 선택 UI 제거
+      selectedIds.forEach(function(eid){
+        if (!eid) return;
+        addedIds.add(eid);
+        setEmpPickable_(eid, false);
+      });
+      selectedIds.clear();
+
+      // ✅ 전체선택 체크박스 동기화
+      syncInfoHeaderCheckbox_();
+
+      // ✅ 테이블/모달 전체 has-value 재계산(선택추가 후)
+      try{ if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(root); }catch(e){}
+    });
+  }
+
+  // ======================================================
+  // ✅ 연차정보: 체크박스 / 전체선택 / 선택삭제
+  // ======================================================
+  function getInfoRowCheckboxes_(){
+    return Array.from(infoTbody.querySelectorAll('tr input[type="checkbox"].chk-anim'));
+  }
+
+  function syncInfoHeaderCheckbox_(){
+    if (!cbAll) return;
+    var cbs = getInfoRowCheckboxes_();
+    if (cbs.length === 0){
+      cbAll.checked = false;
+      cbAll.indeterminate = false;
+      return;
+    }
+    var checked = cbs.filter(function(x){ return x.checked; }).length;
+    cbAll.checked = (checked === cbs.length);
+    cbAll.indeterminate = (checked > 0 && checked < cbs.length);
+  }
+
+  // row checkbox change -> header sync
+  if (!infoTbody.__leaveCbBound){
+    infoTbody.__leaveCbBound = true;
+    infoTbody.addEventListener('change', function(e){
+      var el = e.target;
+      if (!el || el.type !== 'checkbox') return;
+      if (el.classList && el.classList.contains('chk-anim')){
+        syncInfoHeaderCheckbox_();
+      }
+    });
+  }
+
+  // ======================================================
+  // ✅ 비공식연차 자동 계산: (부여연차 - 공식연차)
+  // - 부여/공식 select 변경 시 해당 행의 비공식을 갱신
+  // ======================================================
+  function parseDays_(v){
+    if (v == null) return NaN;
+    if (typeof v === 'number') return v;
+    var s = String(v).trim();
+    if (!s) return NaN;
+    var m = s.match(/(\d+)/);
+    return m ? Number(m[1]) : NaN;
+  }
+
+  function updateUnofficialDays_(tr){
+    if (!tr) return;
+    var tdGrant = tr.children[6]; // 부여연차
+    var tdOffic = tr.children[7]; // 공식연차
+    var tdUnoff = tr.children[8]; // 비공식연차
+    if (!tdGrant || !tdOffic || !tdUnoff) return;
+
+    var sGrant = tdGrant.querySelector('select.select-tbl');
+    var sOffic = tdOffic.querySelector('select.select-tbl');
+    var grant = parseDays_(sGrant ? sGrant.value : '');
+    var offic = parseDays_(sOffic ? sOffic.value : '');
+
+    var box = tdUnoff.querySelector('[data-unofficial-days]') || tdUnoff.querySelector('.text-tbl');
+    if (!box){
+      box = document.createElement('div');
+      box.className = 'text-tbl';
+      box.setAttribute('data-unofficial-days','');
+      tdUnoff.innerHTML = '';
+      tdUnoff.appendChild(box);
+    }
+
+    if (!isFinite(grant) || !isFinite(offic)){
+      box.textContent = '-';
+      return;
+    }
+    var diff = grant - offic;
+    if (diff < 0) diff = 0; // ✅ 음수 방지(원하면 음수 허용으로 변경 가능)
+    box.textContent = diff + '일';
+  }
+
+  if (!infoTbody.__leaveUnoffBound){
+    infoTbody.__leaveUnoffBound = true;
+    infoTbody.addEventListener('change', function(e){
+      var t = e.target;
+      if (!t || !t.matches) return;
+      if (!t.matches('select.select-tbl')) return;
+      var tr = t.closest('tr');
+      if (!tr) return;
+      updateUnofficialDays_(tr);
+    });
+  }
+  
+  // header select-all
+  if (cbAll && !cbAll.__leaveAllBound){
+    cbAll.__leaveAllBound = true;
+    cbAll.addEventListener('change', function(e){
+      var on = !!cbAll.checked;
+      getInfoRowCheckboxes_().forEach(function(x){ x.checked = on; x.indeterminate = false; });
+      cbAll.indeterminate = false;
+    });
+  }
+
+  // 선택삭제
+  if (!btnDel.__leaveDelBound){
+    btnDel.__leaveDelBound = true;
+    btnDel.addEventListener('click', function(e){
+      if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
+      var rows = Array.from(infoTbody.querySelectorAll('tr'));
+      var del = 0;
+      var restored = [];
+      rows.forEach(function(tr){
+        var cb = tr.querySelector('input[type="checkbox"].chk-anim');
+        if (cb && cb.checked){
+          var eid = tr.dataset ? String(tr.dataset.employeeId || '').trim() : '';
+          if (eid) restored.push(eid);
+          tr.remove();
+          del++;
+        }
+      });
+
+      if (del === 0){
+        if (typeof showAlertWarn === 'function') showAlertWarn('삭제할 항목을 선택해 주세요.', '연차설정');
+      }
+
+      // ✅ 삭제된 직원은 다시 선택 가능하게 복구
+      restored.forEach(function(eid){
+        if (!eid) return;
+        addedIds.delete(eid);
+        setEmpPickable_(eid, true);
+      });
+
+      syncInfoHeaderCheckbox_();
+    });
+  }
+
+  // init sync
+  syncInfoHeaderCheckbox_();
+  // init run
+  renderYearList(buildYears());
+  loadAllForYearBatch_(getSelectedYear()); // ✅ 모달 진입 시 2개 동시 로드 후 동시 표시
+
+  // ======================================================
+  // ✅ 연차설정 저장 payload 수집 (모달 onSave에서 호출)
+  // ======================================================
+  root.__leaveSetApi = {
+    getSelectedYear: getSelectedYear,
+    infoTbody: infoTbody,
+    reload: function(){
+      // ✅ 저장 후 재조회도 동일하게 동시 로드 → 동시 표시
+      loadAllForYearBatch_(getSelectedYear());
+    }
+  };
+
+  // 모달 안의 inputgroup 스타일/툴팁 재적용
+  try{
+    if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(root);
+    if (typeof initIconTooltips === 'function') initIconTooltips(root);
+  }catch(e){}
+}
+
+// ======================================================
+// ✅ 모달 현재 상태에서 저장 payload 만들기(전역)
+// - year: 적용연도(YYYY)
+// - rows: 연차정보 테이블 행들
+// ======================================================
+function LeaveSet_collectSavePayload_(){
+  var bodyHost = document.querySelector('#appPageModal [data-role="page-modal-body"]');
+  if (!bodyHost || !bodyHost.__leaveSetApi) return null;
+  var api = bodyHost.__leaveSetApi;
+  var year = api.getSelectedYear ? api.getSelectedYear() : '';
+  year = String(year || '').trim();
+  var y = year ? Number(year) : NaN;
+  if (!isFinite(y)) return null;
+
+  var tb = api.infoTbody;
+  if (!tb) return { year: y, rows: [] };
+
+  function parseDays_(v){
+    if (v == null) return NaN;
+    var s = String(v).trim();
+    if (!s) return NaN;
+    var m = s.match(/(\d+)/);
+    return m ? Number(m[1]) : NaN;
+  }
+
+  var out = [];
+  Array.from(tb.querySelectorAll('tr')).forEach(function(tr){
+    var eid = (tr.dataset && tr.dataset.employeeId) ? String(tr.dataset.employeeId).trim() : '';
+    if (!eid) return;
+
+    var statutoryTxt = tr.children[5] ? (tr.children[5].innerText || tr.children[5].textContent || '') : '';
+    var statutory = parseDays_(statutoryTxt);
+
+    var grantSel = tr.children[6] ? tr.children[6].querySelector('select.select-tbl') : null;
+    var officSel = tr.children[7] ? tr.children[7].querySelector('select.select-tbl') : null;
+    var unoffBox = tr.children[8] ? (tr.children[8].querySelector('[data-unofficial-days]') || tr.children[8].querySelector('.text-tbl')) : null;
+    var noteInp  = tr.children[9] ? tr.children[9].querySelector('input.input-tbl') : null;
+
+    var grant = parseDays_(grantSel ? grantSel.value : '');
+    var offic = parseDays_(officSel ? officSel.value : '');
+    var unoff = parseDays_(unoffBox ? (unoffBox.textContent || '') : '');
+
+    out.push({
+      employee_id: eid,
+      year: y,
+      statutory_days: isFinite(statutory) ? statutory : 0,
+      grant_days:     isFinite(grant) ? grant : 0,
+      official_days:  isFinite(offic) ? offic : 0,
+      unofficial_days:isFinite(unoff) ? unoff : Math.max((isFinite(grant)?grant:0) - (isFinite(offic)?offic:0), 0),
+      note: noteInp ? String(noteInp.value || '') : ''
+    });
+  });
+
+  return { year: y, rows: out };
+}
+
+/*승인모드*/
+function leaveInitApprovalUI() {
+  var root = document.getElementById('leave-root');
+  if (!root) return;
+
+  // 기본: 승인관리 버튼 보이기
+  root.querySelectorAll('[data-approval-hide]').forEach(uiShow);
+
+  // 기본: approval-only 숨기기 (요약카드도 포함)
+  root.querySelectorAll('[data-approval-only]').forEach(uiHide);
+
+  var tbl = root.querySelector('.tbl');
+  if (tbl) {
+    tbl.querySelectorAll('input[type="checkbox"]').forEach(el => { el.disabled = true; el.checked = false; el.indeterminate = false; });
+    tbl.querySelectorAll('select.select-tbl').forEach(el => { el.disabled = true; });
+  }
+}
+
+function leaveToggleApprovalMode(on) {
+  var root = document.getElementById('leave-root');
+  if (!root) return;
+
+  // 승인관리 버튼: on이면 숨김
+  root.querySelectorAll('[data-approval-hide]').forEach(el => on ? uiHide(el) : uiShow(el));
+
+  // approval-only: on이면 보임 (요약카드 래퍼(d-flex)도 여기서 정상 복귀)
+  root.querySelectorAll('[data-approval-only]').forEach(el => on ? uiShow(el) : uiHide(el));
+
+  var tbl = root.querySelector('.tbl');
+  if (tbl) {
+    tbl.querySelectorAll('input[type="checkbox"]').forEach(function (el) {
+      el.disabled = !on;
+      if (!on) { el.checked = false; el.indeterminate = false; }
+    });
+    tbl.querySelectorAll('select.select-tbl').forEach(el => { el.disabled = !on; });
+  }
+}
+
+/* ======================================================
+ * ✅ 승인관리: 상태저장/선택삭제
+ * - 상태저장: 체크박스와 무관(변경된 상태만 저장)
+ * - 선택삭제: 체크박스 선택된 행만 삭제(is_deleted=1)
+ * ====================================================== */
+function leaveSaveApprovalStatus() {
+  var root = document.getElementById('leave-root');
+  if (!root) return;
+
+  var tbl = root.querySelector('[data-leave-info-table]') || root.querySelector('.tbl');
+  if (!tbl) return;
+  var tbody = tbl.tBodies && tbl.tBodies[0];
+  if (!tbody) return;
+
+  var trs = Array.from(tbody.querySelectorAll('tr'));
+  var updates = [];
+
+  trs.forEach(function(tr){
+    var id = tr.dataset ? String(tr.dataset.leaveApplyId || '').trim() : '';
+    if (!id) return;
+
+    var sel = tr.querySelector('select.select-tbl');
+    if (!sel) return;
+
+    var newSt = String(sel.value || '').trim() || '신청';
+    var oldSt = tr.dataset ? String(tr.dataset.origStatus || '').trim() : '';
+    if (!oldSt) oldSt = '신청';
+
+    // ✅ 상태가 바뀐 행만 저장(체크박스 무관)
+    if (newSt !== oldSt){
+      updates.push({ leave_apply_id: id, status: newSt });
+    }
+  });
+
+  if (!updates.length){
+    if (typeof showAlertWarn === 'function') showAlertWarn('변경된 상태가 없습니다.', '연차');
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(function(res){
+      var ok = !!(res && (res.ok === true || res.success === true));
+      if (!ok){
+        var em = (res && (res.error || res.message)) || '상태저장에 실패했습니다.';
+        if (typeof showAlertError === 'function') showAlertError(em, '연차');
+        return;
+      }
+
+      // ✅ 성공 시: 변경된 행의 origStatus 갱신(다음 저장부터 비교가 정확)
+      trs.forEach(function(tr){
+        var sel = tr.querySelector('select.select-tbl');
+        if (sel) tr.dataset.origStatus = String(sel.value || '신청');
+      });
+
+      if (typeof showAlertSuccess === 'function') showAlertSuccess('상태가 저장되었습니다.', '연차');
+
+      // ✅ 재조회(처리일자/처리자 반영)
+      try{
+        var yearSel = root.querySelector('[data-leave-year-select]');
+        if (yearSel) yearSel.dispatchEvent(new Event('change'));
+      }catch(e){}
+    })
+    .withFailureHandler(function(err){
+      if (typeof showAlertError === 'function') {
+        showAlertError((err && err.message) ? err.message : String(err), '연차');
+      }
+    })
+    .LEAVE_updateLeaveApplyStatus({ updates: updates });
+}
+
+function leaveDeleteSelectedRows() {
+  var root = document.getElementById('leave-root');
+  if (!root) return;
+
+  var tbl = root.querySelector('[data-leave-info-table]') || root.querySelector('.tbl');
+  if (!tbl) return;
+  var tbody = tbl.tBodies && tbl.tBodies[0];
+  if (!tbody) return;
+
+  var trs = Array.from(tbody.querySelectorAll('tr'));
+  var ids = [];
+
+  trs.forEach(function(tr){
+    var cb = tr.querySelector('input[type="checkbox"].chk-anim');
+    if (!cb || !cb.checked) return; // ✅ 삭제는 체크박스 선택만 사용
+    var id = tr.dataset ? String(tr.dataset.leaveApplyId || '').trim() : '';
+    if (id) ids.push(id);
+  });
+
+  if (!ids.length){
+    if (typeof showAlertWarn === 'function') showAlertWarn('삭제할 항목을 선택해 주세요.', '연차');
+    return;
+  }
+
+  if (!confirm('선택한 ' + ids.length + '건을 삭제할까요?')) return;
+
+  google.script.run
+    .withSuccessHandler(function(res){
+      var ok = !!(res && (res.ok === true || res.success === true));
+      if (!ok){
+        var em = (res && (res.error || res.message)) || '삭제에 실패했습니다.';
+        if (typeof showAlertError === 'function') showAlertError(em, '연차');
+        return;
+      }
+      if (typeof showAlertSuccess === 'function') showAlertSuccess('삭제되었습니다.', '연차');
+
+      // ✅ 재조회(삭제 반영)
+      try{
+        var yearSel = root.querySelector('[data-leave-year-select]');
+        if (yearSel) yearSel.dispatchEvent(new Event('change'));
+      }catch(e){}
+    })
+    .withFailureHandler(function(err){
+      if (typeof showAlertError === 'function') {
+        showAlertError((err && err.message) ? err.message : String(err), '연차');
+      }
+    })
+    .LEAVE_softDeleteLeaveApplies({ ids: ids });
+}
+
+// ======================================================
+// ✅ 요약카드(발생/사용/잔여 + 승인모드 건수) 갱신
+// - 발생연차: Leave 시트 unofficial_days 합계(연도)
+// - 사용연차(신청/승인): Leave_Apply days 합계(상태별)
+// - 잔여연차: 발생 - 사용(승인)
+// - 건수: 상태별 데이터 개수
+// ======================================================
+// ✅ 테이블과 동일한 필터를 요약에도 적용하기 위한 공통 함수
+function getFilteredLeaveApplyRows_(srcRows){
+  var rows = Array.isArray(srcRows) ? srcRows.slice() : [];
+
+  // ✅ 어떤 스코프에서 호출되든 동작하도록 전역 루트를 기준으로 읽는다
+  var rootEl = window._leaveRoot || document.getElementById('leave-root') || document;
+
+  // 1) 직원필터
+  var selEmpId = '';
+  try{
+    if (rootEl && rootEl.__leaveSelectedEmp && rootEl.__leaveSelectedEmp.employee_id){
+      selEmpId = String(rootEl.__leaveSelectedEmp.employee_id).trim();
+    }else if (window._leaveSelectedEmp && window._leaveSelectedEmp.employee_id){
+      selEmpId = String(window._leaveSelectedEmp.employee_id).trim();
+    }
+  }catch(e){}
+  if (selEmpId){
+    rows = rows.filter(function(r){ return String((r && r.employee_id) || '').trim() === selEmpId; });
+  }
+
+  // 2) 상태필터(전체/신청/승인/미승인)
+  var stat = '전체';
+  try{
+    var sel = rootEl.querySelector ? rootEl.querySelector('[data-leave-info-status-filter]') : null;
+    stat = sel ? String(sel.value || '전체').trim() : '전체';
+  }catch(e){}
+  if (stat && stat !== '전체'){
+    rows = rows.filter(function(r){ return String((r && r.status) || '').trim() === stat; });
+  }
+
+  return rows;
+}
+
+// ✅ 현재 선택된 직원 id (없으면 '')
+function getSelectedEmpId_(){
+  var rootEl = window._leaveRoot || document.getElementById('leave-root') || document;
+  try{
+    if (rootEl && rootEl.__leaveSelectedEmp && rootEl.__leaveSelectedEmp.employee_id){
+      return String(rootEl.__leaveSelectedEmp.employee_id).trim();
+    }
+  }catch(e){}
+  try{
+    if (window._leaveSelectedEmp && window._leaveSelectedEmp.employee_id){
+      return String(window._leaveSelectedEmp.employee_id).trim();
+    }
+  }catch(e){}
+  return '';
+}
+
+function parseUsageToMinutes_(daysTxt){
+  daysTxt = String(daysTxt || '').trim();
+  var md = daysTxt.match(/(\d+)\s*일/);
+  var mh = daysTxt.match(/(\d+)\s*시간/);
+  var d = md ? Number(md[1]) : 0;
+  var h = mh ? Number(mh[1]) : 0;
+  if (!isFinite(d)) d = 0;
+  if (!isFinite(h)) h = 0;
+  // 1일 = 8시간 기준
+  return (d * 8 * 60) + (h * 60);
+}
+function fmtMinutesToDayHour_(mins){
+  mins = Math.max(0, Math.floor(mins || 0));
+  var dayMin = 8 * 60;
+  var d = Math.floor(mins / dayMin);
+  var h = Math.floor((mins % dayMin) / 60);
+  // ✅ 표시 규칙:
+  // - 0일 0시간 => '-'
+  // - 10일 0시간 => '10일'
+  // - 0일 3시간 => '3시간'
+  // - 10일 3시간 => '10일 3시간'
+  if (d === 0 && h === 0) return '-';
+  if (h === 0) return d + '일';
+  if (d === 0) return h + '시간';
+  return d + '일 ' + h + '시간';
+}
+function setSum_(key, txt){
+  try{
+    var rootEl = window._leaveRoot || document;
+    var el = rootEl.querySelector('[data-leave-sum="' + key + '"]');
+    if (el) el.textContent = String(txt == null ? '' : txt);
+  }catch(e){}
+}
+function updateLeaveSummary_(){
+  try{ syncGrantUnofficialDaysFromCache_(); }catch(e){}
+  // ✅ 테이블과 동일한 필터(직원 + 상태) 적용
+  var rows = getFilteredLeaveApplyRows_(_leaveApplyAll);
+  // ✅ 직원 선택 시 요약카드도 해당 직원 기준으로 집계
+  try{
+    var selEmpId = root && root.__leaveSelectedEmp ? String(root.__leaveSelectedEmp.employee_id || '').trim() : '';
+    if (selEmpId){
+      rows = rows.filter(function(r){ return String((r && r.employee_id) || '').trim() === selEmpId; });
+    }
+  }catch(e){}
+  var reqMin = 0, apprMin = 0;
+  var cReq = 0, cAppr = 0, cRej = 0;
+  rows.forEach(function(r){
+    var st = String((r && r.status) || '').trim();
+    var m = parseUsageToMinutes_(r ? r.days : '');
+    if (st === '신청'){ reqMin += m; cReq++; }
+    else if (st === '승인'){ apprMin += m; cAppr++; }
+    else if (st === '미승인'){ cRej++; }
+  });
+  var grantMin = (Number(_grantUnofficialDays) || 0) * 8 * 60;
+  var remainMin = grantMin - apprMin;
+  // ✅ 발생연차: 'N일'만 표시(시간 없음)
+  var g = Number(_grantUnofficialDays) || 0;
+  setSum_('grant', (g ? (g + '일') : '0일'));
+  setSum_('used_req', fmtMinutesToDayHour_(reqMin));
+  setSum_('used_appr', fmtMinutesToDayHour_(apprMin));
+  setSum_('remain', fmtMinutesToDayHour_(remainMin));
+  // ✅ 건수: 0건이면 '-'
+  setSum_('cnt_req',  cReq  ? (cReq  + '건') : '-');
+  setSum_('cnt_appr', cAppr ? (cAppr + '건') : '-');
+  setSum_('cnt_rej',  cRej  ? (cRej  + '건') : '-');
+}
+
+function syncGrantUnofficialDaysFromCache_(){
+  // ✅ 현재 선택 연도는 DOM(select)에서 읽는다 (파일 구조: [data-leave-year-select])
+  var rootEl = window._leaveRoot || document.getElementById('leave-root') || document;
+  var yearLabel = '';
+  try{
+    var ys = rootEl.querySelector ? rootEl.querySelector('[data-leave-year-select]') : null;
+    yearLabel = ys ? String(ys.value || '').trim() : '';
+  }catch(e){}
+  // (fallback) 혹시 기존 전역 변수가 있으면 그걸 사용
+  if (!yearLabel){
+    try{ yearLabel = (typeof _leaveApplyYear !== 'undefined' && _leaveApplyYear) ? String(_leaveApplyYear).trim() : ''; }catch(e){}
+  }
+  // 캐시가 현재 연도랑 다르면(아직 로드 안됨) 우선 0 처리
+  if (!yearLabel || String(window._leaveGrantYear||'') !== String(yearLabel||'')){
+    _grantUnofficialDays = 0;
+    window._grantUnofficialDays = _grantUnofficialDays;
+    return;
+  }
+
+  var eid = '';
+  try{ eid = (typeof getSelectedEmpId_ === 'function') ? getSelectedEmpId_() : ''; }catch(e){}
+  if (eid){
+    _grantUnofficialDays = Number((window._leaveGrantMap||{})[eid] || 0) || 0;
+  }else{
+    _grantUnofficialDays = Number(window._leaveGrantTotal || 0) || 0;
+  }
+  window._grantUnofficialDays = _grantUnofficialDays;
+}
+
+// ✅ 연도별 Leave(발생연차) 캐시 로드: 연도당 1회만 서버 호출
+function loadGrantCacheForYear_(yearLabel){
+  yearLabel = String(yearLabel || '').trim();
+  var y = parseYearNum_(yearLabel);
+  if (!isFinite(y)){
+    window._leaveGrantYear = '';
+    window._leaveGrantMap = {};
+    window._leaveGrantTotal = 0;
+    syncGrantUnofficialDaysFromCache_();
+    updateLeaveSummary_();
+    return;
+  }
+
+  // 이미 같은 연도 캐시가 있으면 즉시 동기화
+  if (String(window._leaveGrantYear||'') === yearLabel && window._leaveGrantMap){
+    syncGrantUnofficialDaysFromCache_();
+    updateLeaveSummary_();
+    return;
+  }
+
+  // 캐시 초기화(로딩 중)
+  window._leaveGrantYear = yearLabel;
+  window._leaveGrantMap = {};
+  window._leaveGrantTotal = 0;
+  syncGrantUnofficialDaysFromCache_();
+  updateLeaveSummary_();
+
+  google.script.run
+    .withSuccessHandler(function(res){
+      var ok = !!(res && (res.ok === true || res.success === true));
+      if (!ok){
+        window._leaveGrantMap = {};
+        window._leaveGrantTotal = 0;
+        syncGrantUnofficialDaysFromCache_();
+        updateLeaveSummary_();
+        return;
+      }
+      var map = {};
+      var total = 0;
+      (res.rows || []).forEach(function(r){
+        var eid = String((r && r.employee_id) || '').trim();
+        if (!eid) return;
+        var n = Number((r && r.unofficial_days) || 0) || 0;
+        map[eid] = n;
+        total += n;
+      });
+      // 백엔드가 total을 주면 그걸 우선
+      if (res.total_unofficial_days != null){
+        var t = Number(res.total_unofficial_days);
+        if (isFinite(t)) total = t;
+      }
+      window._leaveGrantMap = map;
+      window._leaveGrantTotal = total;
+      syncGrantUnofficialDaysFromCache_();
+      updateLeaveSummary_();
+    })
+    .withFailureHandler(function(){
+      window._leaveGrantMap = {};
+      window._leaveGrantTotal = 0;
+      syncGrantUnofficialDaysFromCache_();
+      updateLeaveSummary_();
+    })
+    .LEAVE_listLeaveGrantsByYear(_leaveToWire_({ year: yearLabel }));
+}
+
+// (호환) 기존 호출명 유지: 이제는 캐시 기반으로 즉시 동기화만 수행
+function loadGrantUnofficialDaysForYear_(yearLabel){
+  loadGrantCacheForYear_(yearLabel);       // ✅ 연도당 1회 서버 호출
+  syncGrantUnofficialDaysFromCache_();     // ✅ 직원 클릭 시 즉시 반영
+  updateLeaveSummary_();
+}
+
+function uiHide(el){
+  if(!el) return;
+  el.style.setProperty('display', 'none', 'important');
+}
+function uiShow(el){
+  if(!el) return;
+  // 다시 보이게 할 땐 display를 지워서(d-flex의 flex가 살아나게)
+  el.style.removeProperty('display');
+}
+</script>

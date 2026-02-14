@@ -1,0 +1,268 @@
+<!-- alertmodal.html : 공통 알림/확인 모달 -->
+<style>
+  .alert-modal { border-radius: var(--bd-radius1); border: none; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35); padding-top: 0.4rem; }
+  .alert-modal-body { padding: 0.75rem 0.9rem 0.5rem 0.9rem; align-items: flex-start; }
+  .alert-modal-footer { border-top: 0; padding: 0 0.9rem 0.7rem 0.9rem; display: flex; justify-content: flex-end; gap: 0.4rem; }
+
+  /* 아이콘 영역 */
+  .alert-modal-icon-wrap { flex: 0 0 auto; margin-right: 0.6rem; }
+  .alert-modal-icon { width: 2.1rem; height: 2.1rem; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; }
+
+  /* 텍스트 영역 */
+  .alert-modal-text { min-width: 0; }
+  .alert-modal-title { font-size: var(--t-size3); font-weight: var(--t-weight2); margin-bottom: 0.15rem; color: var(--t-color1); }
+  .alert-modal-message { font-size: var(--t-size1); color: var(--t-color); word-break: keep-all; white-space: pre-line; }
+
+  /* ── 타입별 색상 (기본값: info) ───────────────── */
+  .alert-modal-info .alert-modal-icon { background: rgba(25, 118, 210, 0.12); color: var(--color-blue); }
+  .alert-modal-info { border-top: 3px solid var(--color-blue); }
+  .alert-modal-success .alert-modal-icon { background: rgba(25, 118, 210, 0.12); color: var(--color-blue); }
+  .alert-modal-success { border-top: 3px solid var(--color-blue); }
+  .alert-modal-warning .alert-modal-icon { background: rgba(255, 193, 7, 0.16); color: #ff9800; }
+  .alert-modal-warning { border-top: 3px solid #ff9800; }
+  .alert-modal-danger .alert-modal-icon { background: rgba(211, 47, 47, 0.12); color: var(--color-red); }
+  .alert-modal-danger { border-top: 3px solid var(--color-red); }
+</style>
+
+<!-- ✅ 1) 알림 모달 (확인만 있는 타입 4개) -->
+<div class="modal fade" id="appAlertModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <!-- 기본은 info -->
+    <div class="modal-content alert-modal alert-modal-info">
+      <div class="modal-body alert-modal-body d-flex">
+        <div class="alert-modal-icon-wrap">
+          <div class="alert-modal-icon">
+            <!-- 아이콘: JS에서 타입에 따라 class 변경 -->
+            <i class="fa-solid fa-circle-info" data-role="alert-icon"></i>
+          </div>
+        </div>
+        <div class="alert-modal-text">
+          <div class="alert-modal-title" data-role="alert-title">알림</div>
+          <div class="alert-modal-message" data-role="alert-message">
+            내용이 이곳에 표시됩니다.
+          </div>
+        </div>
+      </div>
+      <div class="alert-modal-footer">
+        <button type="button" class="btn-box btn-box-blue" data-role="alert-ok" data-bs-dismiss="modal">
+          <span class="text">확인</span>
+          <span class="icon"><i class="fa-solid fa-check"></i></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ 2) 확인 모달 (확인 + 취소 타입 4개) -->
+<div class="modal fade" id="appConfirmModal" data-bs-backdrop="static" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <!-- 기본은 info -->
+    <div class="modal-content alert-modal alert-modal-info">
+      <div class="modal-body alert-modal-body d-flex">
+        <div class="alert-modal-icon-wrap">
+          <div class="alert-modal-icon">
+            <i class="fa-solid fa-circle-question" data-role="confirm-icon"></i>
+          </div>
+        </div>
+        <div class="alert-modal-text">
+          <div class="alert-modal-title" data-role="confirm-title">확인</div>
+          <div class="alert-modal-message" data-role="confirm-message">
+            이 작업을 진행하시겠습니까?
+          </div>
+        </div>
+      </div>
+      <div class="alert-modal-footer">
+        <button type="button" class="btn-box btn-box-blue" data-role="confirm-ok" data-bs-dismiss="modal">
+          <span class="text">확인</span>
+          <span class="icon"><i class="fa-solid fa-check"></i></span>
+        </button>
+        <button type="button" class="btn-box" data-role="confirm-cancel" data-bs-dismiss="modal">
+          <span class="text">취소</span>
+          <span class="icon"><i class="fa-solid fa-xmark"></i></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ──────────────────────────────────────
+  // 내부 공통: 타입 적용 (info/success/warning/danger)
+  // type 인자는 'info', 'success', 'warn|warning', 'error|danger' 모두 허용
+  // ──────────────────────────────────────
+  function applyAlertType(modalEl, type, mode) {
+    if (!modalEl) return;
+
+    var content = modalEl.querySelector('.alert-modal');
+    if (!content) return;
+
+    // 기존 타입 클래스 제거
+    content.classList.remove(
+      'alert-modal-info',
+      'alert-modal-success',
+      'alert-modal-warning',
+      'alert-modal-danger'
+    );
+
+    var t = (type || 'info').toLowerCase();
+    if (t === 'warn') t = 'warning';
+    if (t === 'error') t = 'danger';
+    if (['info','success','warning','danger'].indexOf(t) === -1) {
+      t = 'info';
+    }
+
+    content.classList.add('alert-modal-' + t);
+
+    // 아이콘 요소 찾기
+    var iconSel = (mode === 'confirm')
+      ? '[data-role="confirm-icon"]'
+      : '[data-role="alert-icon"]';
+    var iconEl = modalEl.querySelector(iconSel);
+
+    if (iconEl) {
+      iconEl.className = 'fa-solid'; // base 초기화
+
+      if (t === 'success')      iconEl.classList.add('fa-circle-check');
+      else if (t === 'warning') iconEl.classList.add('fa-triangle-exclamation');
+      else if (t === 'danger')  iconEl.classList.add('fa-circle-xmark');
+      else                      iconEl.classList.add('fa-circle-info');
+    }
+  }
+  /*z-index*/
+  function bringModalToFront(modalEl){
+    if (!modalEl) return;
+
+    // 현재 이미 떠 있는 모달 개수(=스택 깊이)
+    var openCount = document.querySelectorAll('.modal.show').length;
+
+    // Bootstrap 기본값: modal 1055, backdrop 1050
+    // 스택 하나당 20씩 올려서 충돌 방지
+    var z = 1055 + (openCount * 20);
+
+    modalEl.style.zIndex = z;
+
+    // 방금 추가된 backdrop(마지막 것)의 z-index도 맞춰줌
+    setTimeout(function(){
+      var backdrops = document.querySelectorAll('.modal-backdrop');
+      var bd = backdrops[backdrops.length - 1];
+      if (bd) bd.style.zIndex = z - 10;
+    }, 0);
+  }
+
+  // ============================
+  // 1) 알림 모달 (확인만)
+  // ============================
+  function showAlert(message, title, type) {
+    var modalEl = document.getElementById('appAlertModal');
+    if (!modalEl) return;
+
+    var msgEl   = modalEl.querySelector('[data-role="alert-message"]');
+    var titleEl = modalEl.querySelector('[data-role="alert-title"]');
+
+    if (titleEl && title != null) {
+      titleEl.textContent = title;
+    }
+    if (msgEl && message != null) {
+      msgEl.textContent = message;
+    }
+
+    applyAlertType(modalEl, type, 'alert');
+
+    var bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    bringModalToFront(modalEl);
+    bsModal.show();
+  }
+
+  // 🔹 알림 4타입 wrapper
+  function showAlertInfo(message, title) {
+    showAlert(message, title || '알림', 'info');
+  }
+  function showAlertSuccess(message, title) {
+    showAlert(message, title || '성공', 'success');
+  }
+  function showAlertWarn(message, title) {
+    showAlert(message, title || '주의', 'warning');
+  }
+  function showAlertError(message, title) {
+    showAlert(message, title || '오류', 'danger');
+  }
+
+  // 알림 메시지 리스트
+  function alertSaveDone() {
+    showAlertSuccess('요청하신 정보가 저장되었습니다.', '저장 완료');
+  }
+  function alertDeleteDone() {
+    showAlertSuccess('요청하신 정보가 삭제되었습니다.', '삭제 완료')
+  }
+  function alertErrorDone() {
+    showAlertError('처리 중 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.', '오류 확인')
+  }
+
+  // ============================
+  // 2) 확인 모달 (확인 + 취소)
+  // ============================
+  function showConfirm(message, title, type, onOk, onCancel) {
+    var modalEl = document.getElementById('appConfirmModal');
+    if (!modalEl) return;
+
+    var msgEl     = modalEl.querySelector('[data-role="confirm-message"]');
+    var titleEl   = modalEl.querySelector('[data-role="confirm-title"]');
+    var okBtn     = modalEl.querySelector('[data-role="confirm-ok"]');
+    var cancelBtn = modalEl.querySelector('[data-role="confirm-cancel"]');
+
+    if (titleEl && title != null) {
+      titleEl.textContent = title;
+    }
+    if (msgEl && message != null) {
+      msgEl.textContent = message;
+    }
+
+    applyAlertType(modalEl, type, 'confirm');
+    bringModalToFront(modalEl);
+    var bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+    // 기존 핸들러 덮어쓰기
+    if (okBtn) {
+      okBtn.onclick = function () {
+        bsModal.hide();
+        if (typeof onOk === 'function') onOk();
+      };
+    }
+    if (cancelBtn) {
+      cancelBtn.onclick = function () {
+        bsModal.hide();
+        if (typeof onCancel === 'function') onCancel();
+      };
+    }
+    bringModalToFront(modalEl);
+    bsModal.show();
+  }
+
+  // 🔹 확인 4타입 wrapper
+  function showConfirmInfo(message, title, onOk, onCancel) {
+    showConfirm(message, title || '확인', 'info', onOk, onCancel);
+  }
+  function showConfirmSuccess(message, title, onOk, onCancel) {
+    showConfirm(message, title || '성공', 'success', onOk, onCancel);
+  }
+  function showConfirmWarn(message, title, onOk, onCancel) {
+    showConfirm(message, title || '주의', 'warning', onOk, onCancel);
+  }
+  function showConfirmError(message, title, onOk, onCancel) {
+    showConfirm(message, title || '오류', 'danger', onOk, onCancel);
+  }
+
+
+  // 전역에 export
+  window.showAlert         = showAlert;
+  window.showAlertInfo     = showAlertInfo;
+  window.showAlertSuccess  = showAlertSuccess;
+  window.showAlertWarn     = showAlertWarn;
+  window.showAlertError    = showAlertError;
+
+  window.showConfirm       = showConfirm;
+  window.showConfirmInfo   = showConfirmInfo;
+  window.showConfirmSuccess= showConfirmSuccess;
+  window.showConfirmWarn   = showConfirmWarn;
+  window.showConfirmError  = showConfirmError;
+</script>

@@ -1,0 +1,732 @@
+<!-- pagemodal.html : 공통 “페이지 모달” -->
+
+<style>
+  .app-page-modal .modal-dialog { margin: 1.75rem auto; scrollbar-color: var(--scroll-color); }
+
+  /* 사이즈 옵션 */
+  .app-page-modal .modal-dialog.page-modal-sm { max-width: 480px; }
+  .app-page-modal .modal-dialog.page-modal-md { max-width: 720px; }
+  .app-page-modal .modal-dialog.page-modal-lg { max-width: 960px; }
+  .app-page-modal .modal-dialog.page-modal-xl { max-width: 1140px; }
+  .app-page-modal .modal-dialog.page-modal-full { max-width: none; width: calc(100vw - 20rem);}
+
+  .app-page-modal .modal-content.page-modal-box {
+    border-radius: var(--bd-radius1);
+    border: none;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
+    border-top: 3px solid var(--accent-color);
+    padding: 0;
+    background: var(--bg-color-body);
+  }
+
+  /* 헤더 */
+  .page-modal-header {
+    padding: 0.7rem 1rem 0.7rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .page-modal-title {
+    margin: 0;
+    font-size: var(--t-size3);
+    font-weight: var(--t-weight3);
+    color: var(--accent-color);
+  }
+
+  .page-modal-close {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    color: var(--t-color-1);
+  }
+  .page-modal-close i {
+    font-size: var(--i-size);
+  }
+
+  /* 바디 */
+  .page-modal-body {
+    padding: 0.7rem 1rem 0.7rem;
+    max-height: calc(100vh - 12rem); /* 헤더+푸터+여백 만큼 빼준 값, 필요하면 조절 */
+    overflow-y: auto;
+    scrollbar-width: thin;
+    background: var(--bg-color-main);
+  }
+
+  /* 푸터 */
+  .page-modal-footer {
+    padding: 0.7rem 1rem 0.7rem;
+    border-top: 1px solid #f1f3f5;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.4rem;
+  }
+  #appPageModal .inputgroup1 input,
+  #appPageModal .inputgroup1 select,
+  #appPageModal .inputgroup1 textarea,
+  #appPageModal .inputgroup2 input,
+  #appPageModal .inputgroup2 select,
+  #appPageModal .inputgroup2 textarea,
+  #appPageModal2 .inputgroup1 input,
+  #appPageModal2 .inputgroup1 select,
+  #appPageModal2 .inputgroup1 textarea,
+  #appPageModal2 .inputgroup2 input,
+  #appPageModal2 .inputgroup2 select,
+  #appPageModal2 .inputgroup2 textarea { background-color: var(--bg-color-accent); }
+  #appPageModal .sec,
+  #appPageModal2 .sec { padding: 0.4rem; border-radius: var(--bd-radius); }
+  #appPageModal .sec-header,
+  #appPageModal2 .sec-header{ padding: 0 0.5rem 0 0.25rem; font-size: var(--t-size2); color: var(--t-color); }
+
+  #appPageModal .sec-header .text{
+    padding: 0.3rem 0.5rem;
+    margin-bottom: 0.1rem;
+    color: #1A3A5F; /* navy #002366 뚜렷함, #1A3A5F 채도가 낮음*/
+    background: var(--bg-color-main);
+    border-radius: var(--bd-radius);
+    box-shadow: var(--box-sha-bb);
+  }
+  #appPageModal .sec-body.sec-body-row { flex-direction: row; align-items: center; gap: 0.25rem; }
+
+/* =========================================================
+  * ✅ leave-set-page-modal 전용:
+  * - 모달(바디) 스크롤 X
+  * - 화면 세로 꽉 채움
+  * - 내부 wrap에서만 스크롤
+  * ========================================================= */
+  #appPageModal.mode-wrap-scroll .modal-dialog {
+    height: calc(100vh - 3.5rem); /* margin(1.75rem*2) 만큼 제외 → 딱 맞춤 */
+  }
+
+  #appPageModal.mode-wrap-scroll .modal-dialog.modal-dialog-centered{
+    align-items: stretch; /* centered가 flex라서, content가 높이를 꽉 못 먹는 문제 방지 */
+  }
+
+  #appPageModal.mode-wrap-scroll .modal-content.page-modal-box{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* 🔥 여기서 모달 바디 스크롤을 "막고" 내부로 스크롤을 넘김 */
+  #appPageModal.mode-wrap-scroll .page-modal-body{
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;     /* 기존 max-height 무력화 */
+    overflow: hidden;     /* 모달 바디는 스크롤 금지 */
+    display: flex;        /* 내부 host를 flex로 */
+    flex-direction: column;
+  }
+
+  /* 템플릿이 꽉 차도록 bodyHost도 flex */
+  #appPageModal.mode-wrap-scroll [data-role="page-modal-body"]{
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 보통 템플릿 root는 1개라, 그 1개를 자동으로 꽉 채움 */
+  #appPageModal.mode-wrap-scroll [data-role="page-modal-body"] > *{
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  /* ✅ 2번 모달은 1번 모달 위에 */
+  #appPageModal2 { z-index: 1070; }
+  .modal-backdrop.stack-2 { z-index: 1060; }
+</style>
+
+<div class="modal fade app-page-modal" id="appPageModal" data-bs-backdrop="static" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered page-modal-md">
+    <div class="modal-content page-modal-box">
+      <div class="page-modal-header">
+        <h5 class="page-modal-title" data-role="page-modal-title">페이지 모달</h5>
+        <button type="button"class="page-modal-close btn-icon btn-icon-l" data-bs-dismiss="modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="page-modal-body">
+        <div data-role="page-modal-body">
+          <!-- JS로 템플릿 주입 -->
+        </div>
+      </div>
+
+      <div class="page-modal-footer" data-role="page-modal-footer">
+        <!-- 필요하면 확인/저장 버튼도 여기서 공통으로 둘 수 있음 -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ 2번(오버레이) 페이지모달: 상세모달 위에 띄우기 용도 -->
+<div class="modal fade app-page-modal" id="appPageModal2" data-bs-backdrop="static" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered page-modal-md">
+    <div class="modal-content page-modal-box">
+      <div class="page-modal-header">
+        <h5 class="page-modal-title" data-role="page-modal-title">페이지 모달</h5>
+        <button type="button"class="page-modal-close btn-icon btn-icon-l" data-bs-dismiss="modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="page-modal-body">
+        <div data-role="page-modal-body"></div>
+      </div>
+      <div class="page-modal-footer" data-role="page-modal-footer"></div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  (function () {
+    /**
+     * 옵션
+     * - title: 모달 제목
+     * - size: 'sm' | 'md' | 'lg' | 'xl' | 'full'
+     * - templateId: <template> id
+     * - onOpen(modalEl, bodyHost): 모달 표시 직후 콜백
+     * - onSave(e): 저장 버튼 클릭 시 콜백 (false 리턴하면 모달 닫지 않음)
+     */
+    function openPageModal(opts) {
+      opts = opts || {};
+      var title      = opts.title || '페이지 모달';
+      var size       = opts.size || 'md';
+      var templateId = opts.templateId;
+      var onOpen     = opts.onOpen;
+      var onSave     = opts.onSave;
+
+      // ✅ 추가 옵션
+      // - footerButtons: [{ action, text, icon, className, acl, close, onClick }]
+      // - onAction(action, e, modalEl, bodyHost): 공통 액션 핸들러
+      var footerButtons = Array.isArray(opts.footerButtons) ? opts.footerButtons : null;
+      var onAction      = opts.onAction;
+
+      var modalEl = document.getElementById('appPageModal');
+      if (!modalEl) return;
+
+      var bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+      // 제목
+      var titleEl = modalEl.querySelector('[data-role="page-modal-title"]');
+      if (titleEl) titleEl.textContent = title;
+
+      // 사이즈
+      var dialog = modalEl.querySelector('.modal-dialog');
+      if (dialog) {
+        dialog.classList.remove('page-modal-sm','page-modal-md','page-modal-lg','page-modal-xl','page-modal-full');
+        dialog.classList.add('page-modal-' + size);
+      }
+
+      // 바디 주입
+      var bodyHost = modalEl.querySelector('[data-role="page-modal-body"]');
+      if (bodyHost) {
+        bodyHost.innerHTML = '';
+        if (templateId) {
+          var tpl = document.getElementById(templateId);
+          if (tpl && 'content' in tpl) {
+            bodyHost.appendChild(tpl.content.cloneNode(true));
+            requestAnimationFrame(function () {
+              if (window.initTooltipPortal) window.initTooltipPortal(modalEl);
+              if (window.initIconTooltips) window.initIconTooltips(modalEl);
+              if (window.initUiScope) window.initUiScope(bodyHost);
+            });
+          }
+        }
+      }
+
+      // wrap-scroll 모드
+      var WRAP_SCROLL_TPLS = new Set(['leave-set-page-modal','workstudy-set1-page-modal','workstudy-set2-page-modal']);
+      modalEl.classList.toggle('mode-wrap-scroll', WRAP_SCROLL_TPLS.has(templateId));
+
+      // ✅ 푸터 동적 구성
+      var footerHost =
+        modalEl.querySelector('[data-role="page-modal-footer"]') ||
+        modalEl.querySelector('.page-modal-footer');
+
+      function buildBtn(cfg){
+        cfg = cfg || {};
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = cfg.className || 'btn-box btn-box-blue';
+        if (cfg.action) btn.dataset.action = cfg.action;
+        if (cfg.acl) btn.setAttribute('data-acl', cfg.acl);
+
+        // ⚠️ cfg.icon 은 'fa-trash-can' 처럼 "클래스명만"
+        var iconHtml = cfg.icon ? ('<span class="icon"><i class="fa-solid ' + cfg.icon + '"></i></span>') : '';
+        btn.innerHTML =
+          '<span class="text">' + (cfg.text || '') + '</span>' +
+          iconHtml;
+
+        // 옵션 저장
+        btn._cfg = cfg;
+        return btn;
+      }
+
+      function getDefaultConfirm(action){
+        if (action === 'delete') {
+          return { type:'danger', title:'삭제 확인', message:'정말 삭제하시겠습니까?\n삭제 후 되돌릴 수 없습니다.' };
+        }
+        if (action === 'save') {
+          return { type:'info', title:'저장 확인', message:'저장하시겠습니까?' };
+        }
+        // 기타
+        return { type:'info', title:'확인', message:'이 작업을 진행하시겠습니까?' };
+      }
+
+      function showConfirmByType(type, message, title, onOk, onCancel){
+        var t = (type || 'info').toLowerCase();
+        if (t === 'warn') t = 'warning';
+        if (t === 'error') t = 'danger';
+
+        // alertmodal.html에 이미 있는 wrapper 사용
+        if (t === 'danger')  return showConfirmError(message, title, onOk, onCancel);
+        if (t === 'warning') return showConfirmWarn(message, title, onOk, onCancel);
+        if (t === 'success') return showConfirmSuccess(message, title, onOk, onCancel);
+        return showConfirmInfo(message, title, onOk, onCancel);
+      }
+
+      function showAlertByType(type, message, title){
+        var t = (type || 'info').toLowerCase();
+        if (t === 'warn') t = 'warning';
+        if (t === 'error') t = 'danger';
+
+        if (t === 'danger')  return showAlertError(message, title);
+        if (t === 'warning') return showAlertWarn(message, title);
+        if (t === 'success') return showAlertSuccess(message, title);
+        return showAlertInfo(message, title);
+      }
+
+      function renderFooter(){
+        if (!footerHost) return;
+        footerHost.innerHTML = '';
+
+        // footerButtons가 있으면 그것으로 렌더, 없으면 기본 저장+취소
+        var list = (footerButtons && footerButtons.length) ? footerButtons : [
+          { action:'save',   text:'저장', icon:'fa-floppy-disk', className:'btn-box btn-box-blue' },
+          { action:'cancel', text:'취소', icon:'fa-xmark',       className:'btn-box', confirm:false, autoAlert:false, close:true }
+        ];
+
+        list.forEach(function(cfg){
+          footerHost.appendChild(buildBtn(cfg));
+        });
+
+        if (window.initUiScope) window.initUiScope(footerHost);
+
+        // ✅ footer 내 ACL 적용(동적 버튼 생성 대응)
+        try{
+          if (window.ACL_applyToScope) window.ACL_applyToScope(footerHost);
+        }catch(e){}
+
+        footerHost.onclick = function(e){
+          var btnEl = e.target.closest('button');
+          if (!btnEl) return;
+
+          var cfg = btnEl._cfg || {};
+          var action = (btnEl.dataset.action || '').trim();
+
+          // 기본값들
+          var confirmOpt = getDefaultConfirm(action);
+
+          var needConfirm = (cfg.confirm !== false);       // 기본 true
+          var confirmType = cfg.confirmType || confirmOpt.type;
+          var confirmTitle = cfg.confirmTitle || confirmOpt.title;
+          var confirmMessage = cfg.confirmMessage || confirmOpt.message;
+
+          // autoAlert: 성공/실패 알림 자동 (기본 true)
+          var autoAlert = (cfg.autoAlert !== false);
+
+          // close: 성공 시 페이지모달 닫기 (기본 true)
+          var closeOnSuccess = (cfg.close !== false);
+
+          // 기본 성공 메시지
+          var defaultSuccessTitle =
+            cfg.successTitle || (action === 'save' ? '저장 완료' : action === 'delete' ? '삭제 완료' : '완료');
+          var defaultSuccessMessage =
+            cfg.successMessage || (action === 'save' ? '요청하신 정보가 저장되었습니다.' : action === 'delete' ? '요청하신 정보가 삭제되었습니다.' : '요청이 처리되었습니다.');
+
+          // 실행 유틸(비동기 완료 콜백)
+          function done(res, opt){
+            opt = opt || {};
+
+            btnEl.disabled = false;
+
+            // res가 boolean이면 정규화
+            if (typeof res === 'boolean') res = { ok: res };
+
+            var ok = !!(res && (res.ok === true || res.success === true));
+
+            if (ok) {
+              if (autoAlert) {
+                var t  = opt.successType || 'success';
+                var tt = opt.successTitle || defaultSuccessTitle;
+                var mm = opt.successMessage || defaultSuccessMessage;
+                showAlertByType(t, mm, tt);
+              }
+              if (opt.close === true || (opt.close !== false && closeOnSuccess)) {
+                bsModal.hide();
+              }
+              return;
+            }
+
+            // 실패
+            if (autoAlert) {
+              var em = (res && (res.error || res.message)) || opt.errorMessage || '처리 중 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.';
+              var et = opt.errorTitle || '오류 확인';
+              showAlertError(em, et);
+            }
+          }
+
+          // 실제 액션 실행 (onClick → onAction → onSave 순)
+          function runAction(){
+            btnEl.disabled = true;
+
+            var ret;
+
+            // 1) 버튼별 onClick
+            if (typeof cfg.onClick === 'function') {
+              ret = cfg.onClick(e, modalEl, bodyHost, done);
+            }
+
+            // 2) 공통 onAction
+            if (ret !== false && typeof onAction === 'function' && action) {
+              ret = onAction(action, e, modalEl, bodyHost, done);
+            }
+
+            // 3) save 액션이면 기존 onSave 호환
+            if (ret !== false && action === 'save' && typeof onSave === 'function') {
+              // (onSave(e, modalEl, bodyHost, done) 형태도 허용)
+              ret = onSave(e, modalEl, bodyHost, done);
+            }
+
+            // ret 처리 규칙
+            // - false: 비동기라고 가정 → done을 직접 호출해야 함
+            // - Promise: resolve 값으로 done 호출
+            // - object/bool/undefined: 즉시 done 처리
+            if (ret === false) {
+              // 비동기: done을 콜백에서 호출해야 함
+              return;
+            }
+
+            // Promise 지원
+            if (ret && typeof ret.then === 'function') {
+              ret.then(function(v){ done(v); })
+                .catch(function(err){ done({ ok:false, error: (err && err.message) ? err.message : String(err) }); });
+              return;
+            }
+
+            // object/boolean/undefined
+            if (typeof ret === 'object') {
+              done(ret);
+            } else if (typeof ret === 'boolean') {
+              done({ ok: ret });
+            } else {
+              // 리턴이 없으면 성공으로 간주(공용 처리)
+              done({ ok:true });
+            }
+          }
+
+          // Confirm 여부
+          if (needConfirm && typeof showConfirm === 'function') {
+            showConfirmByType(confirmType, confirmMessage, confirmTitle, runAction, function(){
+              // cancel → 아무 처리 없음
+            });
+          } else {
+            runAction();
+          }
+        };
+      }
+
+      renderFooter();
+
+      // ✅ ACL(footer 버튼 등) - footer가 동적으로 생성되므로 즉시 적용
+      try{
+        if (window.ACL_applyToScope) window.ACL_applyToScope(modalEl);
+      }catch(e){}
+
+      // shown 콜백
+      modalEl.addEventListener('shown.bs.modal', function handler() {
+        modalEl.removeEventListener('shown.bs.modal', handler);
+
+        if (window.initTooltipPortal) window.initTooltipPortal(modalEl);
+        if (window.initIconTooltips) window.initIconTooltips(modalEl);
+        if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(modalEl);
+
+        if (typeof onOpen === 'function') onOpen(modalEl, bodyHost);
+      });
+
+      bsModal.show();
+    }
+
+    // 전역에서 사용
+    window.openPageModal = openPageModal;
+
+    // ✅ 2번(오버레이) 모달: 상세 유지 + 위에 띄우기
+    window.openPageModal2 = function(opts){
+      opts = opts || {};
+
+      // openPageModal과 동일 옵션을 쓰되, 타겟 모달만 바꾼 "복제 버전"
+      var title      = opts.title || '페이지 모달';
+      var size       = opts.size || 'md';
+      var templateId = opts.templateId;
+      var onOpen     = opts.onOpen;
+      var onSave     = opts.onSave;
+
+      // ✅ 추가 옵션(동일)
+      var footerButtons = Array.isArray(opts.footerButtons) ? opts.footerButtons : null;
+      var onAction      = opts.onAction;
+
+      var modalEl = document.getElementById('appPageModal2');
+      if (!modalEl) return;
+
+      var bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+      // 제목
+      var titleEl = modalEl.querySelector('[data-role="page-modal-title"]');
+      if (titleEl) titleEl.textContent = title;
+
+      // 사이즈
+      var dialog = modalEl.querySelector('.modal-dialog');
+      if (dialog) {
+        dialog.classList.remove('page-modal-sm','page-modal-md','page-modal-lg','page-modal-xl','page-modal-full');
+        dialog.classList.add('page-modal-' + size);
+      }
+
+      // 바디 주입
+      var bodyHost = modalEl.querySelector('[data-role="page-modal-body"]');
+      if (bodyHost) {
+        bodyHost.innerHTML = '';
+        if (templateId) {
+          var tpl = document.getElementById(templateId);
+          if (tpl && 'content' in tpl) {
+            bodyHost.appendChild(tpl.content.cloneNode(true));
+            requestAnimationFrame(function () {
+              if (window.initTooltipPortal) window.initTooltipPortal(modalEl);
+              if (window.initIconTooltips) window.initIconTooltips(modalEl);
+              if (window.initUiScope) window.initUiScope(bodyHost);
+            });
+          }
+        }
+      }
+
+      // wrap-scroll 모드(원본과 동일하게 토글만; CSS가 #appPageModal에만 있어도 무해)
+      var WRAP_SCROLL_TPLS = new Set(['leave-set-page-modal','workstudy-set1-page-modal','workstudy-set2-page-modal']);
+      modalEl.classList.toggle('mode-wrap-scroll', WRAP_SCROLL_TPLS.has(templateId));
+
+      // ✅ 푸터 동적 구성 (핵심: .modal-footer가 아니라 page-modal-footer를 찾는다)
+      var footerHost =
+        modalEl.querySelector('[data-role="page-modal-footer"]') ||
+        modalEl.querySelector('.page-modal-footer');
+
+      function buildBtn(cfg){
+        cfg = cfg || {};
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = cfg.className || 'btn-box btn-box-blue';
+        if (cfg.action) btn.dataset.action = cfg.action;
+        if (cfg.acl) btn.setAttribute('data-acl', cfg.acl);
+
+        // ⚠️ cfg.icon 은 'fa-trash-can' 처럼 "클래스명만"
+        var iconHtml = cfg.icon ? ('<span class="icon"><i class="fa-solid ' + cfg.icon + '"></i></span>') : '';
+        btn.innerHTML =
+          '<span class="text">' + (cfg.text || '') + '</span>' +
+          iconHtml;
+
+        // 옵션 저장
+        btn._cfg = cfg;
+        return btn;
+      }
+
+      function getDefaultConfirm(action){
+        if (action === 'delete') {
+          return { type:'danger', title:'삭제 확인', message:'정말 삭제하시겠습니까?\n삭제 후 되돌릴 수 없습니다.' };
+        }
+        if (action === 'save') {
+          return { type:'info', title:'저장 확인', message:'저장하시겠습니까?' };
+        }
+        return { type:'info', title:'확인', message:'이 작업을 진행하시겠습니까?' };
+      }
+
+      function showConfirmByType(type, message, title, onOk, onCancel){
+        var t = (type || 'info').toLowerCase();
+        if (t === 'warn') t = 'warning';
+        if (t === 'error') t = 'danger';
+
+        if (t === 'danger')  return showConfirmError(message, title, onOk, onCancel);
+        if (t === 'warning') return showConfirmWarn(message, title, onOk, onCancel);
+        if (t === 'success') return showConfirmSuccess(message, title, onOk, onCancel);
+        return showConfirmInfo(message, title, onOk, onCancel);
+      }
+
+      function showAlertByType(type, message, title){
+        var t = (type || 'info').toLowerCase();
+        if (t === 'warn') t = 'warning';
+        if (t === 'error') t = 'danger';
+
+        if (t === 'danger')  return showAlertError(message, title);
+        if (t === 'warning') return showAlertWarn(message, title);
+        if (t === 'success') return showAlertSuccess(message, title);
+        return showAlertInfo(message, title);
+      }
+
+      function renderFooter(){
+        if (!footerHost) return;
+        footerHost.innerHTML = '';
+
+        // footerButtons가 있으면 그것으로 렌더, 없으면 기본 저장+취소
+        var list = (footerButtons && footerButtons.length) ? footerButtons : [
+          { action:'save',   text:'저장', icon:'fa-floppy-disk', className:'btn-box btn-box-blue' },
+          { action:'cancel', text:'취소', icon:'fa-xmark',       className:'btn-box', confirm:false, autoAlert:false, close:true }
+        ];
+
+        list.forEach(function(cfg){
+          footerHost.appendChild(buildBtn(cfg));
+        });
+
+        if (window.initUiScope) window.initUiScope(footerHost);
+
+        // ✅ footer 내 ACL 적용(동적 버튼 생성 대응)
+        try{
+          if (window.ACL_applyToScope) window.ACL_applyToScope(footerHost);
+        }catch(e){}
+
+        footerHost.onclick = function(e){
+          var btnEl = e.target.closest('button');
+          if (!btnEl) return;
+
+          var cfg = btnEl._cfg || {};
+          var action = (btnEl.dataset.action || '').trim();
+
+          // 기본 confirm 문구
+          var confirmOpt = getDefaultConfirm(action);
+
+          var needConfirm   = (cfg.confirm !== false);  // 기본 true
+          var confirmType   = cfg.confirmType   || confirmOpt.type;
+          var confirmTitle  = cfg.confirmTitle  || confirmOpt.title;
+          var confirmMessage= cfg.confirmMessage|| confirmOpt.message;
+
+          // autoAlert: 성공/실패 알림 자동 (기본 true)
+          var autoAlert = (cfg.autoAlert !== false);
+
+          // close: 성공 시 페이지모달 닫기 (기본 true)
+          var closeOnSuccess = (cfg.close !== false);
+
+          // 기본 성공 메시지
+          var defaultSuccessTitle =
+            cfg.successTitle || (action === 'save' ? '저장 완료' : action === 'delete' ? '삭제 완료' : '완료');
+          var defaultSuccessMessage =
+            cfg.successMessage || (action === 'save' ? '요청하신 정보가 저장되었습니다.' : action === 'delete' ? '요청하신 정보가 삭제되었습니다.' : '요청이 처리되었습니다.');
+
+          // 실행 유틸(비동기 완료 콜백)
+          function done(res, opt){
+            opt = opt || {};
+            btnEl.disabled = false;
+
+            if (typeof res === 'boolean') res = { ok: res };
+            var ok = !!(res && (res.ok === true || res.success === true));
+
+            if (ok) {
+              if (autoAlert) {
+                var t  = opt.successType || 'success';
+                var tt = opt.successTitle || defaultSuccessTitle;
+                var mm = opt.successMessage || defaultSuccessMessage;
+                showAlertByType(t, mm, tt);
+              }
+              if (opt.close === true || (opt.close !== false && closeOnSuccess)) {
+                bsModal.hide();
+              }
+              return;
+            }
+
+            // 실패
+            if (autoAlert) {
+              var em = (res && (res.error || res.message)) || opt.errorMessage || '처리 중 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.';
+              var et = opt.errorTitle || '오류 확인';
+              showAlertError(em, et);
+            }
+          }
+
+          // 실제 액션 실행 (onClick → onAction → onSave 순)
+          function runAction(){
+            btnEl.disabled = true;
+
+            var ret;
+
+            // 1) 버튼별 onClick
+            if (typeof cfg.onClick === 'function') {
+              ret = cfg.onClick(e, modalEl, bodyHost, done);
+            }
+
+            // 2) 공통 onAction
+            if (ret !== false && typeof onAction === 'function' && action) {
+              ret = onAction(action, e, modalEl, bodyHost, done);
+            }
+
+            // 3) save 액션이면 기존 onSave 호환
+            if (ret !== false && action === 'save' && typeof onSave === 'function') {
+              ret = onSave(e, modalEl, bodyHost, done);
+            }
+
+            // ret 처리 규칙
+            if (ret === false) return;
+
+            if (ret && typeof ret.then === 'function') {
+              ret.then(function(v){ done(v); })
+                .catch(function(err){
+                  done({ ok:false, error: (err && err.message) ? err.message : String(err) });
+                });
+              return;
+            }
+
+            if (typeof ret === 'object') {
+              done(ret);
+            } else if (typeof ret === 'boolean') {
+              done({ ok: ret });
+            } else {
+              done({ ok:true });
+            }
+          }
+
+          // Confirm 여부
+          if (needConfirm && typeof showConfirm === 'function') {
+            showConfirmByType(confirmType, confirmMessage, confirmTitle, runAction, function(){});
+          } else {
+            runAction();
+          }
+        };
+      }
+
+      renderFooter();
+
+      // ✅ ACL(footer 버튼 등) - footer가 동적으로 생성되므로 즉시 적용
+      try{
+        if (window.ACL_applyToScope) window.ACL_applyToScope(modalEl);
+      }catch(e){}
+
+      // shown 콜백: backdrop z-index + init + onOpen
+      modalEl.addEventListener('shown.bs.modal', function handler() {
+        modalEl.removeEventListener('shown.bs.modal', handler);
+
+        // ✅ backdrop z-index 조정(가장 마지막 backdrop에 stack-2 부여)
+        var backs = document.querySelectorAll('.modal-backdrop');
+        var last = backs && backs.length ? backs[backs.length - 1] : null;
+        if (last) last.classList.add('stack-2');
+
+        if (window.initTooltipPortal) window.initTooltipPortal(modalEl);
+        if (window.initIconTooltips) window.initIconTooltips(modalEl);
+        if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(modalEl);
+
+        if (typeof onOpen === 'function') onOpen(modalEl, bodyHost);
+      });
+
+      bsModal.show();
+    };
+  })();
+</script>

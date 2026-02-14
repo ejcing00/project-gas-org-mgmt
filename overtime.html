@@ -1,0 +1,1139 @@
+<!--overtime.html-->
+<style>
+  /* =========================
+   * Overtime Print (PDF)
+   * - 인쇄 전용 템플릿(print-root)을 미리 만들어두고
+   *   STEP4 데이터를 print-root로 "복사"해서 출력
+   * ========================= */
+  [data-ot-print-root]{ display:none; }
+  body.ot-printing [data-ot-print-root]{ display:block; }
+
+  @media print{
+    /* ✅ 가로 인쇄(landscape) */
+    @page { size: A4 landscape; margin: 10mm; }
+
+    /* ✅ 인쇄 시 배경/색상 유지(브라우저가 허용하는 범위 내) */
+    body.ot-printing [data-ot-print-root],
+    body.ot-printing [data-ot-print-root] *{
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* 인쇄 시 print-root만 보이게 */
+    body *{ visibility:hidden !important; }
+    body.ot-printing [data-ot-print-root],
+    body.ot-printing [data-ot-print-root] *{ visibility:visible !important; }
+
+    body.ot-printing [data-ot-print-root]{
+      position:absolute;
+      left:0; top:0;
+      width:100%;
+      box-sizing:border-box;
+    }
+
+    /* 기본 타이포 */
+    .ot-print-wrap{
+      padding: 6mm 6mm;
+    }
+    .ot-print-head{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 8mm;
+      margin-bottom: 4mm;
+    }
+    .ot-print-title{
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin: 0;
+    }
+    .ot-print-unit{
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    /* 테이블 */
+    .ot-print-table{
+      margin-top: 2mm;
+    }
+    .ot-print-table table{
+      width:100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 11px;
+   }
+    .ot-print-table th,
+    .ot-print-table td{
+      border: 1px solid #c8cdd6;
+      padding: 2.2mm 1.6mm;
+      vertical-align: middle;
+      text-align: center;
+      word-break: keep-all;
+    }
+    .ot-print-table thead th{
+      font-weight: 700;
+      background: #DDEBF5;
+    }
+    .ot-print-table .t-right{ text-align:right; }
+    .ot-print-table .t-left{ text-align:left; }
+
+    /* 지급기준(고정문구) */
+    .ot-print-foot{
+      margin-top: 6mm;
+      font-size: 12px;
+      line-height: 1.55;
+      color: #111;
+    }
+    .ot-print-foot .ft-title{
+      font-weight: 800;
+      margin-bottom: 2mm;
+    }
+    .ot-print-foot ul{ margin:0; padding-left: 18px; }
+    .ot-print-foot li{ margin: 1mm 0; }
+  }
+  /* ot-printing 상태일 때: overtime 루트 안에서 print-root만 보이게(미리보기 깔끔) */
+  body.ot-printing [data-overtime-root] > :not([data-ot-print-root]){
+    display: none !important;
+  }
+
+  /* 배경도 흰색으로 */
+  body.ot-printing{
+    background: #fff !important;
+  }  
+</style>
+
+<template id="tpl-overtime">
+  <div class="page-root" data-overtime-root>
+    <div class="page-body flex-row gap-3">
+      <div style="flex: 2" class="col-fill">
+        <div class="crd">
+          <div class="crd-body">
+            <div class="wrap wrap-desc">
+              <div class="desc-item-value m-2" style="font-size: var(--t-size1)"><span style="font-size: var(--t-size2); color: var(--color-navy);">초과근무</span>는 법정근무시간을 초과한 추가 노동을 의미하며, <span style="font-size: var(--t-size2); color: var(--color-navy); ">초과근무수당</span>은 이에 대한 대가를 통상임금에 가산하여 지급하는 수당입니다.</div>
+              <div class="desc-item-group">
+                <div class="desc-item-label">법정근무</div>
+                <div class="desc-item-value">법으로 정해진 최대 근무시간<br>통상임금(시급)=월급여÷209시간<br>1일 8시간, 1주 40시간</div>
+              </div>
+              <div class="desc-item-group">
+                <div class="desc-item-label">연장근무</div>
+                <div class="desc-item-value">법정근무시간(8시간)을 초과하는 근무시간<br>통상임금의 50% 가산<br>평일 19:00~22:00, 휴일 8시간 초과</div>
+              </div>
+              <div class="desc-item-group">
+                <div class="desc-item-label">휴일근무</div>
+                <div class="desc-item-value">법정휴일 및 회사약정휴일 근무시간<br>통상임금의 50% 가산<br>휴일 06:00~22:00</div>
+              </div>
+              <div class="desc-item-group">
+                <div class="desc-item-label">야간근무</div>
+                <div class="desc-item-value">특정시간대 근무시간<br>통상임금의 50% 가산<br>당일22:00~익일06:00</div>
+              </div>
+              <hr class="hr-bar">
+              <div class="desc-item-group">
+                <div class="desc-item-label">관련근거</div>
+                <div class="desc-item-value">창업지원단-2406호(2021. 7. 5.)</div>
+              </div>
+              <div class="desc-item-group">
+                <div class="desc-item-label">시간범위</div>
+                <div class="desc-item-value">평일 19:00~22:00 => 연장근무<br>평일 22:00~24:00 => 야간근무<br>휴일 06:00~22:00 => 휴일근무<br>휴일 22:00~24:00 => 야간근무<br><span class="text-comment">*00:00~06:00 계산불가</span></div>
+              </div>
+              <div class="desc-item-group">
+                <div class="desc-item-label">시간한도</div>
+                <div class="desc-item-value">1일 최대 4시간 이내<br>1주 최대 12시간 이내<br><span class="text-comment">*상단 관련근거 내 시간한도가 명시되어 있음</span><br><span class="text-comment">*가능한 시간한도 준수</span></div>
+              </div>
+              <div class="desc-item-group">
+                <div class="desc-item-label">수당한도</div>
+                <div class="desc-item-value">월 최대 350,000원<br><span class="text-comment">*최종지급액은 천원단위 절사</span></div>
+              </div>
+              <hr class="hr-bar">
+              <div class="desc-item-group">
+                <div class="desc-item-label">파일출력</div>
+                <div class="desc-item-value">출력 시 본문 제외 상/하단 주석 제거<br>=> 머리글과 바닥글 체크해제</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div style="flex: 8; min-width: 0; margin-bottom: 0;" class="sec fill" >
+        <div class="sec-body scroll-y gap-2">
+          <div class="sec" style="width: 250px; min-width: 250px; max-width: 250px;">
+            <div class="sec-header">[STEP1] 초과근무기간</div>
+            <div class="sec-body flex-row gap-1">
+              <div class="inputgroup2">
+                <select data-ot-year></select>
+                <label>연도</label>
+              </div>
+              <div class="inputgroup2">
+                <select data-ot-month>
+                  <option value="1">1월</option>
+                  <option value="2">2월</option>
+                  <option value="3">3월</option>
+                  <option value="4">4월</option>
+                  <option value="5">5월</option>
+                  <option value="6">6월</option>
+                  <option value="7">7월</option>
+                  <option value="8">8월</option>
+                  <option value="9">9월</option>
+                  <option value="10">10월</option>
+                  <option value="11">11월</option>
+                  <option value="12">12월</option>
+                </select>
+                <label>월</label>
+              </div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="sec-header">
+              <div>[STEP 2] 초과근무대상</div>
+              <div class="d-flex gap-1">
+                <button type="button" class="btn-icon bubble btn-icon-s btn-icon-blue" data-tbl-action="add" data-clone="clear" aria-label="추가"><i class="fa-solid fa-plus"></i></button>
+                <button type="button" class="btn-icon bubble btn-icon-s btn-icon-red" data-tbl-action="delete" data-delete-keep="blank" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
+              </div>
+            </div>
+            <div class="sec-body">
+              <div class="wrap wrap-tbl">
+                <table class="tbl" style="table-layout: fixed;">
+                  <colgroup>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th rowspan="2"><input type="checkbox" class="chk-anim" aria-label="전체선택"></th>
+                      <th rowspan="2">직원</th>
+                      <th colspan="2">월급여</th>
+                      <th rowspan="2">통상임금</th>
+                      <th colspan="2">초과근무시급</th>
+                      <th rowspan="2">최소 초과근무시간<br><div style="font-size: var(--t-size-1); color: var(--t-color-2)">*연장근무시급 기준</div></th>
+                    </tr>
+                    <tr>
+                      <th>산출기준</th>
+                      <th>금액</th>
+                      <th>연장·휴일근무</th>
+                      <th>야간근무</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                      <td>
+                        <select class="select-tbl">
+                          <option value="">선택</option>
+                          <option value="">00000 홍길동</option>
+                        </select>
+                      </td>
+                      <td>
+                        <select class="select-tbl">
+                          <option value="">선택</option>
+                          <option value="실지급액(자동)">실지급액(자동)</option>
+                          <option value="직접입력">직접입력</option>
+                        </select>
+                      </td>
+                      <td><input type="text" class="input-tbl input-unit" data-unit="원" autocomplete="off" disabled></td>
+                      <td><input type="text" class="input-tbl input-unit" data-unit="원" autocomplete="off" disabled></td>
+                      <td><div class="text-tbl text-unit" data-unit="원">10,000</div></td>
+                      <td><div class="text-tbl text-unit" data-unit="원">10,000</div></td>
+                      <td><div class="text-tbl">0시간 0분</div></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="sec-header">
+              <div>[STEP 3] 초과근무내역</div>
+              <div class="d-flex gap-1">
+                <button type="button" class="btn-icon bubble btn-icon-s btn-icon-blue" data-tbl-action="add" data-clone="clear" aria-label="추가"><i class="fa-solid fa-plus"></i></button>
+                <button type="button" class="btn-icon bubble btn-icon-s btn-icon-red" data-tbl-action="delete" data-delete-keep="blank" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
+              </div>
+            </div>
+            <div class="sec-body">
+              <div class="wrap wrap-tbl">
+                <table class="tbl" style="table-layout: fixed;">
+                  <colgroup>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th rowspan="2"><input type="checkbox" class="chk-anim" aria-label="전체선택"></th>
+                      <th rowspan="2">직원</th>
+                      <th colspan="4">초과근무일시</th>
+                      <th colspan="4">초과근무시간</th>
+                    </tr>
+                    <tr>
+                      <th>일자</th>
+                      <th>시작시간</th>
+                      <th>종료시간</th>
+                      <th>공휴일여부</th>
+                      <th>연장근무</th>
+                      <th>휴일근무</th>
+                      <th>야간근무</th>
+                      <th>합계</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                      <td>
+                        <select class="select-tbl">
+                          <option value="">선택</option>
+                          <option value="">00000 홍길동</option>
+                        </select>
+                      </td>
+                        <td><input type="text" class="input-tbl input-date" autocomplete="off" disabled></td>
+                        <td><input type="text" class="input-tbl input-time" autocomplete="off" disabled></td>
+                        <td><input type="text" class="input-tbl input-time" autocomplete="off" disabled></td>
+                      <td>
+                        <select class="select-tbl" disabled>
+                          <option value="미해당">미해당</option>
+                          <option value="해당">해당</option>
+                        </select>
+                      </td>
+                      <td><div class="text-tbl">0시간 0분</div></td>
+                      <td><div class="text-tbl">0시간 0분</div></td>
+                      <td><div class="text-tbl">0시간 0분</div></td>
+                      <td><div class="text-tbl">0시간 0분</div></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="sec-header">
+              <div>[STEP 4] 초과근무수당 산출표</div>
+              <!-- ✅ PDF(인쇄) 버튼 -->
+              <button type="button" class="btn-icon bubble btn-icon-red" aria-label="Download" data-ot-print>
+                <i class="fa-solid fa-file-pdf"></i>
+              </button>
+            </div>
+            <div class="sec-body">
+              <div class="wrap wrap-tbl scroll-x">
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th rowspan="2">순번</th>
+                      <th rowspan="2">직원명</th>
+                      <th rowspan="2">통상임금</th>
+                      <th colspan="4">초과근무시간</th>
+                      <th colspan="4">초과근무수당</th>
+                      <th rowspan="2">최종지급액<br><div style="font-size: var(--t-size-1); color: var(--t-color-2); font-weight: var(--t-weight);">*천원단위 절사</div></th>
+                      <th rowspan="2">사업명</th>
+                    </tr>
+                    <tr>
+                      <th>연장근무</th>
+                      <th>휴일근무</th>
+                      <th>야간근무</th>
+                      <th>합계</th>
+                      <th>연장근무</th>
+                      <th>휴일근무</th>
+                      <th>야간근무</th>
+                      <th>합계</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><div class="text-tbl">1</div></td>
+                      <td><div class="text-tbl">홍길동</div></td>
+                      <td><div class="text-tbl text-unit" data-unit="원">10000</div></td>
+                      <td><div class="text-tbl">00시간 00분</div></td>
+                      <td><div class="text-tbl">00시간 00분</div></td>
+                      <td><div class="text-tbl">00시간 00분</div></td>
+                      <td><div class="text-tbl">00시간 00분</div></td>
+                      <td><div class="text-tbl text-unit" data-unit="원">10000</div></td>
+                      <td><div class="text-tbl text-unit" data-unit="원">10000</div></td>
+                      <td><div class="text-tbl text-unit" data-unit="원">10000</div></td>
+                      <td><div class="text-tbl text-unit" data-unit="원">10000</div></td>
+                      <td><div class="text-tbl text-unit" data-unit="원">10000</div></td>
+                      <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div data-ot-print-root>
+      <div class="ot-print-wrap">
+        <div class="ot-print-head">
+          <h1 class="ot-print-title" data-ot-print-title>초과근무수당 산출표</h1>
+        </div>
+
+        <div class="ot-print-table">
+          <table>
+            <thead>
+              <tr>
+                <th rowspan="2" style="width:36px;">순번</th>
+                <th rowspan="2" style="width:65px;">직원명</th>
+                <th rowspan="2" style="width:70px;">통상임금</th>
+                <th colspan="4">초과근무시간</th>
+                <th colspan="4">초과근무수당</th>
+                <th rowspan="2" style="width:90px;">최종지급액<br><span style="font-weight:400; font-size:10px;">*천원단위 절사</span></th>
+                <th rowspan="2" style="width:150px;">비고</th>
+              </tr>
+              <tr>
+                <th style="width:72px;">연장근무</th>
+                <th style="width:72px;">휴일근무</th>
+                <th style="width:72px;">야간근무</th>
+                <th style="width:72px;">합계</th>
+                <th style="width:78px;">연장근무</th>
+                <th style="width:78px;">휴일근무</th>
+                <th style="width:78px;">야간근무</th>
+                <th style="width:78px;">합계</th>
+              </tr>
+            </thead>
+            <tbody data-ot-print-tbody>
+              <!-- JS에서 STEP4 값을 복사해서 row를 채움 -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="ot-print-foot">
+          <div class="ft-title">초과근무수당 지급기준: 창업지원단-2406호(2021. 7. 5.)</div>
+          <ul>
+            <li>수당 및 시간한도: 월 최대 350,000원, 1주 최대 12시간</li>
+            <li>통상임금: 월급여 ÷ 209시간</li>
+            <li>연장근무: 통상임금의 50% 가산 (평일 19시~22시)</li>
+            <li>휴일근무: 통상임금의 50% 가산 (휴일 06시~22시)</li>
+            <li>야간근무: 통상임금의 100% 가산 (22시~24시)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+(function(){
+
+  // ===== util =====
+  function _num(v){
+    v = String(v == null ? '' : v);
+    v = v.replace(/[^\d.-]/g,'');
+    var n = Number(v);
+    return isFinite(n) ? n : 0;
+  }
+  function _fmtMoney(n){
+    n = Math.floor(_num(n));
+    return n.toLocaleString('ko-KR');
+  }
+  function _fmtHM(min){
+    min = Math.max(0, Math.floor(_num(min)));
+    var h = Math.floor(min / 60);
+    var m = min % 60;
+    // 예시: 12시간 0분 / 1시간 24분 / 0시간 4분
+    return h + '시간 ' + m + '분';
+  }
+  function _parseTimeToMin(t){ // "HH:MM" -> minutes from 00:00
+    t = String(t||'').trim();
+    var m = t.match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return null;
+    var hh = Number(m[1]), mm = Number(m[2]);
+    if (hh<0 || hh>24 || mm<0 || mm>59) return null;
+    if (hh===24 && mm!==0) return null;
+    return hh*60 + mm;
+  }
+  function _overlap(a1,a2,b1,b2){
+    var s = Math.max(a1,b1), e = Math.min(a2,b2);
+    return Math.max(0, e - s);
+  }
+  function _isIntLike(x){
+    return Math.abs(x - Math.round(x)) < 1e-9;
+  }
+
+  // ===== main =====
+  window.Overtime_init = function(scopeEl){
+    if (!scopeEl) return;
+    // 루트(페이지) 기준으로만 찾기
+    var root = scopeEl.querySelector('[data-overtime-root]') || scopeEl;
+
+    var selYear   = root.querySelector('[data-ot-year]');
+    var selMonth  = root.querySelector('[data-ot-month]');
+    var btnPrint  = root.querySelector('[data-ot-print]');
+    var printRoot = root.querySelector('[data-ot-print-root]');
+
+    function refreshUi_(){
+      if (typeof window.refreshFloatingInputs === 'function'){
+        window.refreshFloatingInputs(root);
+      }
+      if (window.initUnitInputs) window.initUnitInputs(root);
+      if (window.initUnitTextTbl) window.initUnitTextTbl(root);
+    }
+    var tables = root.querySelectorAll('table.tbl');
+    if (!tables || tables.length < 3){
+      console.error('Overtime_init: 테이블을 찾지 못했습니다. table.tbl count=', tables ? tables.length : 0);
+      return;
+    }
+    var tbl2 = tables[0]; // STEP2
+    var tbl3 = tables[1]; // STEP3
+    var tbl4 = tables[2]; // STEP4
+
+    var ctx = {
+      years: [],
+      employees: [], // {id,name,label}
+      salaryMap: {}, // id -> salary
+      capAmount: 0,
+      _ready: false,
+      _loading: false
+    };
+
+    // ===== default period: previous month (초기 전달 연/월 “기준값” 보관) =====
+    var _defaultPeriod = (function(){
+      var d = new Date();
+      d.setMonth(d.getMonth() - 1);
+      return {
+        year: d.getFullYear() + '년',
+        month: String(d.getMonth() + 1)
+      };
+    })();
+    var _desiredYear  = _defaultPeriod.year;
+    var _desiredMonth = _defaultPeriod.month;
+
+    // 셀렉트가 비어있어도 “기준값”은 보관해두고, 월은 즉시 반영(옵션이 고정이라 가능)
+    (function setDefaultPeriod(){
+      if (selMonth) selMonth.value = _desiredMonth;
+      if (selYear)  selYear.value  = _desiredYear; // 옵션이 아직 없어도 값 자체는 보관됨(안 잡히면 fillYears_에서 보정)
+    })();
+
+    function getPeriod_(){
+      var y = selYear  ? String(selYear.value  || '').trim() : '';
+      var m = selMonth ? String(selMonth.value || '').trim() : '';
+      if (!m) m = _desiredMonth;
+      if (!y) y = _desiredYear;
+      return { year: y, month: m };
+    }
+
+    // ===== API (google.script.run 우선 + fetch 라우터 있으면 교체) =====
+    function api_(fn, payload){
+      return new Promise(function(resolve, reject){
+        if (window.google && google.script && google.script.run){
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)[fn](payload);
+          return;
+        }
+        reject(new Error('API 호출 수단이 없습니다. (google.script.run 미존재)'));
+      });
+    }
+
+    function reloadContext_(){
+      if (!selYear || !selMonth) return Promise.resolve();
+        var period = getPeriod_();
+        var payload = { year: period.year, month: period.month };
+
+        // 로딩 시작(placeholder 표시용)
+        ctx._loading = true;
+        ctx._ready = false;
+
+        // ✅ 여기서 한번 재계산을 돌려야, auto 행에 placeholder('불러오는 중...')가 즉시 표시됨
+        // (연/월 change 핸들러는 reloadContext_ 호출 후 return 하므로, 이 타이밍이 필요)
+        try { recalcAll_(); } catch(e) {}
+        try { refreshUi_(); } catch(e) {}
+      return api_('OVERTIME_getContext', payload).then(function(res){
+        res = res || {};
+        ctx.years = res.years || [];
+        ctx.employees = (res.employees || []).map(function(x){
+          return { id: String(x.employee_id||''), name: String(x.name||''), label: String(x.employee_id||'') + ' ' + String(x.name||'') };
+        });
+        // ✅ STEP2 직원 선택목록: 사번(employee_id) 오름차순 정렬
+        // - 숫자 비교 우선, 동률/비숫자 섞임은 문자열 비교로 안정화
+        ctx.employees.sort(function(a,b){
+          var as = String((a&&a.id)||'').trim();
+          var bs = String((b&&b.id)||'').trim();
+          var an = Number(as), bn = Number(bs);
+          var aNum = isFinite(an) && as !== '';
+          var bNum = isFinite(bn) && bs !== '';
+          if (aNum && bNum && an !== bn) return an - bn;
+          return as.localeCompare(bs, 'ko');
+        });
+        ctx.salaryMap = res.salaryMap || {};
+        ctx.capAmount = _num(res.capAmount);
+        ctx._ready = true;
+        ctx._loading = false;
+        fillYears_();
+        recalcAll_();
+        refreshUi_();
+      }).catch(function(err){
+        ctx._loading = false;
+        console.error(err);
+        // 있으면 공용 알림 사용
+        if (typeof showAlertError === 'function') showAlertError('초과근무 데이터 로드 실패', String(err));
+      });
+    }
+
+    function fillYears_(){
+      if (!selYear) return;
+      var cur = selYear.value;
+      // years가 비면 기존 옵션 유지
+      if (!ctx.years.length) return;
+      selYear.innerHTML = '';
+      ctx.years.forEach(function(y){
+        var opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        selYear.appendChild(opt);
+      });
+      // 1) 기존 선택값(cur)이 유효하면 유지
+      if (cur && [...selYear.options].some(function(o){ return o.value === cur; })){
+        selYear.value = cur;
+        _desiredYear = cur;
+        return;
+      }
+      // 2) cur이 비었거나(초기엔 여기) 유효하지 않으면 “초기 기준 연도”로 보정
+      if (_desiredYear && [...selYear.options].some(function(o){ return o.value === _desiredYear; })){
+        selYear.value = _desiredYear;
+        return;
+      }
+      // 3) 그래도 없으면 첫 옵션 선택
+      if (selYear.options.length){
+        selYear.selectedIndex = 0;
+        _desiredYear = selYear.value;
+      }
+    }
+
+    // ===== STEP2 helpers =====
+    function step2Rows_(){
+      return Array.from(tbl2.tBodies[0].rows || []);
+    }
+    function step3Rows_(){
+      return Array.from(tbl3.tBodies[0].rows || []);
+    }
+
+    function selectedTargetEmpIds_(){
+      var ids = [];
+      step2Rows_().forEach(function(r){
+        var empSel = r.cells[1].querySelector('select');
+        var id = empSel ? String(empSel.value||'').trim() : '';
+        if (id) ids.push(id);
+      });
+      return ids;
+    }
+
+    function rebuildStep2EmpOptions_(){
+      var chosen = new Set(selectedTargetEmpIds_());
+      step2Rows_().forEach(function(r){
+        var empSel = r.cells[1].querySelector('select');
+        if (!empSel) return;
+        var cur = String(empSel.value||'').trim();
+        empSel.innerHTML = '';
+        var opt0 = document.createElement('option');
+        opt0.value = '';
+        opt0.textContent = '선택';
+        empSel.appendChild(opt0);
+
+        ctx.employees.forEach(function(e){
+          // 현재 row의 cur는 유지, 다른 row에서 선택된 값은 제외
+          if (e.id !== cur && chosen.has(e.id)) return;
+          var opt = document.createElement('option');
+          opt.value = e.id;
+          opt.textContent = e.label;
+          empSel.appendChild(opt);
+        });
+
+        empSel.value = cur; // 가능한 경우 유지
+      });
+    }
+
+    function calcStep2Row_(r){
+      // cols: [0]chk [1]emp [2]basis [3]amount [4]normal [5]ext [6]night [7]minHours :contentReference[oaicite:8]{index=8}
+      var empSel   = r.cells[1].querySelector('select');
+      var basisSel = r.cells[2].querySelector('select');
+      var inpAmt   = r.cells[3].querySelector('input');
+      var inpNorm  = r.cells[4].querySelector('input');
+      var outExt   = r.cells[5].querySelector('.text-tbl');
+      var outNight = r.cells[6].querySelector('.text-tbl');
+      var outMin   = r.cells[7].querySelector('.text-tbl');
+
+      var empId = empSel ? String(empSel.value||'').trim() : '';
+      var basis = basisSel ? String(basisSel.value||'') : '';
+
+      // 산출기준 옵션 값 세팅(기존엔 value가 비어있음 :contentReference[oaicite:9]{index=9}) -> 텍스트로 판별
+      var basisText = basisSel && basisSel.selectedOptions[0] ? basisSel.selectedOptions[0].textContent.trim() : '';
+      var isAuto = (basisText.indexOf('실지급액') >= 0);
+      var isManual = (basisText.indexOf('직접입력') >= 0);
+
+      // 이전 상태 기억(산출기준 전환 감지)
+      var prevBasis = r.dataset.prevBasis || '';
+      var prevEmpId = r.dataset.prevEmpId || '';
+      r.dataset.prevBasis = (isAuto ? 'auto' : (isManual ? 'manual' : 'none'));
+      r.dataset.prevEmpId = empId;
+
+      // 금액 입력 enabled/disabled
+      if (inpAmt){
+        inpAmt.placeholder = ''; // 기본 초기화
+        if (isManual){
+          // ✅ 직접입력: enable + (auto에서 넘어왔으면 값 제거)
+          inpAmt.disabled = false;
+          if (prevBasis === 'auto' || prevBasis === 'none') inpAmt.value = '';
+        } else {
+          // ✅ 선택/자동: disabled + 값은 항상 공백(요구사항)
+          inpAmt.disabled = true;
+          inpAmt.value = '';
+        }
+      }
+      if (inpNorm) inpNorm.disabled = true; // 통상임금은 항상 자동
+      
+      // 직원 해제되면 관련 출력도 초기화
+      if (!empId){
+        if (inpNorm) inpNorm.value = '';
+        if (outExt) outExt.textContent = '';
+        if (outNight) outNight.textContent = '';
+        if (outMin) outMin.textContent = '0시간 0분';
+        return;
+      }
+
+      // 금액 결정
+      var salary = 0;
+      if (isAuto){
+        // ✅ input-unit 특성상 value에 문구를 넣기 어렵다 → placeholder 사용
+        if (inpAmt){
+          inpAmt.placeholder = (ctx._loading || !ctx._ready) ? '불러오는 중...' : '';
+        }
+
+        // 컨텍스트가 아직 없으면 계산 중단(로드 완료 후 recalcAll_에서 자동 재계산)
+        if (ctx._loading || !ctx._ready){
+          if (inpNorm) inpNorm.value = '';
+          if (outExt) outExt.textContent = '';
+          if (outNight) outNight.textContent = '';
+          if (outMin) outMin.textContent = '0시간 0분';
+          return;
+        }
+
+        salary = _num(ctx.salaryMap[empId]);
+        if (inpAmt){
+          inpAmt.value = salary ? _fmtMoney(salary) : '';
+        }
+      } else {
+        // auto가 아니면 placeholder 제거
+        if (inpAmt) inpAmt.placeholder = '';
+      }
+
+      var amt = inpAmt ? _num(inpAmt.value) : 0;
+      var normal = Math.floor(amt / 209); // 내림(요구사항)
+      if (inpNorm) inpNorm.value = normal ? _fmtMoney(normal) : '';
+
+      var rateExt = Math.floor(normal * 1.5);
+      var rateNight = Math.floor(normal * 2);
+
+      if (outExt) outExt.textContent = _fmtMoney(rateExt);
+      if (outNight) outNight.textContent = _fmtMoney(rateNight);
+
+      // 최소 초과근무시간: cap / rateExt  -> "N시간 N분"
+      // - 초 단위가 생기면 무조건 +1분(= 분 단위 올림)
+      function _fmtHM_(mins){
+        mins = Math.max(0, Math.floor(_num(mins)));
+        var h = Math.floor(mins / 60);
+        var m = mins % 60;
+        return h + '시간 ' + m + '분';
+      }
+      var minMinutes = 0;
+      if (ctx.capAmount > 0 && rateExt > 0){
+        // hours = capAmount / rateExt
+        // minutes = hours * 60
+        // seconds 존재 시 +1분 요구사항 => Math.ceil로 "분 단위 올림"
+        var rawMin = (ctx.capAmount * 60) / rateExt;
+        // 부동소수 오차 방지용 아주 작은 값
+        minMinutes = Math.ceil(rawMin - 1e-12);
+      }
+      if (outMin) outMin.textContent = _fmtHM_(minMinutes);
+    }
+
+    // ===== STEP3 calc =====
+    function enableStep3Row_(r, enabled){
+      var date = r.cells[2].querySelector('input');
+      var st   = r.cells[3].querySelector('input');
+      var et   = r.cells[4].querySelector('input');
+      var hol  = r.cells[5].querySelector('select');
+      [date,st,et,hol].forEach(function(x){
+        if (!x) return;
+        x.disabled = !enabled;
+        if (!enabled) x.value = '';
+      });
+    }
+
+    function calcStep3Row_(r){
+      // cols: [0]chk [1]emp [2]date [3]start [4]end [5]holiday [6]ext [7]hol [8]night [9]sum :contentReference[oaicite:10]{index=10}
+      var empSel = r.cells[1].querySelector('select');
+      var date   = r.cells[2].querySelector('input');
+      var st     = r.cells[3].querySelector('input');
+      var et     = r.cells[4].querySelector('input');
+      var holSel = r.cells[5].querySelector('select');
+
+      var outExt   = r.cells[6].querySelector('.text-tbl');
+      var outHol   = r.cells[7].querySelector('.text-tbl');
+      var outNight = r.cells[8].querySelector('.text-tbl');
+      var outSum   = r.cells[9].querySelector('.text-tbl');
+
+      var empId = empSel ? String(empSel.value||'').trim() : '';
+      if (!empId){
+        enableStep3Row_(r, false);
+        outExt.textContent = '0시간 0분';
+        outHol.textContent = '0시간 0분';
+        outNight.textContent = '0시간 0분';
+        outSum.textContent = '0시간 0분';
+        return {ext:0, hol:0, night:0};
+      }
+      enableStep3Row_(r, true);
+
+      var startMin = _parseTimeToMin(st.value);
+      var endMin   = _parseTimeToMin(et.value);
+      var holText  = holSel && holSel.selectedOptions[0] ? holSel.selectedOptions[0].textContent.trim() : '미해당';
+      var isHoliday = (holText === '해당');   // ✅ "해당"일 때만 true
+
+      // invalid base
+      var ext=0, hol=0, night=0;
+
+      // 시간 검증
+      var invalid = false;
+      if (startMin==null || endMin==null || endMin<=startMin) invalid = true;
+
+      if (!invalid){
+        // ✅ 공통: 야간근무는 22:00~24:00 겹치는 구간만 계산(공휴일 여부 무관)
+        night = _overlap(startMin, endMin, 22*60, 24*60);
+
+        if (!isHoliday){
+          // ✅ 연장근무: 공휴일 미해당 + 19:00~22:00 겹치는 구간만 계산
+          // 그 외 시간은 계산에서 제외
+          ext = _overlap(startMin, endMin, 19*60, 22*60);
+          hol = 0;
+        } else {
+          // ✅ 휴일근무: 공휴일 해당 + 06:00~22:00 겹치는 구간만 계산
+          // 최대 8시간(480분)까지만 반영, 초과분은 제외
+          hol = _overlap(startMin, endMin, 6*60, 22*60);
+          if (hol > 480) hol = 480;
+          ext = 0;
+        }
+      }
+
+      // invalid 처리: 0으로 + 행 표시
+      r.classList.toggle('is-invalid', !!invalid);
+      if (invalid){
+        ext=hol=night=0;
+      }
+
+      outExt.textContent   = _fmtHM(ext);
+      outHol.textContent   = _fmtHM(hol);
+      outNight.textContent = _fmtHM(night);
+      outSum.textContent   = _fmtHM(ext+hol+night);
+
+      return {ext:ext, hol:hol, night:night};
+    }
+
+    // ===== STEP4 render =====
+    function rebuildStep3EmpOptions_(){
+      var chosenTargets = selectedTargetEmpIds_();
+      var map = new Map();
+      ctx.employees.forEach(function(e){ map.set(e.id, e); });
+
+      step3Rows_().forEach(function(r){
+        var empSel = r.cells[1].querySelector('select');
+        if (!empSel) return;
+        var cur = String(empSel.value||'').trim();
+        empSel.innerHTML = '';
+        var opt0 = document.createElement('option');
+        opt0.value = '';
+        opt0.textContent = '선택';
+        empSel.appendChild(opt0);
+
+        chosenTargets.forEach(function(id){
+          var e = map.get(id);
+          if (!e) return;
+          var opt = document.createElement('option');
+          opt.value = e.id;
+          opt.textContent = e.label;
+          empSel.appendChild(opt);
+        });
+
+        empSel.value = cur; // 중복 선택 가능(요구사항)
+      });
+    }
+
+    function readStep2Rates_(){
+      // employee_id -> {name, normal, rateExt, rateNight}
+      var map = {};
+      step2Rows_().forEach(function(r){
+        var empSel = r.cells[1].querySelector('select');
+        var empId = empSel ? String(empSel.value||'').trim() : '';
+        if (!empId) return;
+
+        var emp = ctx.employees.find(e=>e.id===empId);
+        var name = emp ? emp.name : '';
+
+        var normal = _num(r.cells[4].querySelector('input')?.value);
+        var rateExt = _num(r.cells[5].querySelector('.text-tbl')?.textContent);
+        var rateNight = _num(r.cells[6].querySelector('.text-tbl')?.textContent);
+
+        map[empId] = {name:name, normal:normal, rateExt:rateExt, rateNight:rateNight};
+      });
+      return map;
+    }
+
+    function calcStep4_(){
+      var targets = selectedTargetEmpIds_();
+      var rateMap = readStep2Rates_();
+
+      // 직원별 분 합산
+      var minMap = {};
+      targets.forEach(function(id){
+        minMap[id] = {ext:0, hol:0, night:0};
+      });
+
+      step3Rows_().forEach(function(r){
+        var empSel = r.cells[1].querySelector('select');
+        var empId = empSel ? String(empSel.value||'').trim() : '';
+        if (!empId || !minMap[empId]) return;
+        var v = calcStep3Row_(r); // 여기서 row 값 최신화도 같이
+        minMap[empId].ext += v.ext;
+        minMap[empId].hol += v.hol;
+        minMap[empId].night += v.night;
+      });
+
+      // STEP4 tbody 재생성
+      var tbody = tbl4.tBodies[0];
+      var existingBiz = {}; // employee_id -> 사업명 유지
+      Array.from(tbody.rows).forEach(function(tr){
+        var empName = tr.cells[1]?.innerText?.trim();
+        var bizInp = tr.querySelector('input');
+        if (empName && bizInp) existingBiz[empName] = bizInp.value; // name 기준(단순)
+      });
+      tbody.innerHTML = '';
+
+      targets.forEach(function(empId, idx){
+        var rate = rateMap[empId] || {name:'', normal:0, rateExt:0, rateNight:0};
+        var mins = minMap[empId] || {ext:0, hol:0, night:0};
+        var sumMin = mins.ext + mins.hol + mins.night;
+
+        // 수당 계산 (분 단위)
+        var payExt   = (rate.rateExt * (mins.ext/60));
+        var payHol   = (rate.rateExt * (mins.hol/60));   // 휴일도 1.5배(연장·휴일근무)
+        var payNight = (rate.rateNight * (mins.night/60));
+        var paySum   = payExt + payHol + payNight;
+
+        var finalPay = Math.floor(paySum / 1000) * 1000; // 천원단위 절사
+
+        var tr = document.createElement('tr');
+        tr.innerHTML = [
+          '<td><div class="text-tbl">'+(idx+1)+'</div></td>',
+          '<td><div class="text-tbl">'+(rate.name||'')+'</div></td>',
+          '<td><div class="text-tbl text-unit" data-unit="원">'+_fmtMoney(rate.normal)+'</div></td>',
+          '<td><div class="text-tbl">'+_fmtHM(mins.ext)+'</div></td>',
+          '<td><div class="text-tbl">'+_fmtHM(mins.hol)+'</div></td>',
+          '<td><div class="text-tbl">'+_fmtHM(mins.night)+'</div></td>',
+          '<td><div class="text-tbl">'+_fmtHM(sumMin)+'</div></td>',
+          '<td><div class="text-tbl text-unit" data-unit="원">'+_fmtMoney(payExt)+'</div></td>',
+          '<td><div class="text-tbl text-unit" data-unit="원">'+_fmtMoney(payHol)+'</div></td>',
+          '<td><div class="text-tbl text-unit" data-unit="원">'+_fmtMoney(payNight)+'</div></td>',
+          '<td><div class="text-tbl text-unit" data-unit="원">'+_fmtMoney(paySum)+'</div></td>',
+          '<td><div class="text-tbl text-unit" data-unit="원">'+_fmtMoney(finalPay)+'</div></td>',
+          '<td><input type="text" class="input-tbl" autocomplete="off" value="'+(existingBiz[rate.name]||'')+'"></td>'
+        ].join('');
+        tbody.appendChild(tr);
+      });
+    }
+
+    function recalcAll_(){
+    // ✅ STEP2에서 실지급액(자동)을 쓰는 행이 있으면, 컨텍스트가 준비됐는지 보장
+    var needAuto = step2Rows_().some(function(r){
+      var empSel = r.cells[1].querySelector('select');
+      var basisSel = r.cells[2].querySelector('select');
+      var empId = empSel ? String(empSel.value||'').trim() : '';
+      var basisText = basisSel && basisSel.selectedOptions[0] ? basisSel.selectedOptions[0].textContent.trim() : '';
+      return empId && (basisText.indexOf('실지급액') >= 0);
+    });
+    if (needAuto && !ctx._ready && !ctx._loading){
+      reloadContext_();
+      return;
+    }
+      // STEP2
+      rebuildStep2EmpOptions_();
+      step2Rows_().forEach(calcStep2Row_);
+
+      // STEP3
+      rebuildStep3EmpOptions_();
+      step3Rows_().forEach(calcStep3Row_);
+
+      // STEP4
+      calcStep4_();
+
+      // ✅ 커스텀 input(has-value) + date/time 재초기화
+      refreshUi_();
+      // ✅ 텍스트 유닛(원/시간 등) 재적용
+      if (window.initUnitTextTbl) window.initUnitTextTbl(scopeEl);
+    }
+
+    // ===== events =====
+    scopeEl.addEventListener('change', function(e){
+      // STEP1 period change => reload salaryMap/cap
+      if (e.target === selYear || e.target === selMonth){
+        if (selYear && selYear.value)  _desiredYear  = String(selYear.value);
+        if (selMonth && selMonth.value) _desiredMonth = String(selMonth.value);
+        reloadContext_();
+        return;
+      }
+      // STEP2/3 입력 변경 => 재계산
+      if (tbl2.contains(e.target) || tbl3.contains(e.target)){
+        recalcAll_();
+      }
+    });
+
+    scopeEl.addEventListener('input', function(e){
+      if (tbl2.contains(e.target) || tbl3.contains(e.target)){
+        recalcAll_();
+      }
+    });
+
+    // add/delete 버튼 클릭 후에도 옵션/계산 재정렬
+    scopeEl.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-tbl-action]');
+      if (!btn) return;
+      // DOM 갱신 이후 실행
+      setTimeout(recalcAll_, 0);
+    });
+
+    function buildPrint_(){
+      var pr = root.querySelector('[data-ot-print-root]');
+      if (!pr) return;
+
+      // 제목: "초과근무수당 산출표(YYYY년 M월)"
+      var y = (selYear && selYear.value) ? String(selYear.value) : '';
+      var m = (selMonth && selMonth.value) ? String(selMonth.value) : '';
+      var titleEl = pr.querySelector('[data-ot-print-title]');
+      if (titleEl){
+        titleEl.textContent = '창업지원단 초과근무수당 산출표(' + y + ' ' + m + '월)';
+      }
+
+      // STEP4 -> print tbody 복사
+      var ptb = pr.querySelector('[data-ot-print-tbody]');
+      if (!ptb) return;
+      ptb.innerHTML = '';
+
+      var srcBody = tbl4 && tbl4.tBodies ? tbl4.tBodies[0] : null;
+      if (!srcBody) return;
+
+      Array.from(srcBody.rows || []).forEach(function(tr){
+        // STEP4 마지막 사업명은 input일 수 있으니 value로 가져오기
+        var tds = Array.from(tr.cells || []);
+        if (!tds.length) return;
+
+        var bizInput = tr.querySelector('input');
+        var bizText = bizInput ? String(bizInput.value || '').trim() : (tds[12] ? tds[12].innerText.trim() : '');
+
+        // STEP4 구조(13칸): 0~11 text, 12 사업명
+        function cellText(i){
+          var c = tds[i];
+          if (!c) return '';
+          // text-unit/div.text-tbl 등 내부 텍스트 그대로
+          return (c.innerText || '').trim();
+        }
+
+        var row = document.createElement('tr');
+        row.innerHTML = [
+          '<td>' + cellText(0) + '</td>',
+          '<td>' + cellText(1) + '</td>',
+          '<td class="t-right">' + cellText(2) + '</td>',
+          '<td>' + cellText(3) + '</td>',
+          '<td>' + cellText(4) + '</td>',
+          '<td>' + cellText(5) + '</td>',
+          '<td>' + cellText(6) + '</td>',
+          '<td class="t-right">' + cellText(7) + '</td>',
+          '<td class="t-right">' + cellText(8) + '</td>',
+          '<td class="t-right">' + cellText(9) + '</td>',
+          '<td class="t-right">' + cellText(10) + '</td>',
+          '<td class="t-right">' + cellText(11) + '</td>',
+          '<td class="t-left">' + bizText + '</td>'
+        ].join('');
+        ptb.appendChild(row);
+      });
+
+      // 유닛/커스텀 텍스트 포맷 재적용(있으면)
+      if (window.initUnitTextTbl) window.initUnitTextTbl(pr);
+    }
+
+    function startPrint_(){
+      buildPrint_(); // ✅ print-root 내부에 step4 내용을 복사해 채움
+
+      // ✅ 같은 페이지를 숨기지 말고, "iframe"에 템플릿만 넣어서 인쇄
+      var pr = root.querySelector('[data-ot-print-root]');
+      if (!pr) return;
+
+      // 현재 문서의 스타일을 그대로 복사(인쇄 템플릿 CSS 포함)
+      var cssText = Array.prototype.slice.call(document.querySelectorAll('style'))
+        .map(function(s){ return s && s.textContent ? s.textContent : ''; })
+        .join('\n');
+
+      var titleEl = pr.querySelector('[data-ot-print-title]');
+      var docTitle = titleEl ? String(titleEl.textContent||'').trim() : '초과근무수당 산출표';
+
+      var iframe = document.createElement('iframe');
+      iframe.setAttribute('aria-hidden', 'true');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      iframe.style.opacity = '0';
+      document.body.appendChild(iframe);
+
+      var w = iframe.contentWindow;
+      var d = w.document;
+      d.open();
+      d.write(
+        '<!doctype html><html><head><meta charset="utf-8">' +
+        '<title>' + (docTitle.replace(/</g,'&lt;').replace(/>/g,'&gt;')) + '</title>' +
+        '<style>' + cssText + '</style>' +
+        // ✅ overtime.html의 print CSS는 body.ot-printing + [data-ot-print-root]를 전제로 함
+        '</head><body class="ot-printing">' +
+        // ✅ data-ot-print-root 래퍼(outerHTML)까지 포함해서 넣어야 CSS가 적용됨
+        pr.outerHTML +
+        '</body></html>'
+      );
+      d.close();
+
+      // iframe 로딩 이후 인쇄 → 끝나면 iframe 제거
+      var cleanup = function(){
+        try{ document.body.removeChild(iframe); }catch(e){}
+      };
+      w.onafterprint = cleanup;
+      setTimeout(function(){
+        try{
+          w.focus();
+          w.print();
+        }catch(e){
+          cleanup();
+        }
+      }, 50);
+    }
+
+    // endPrint_/afterprint는 더 이상 본문 토글 방식이 아니므로 제거(유지 불필요)
+
+    if (btnPrint){
+      btnPrint.addEventListener('click', function(){
+        startPrint_();
+      });
+    }
+
+    // first load
+    reloadContext_();
+  };
+
+})();
+</script>

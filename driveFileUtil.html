@@ -1,0 +1,166 @@
+<!--drivceFileUtil.html-->
+<script>
+/**
+ * DriveFileUtil (client)
+ * - 공통 파일 업로드/다운로드 유틸
+ * - 기본은 _callGAS_ (Promise 기반) 사용
+ * - 없으면 google.script.run 래퍼로 동작
+ *
+ * 서버 함수:
+ *   FILEUTIL_upload({ permKey, folderKey, file_name, mime_type, size, data_url })
+ *   FILEUTIL_download({ permKey, file_id }) -> { ok, file_name, mime_type, data_base64 }
+ */
+(function(){
+  function _call_(fn, payload){
+    // 1) 앱 공통 Promise 래퍼가 있으면 우선 사용
+    if (typeof window._callGAS_ === 'function') {
+      return window._callGAS_(fn, payload);
+    }
+
+    // 2) fallback: google.script.run
+    return new Promise(function(resolve, reject){
+      try{
+        var runner = google.script.run
+          .withSuccessHandler(function(res){ resolve(res); })
+          .withFailureHandler(function(err){
+            var msg = (err && err.message) ? err.message : String(err);
+            reject(new Error(msg));
+          });
+
+        if (!runner || typeof runner[fn] !== 'function') {
+          reject(new Error('GAS 함수 없음: ' + fn));
+          return;
+        }
+        runner[fn](payload);
+      }catch(e){
+        reject(e);
+      }
+    });
+  }
+
+  function _readAsDataURL_(file){
+    return new Promise(function(resolve, reject){
+      try{
+        var fr = new FileReader();
+        fr.onload = function(){ resolve(String(fr.result || '')); };
+        fr.onerror = function(){ reject(new Error('파일 읽기 실패')); };
+        fr.readAsDataURL(file);
+      }catch(e){
+        reject(e);
+      }
+    });
+  }
+
+  function _b64ToBlob_(b64, mime){
+    mime = mime || 'application/octet-stream';
+    var bin = atob(b64);
+    var len = bin.length;
+    var bytes = new Uint8Array(len);
+    for (var i=0; i<len; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: mime });
+  }
+
+  function _downloadBlob_(blob, filename){
+    filename = filename || 'download';
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function(){ try{ URL.revokeObjectURL(url); }catch(e){} }, 2000);
+  }
+
+  var DriveFileUtil = {
+    /**
+     * 업로드(Drive 생성)
+     * opts: { permKey?, folderKey, file }
+     */
+    upload: function(opts){
+      opts = opts || {};
+      var file = opts.file;
+      if (!file) return Promise.reject(new Error('file이 없습니다.'));
+      var folderKey = String(opts.folderKey || '').trim();
+      if (!folderKey) return Promise.reject(new Error('folderKey가 없습니다.'));
+      var permKey = String(opts.permKey || '').trim();
+
+      return _readAsDataURL_(file).then(function(dataUrl){
+        var payload = {
+          permKey: permKey,
+          folderKey: folderKey,
+          file_name: file.name,
+          mime_type: file.type || 'application/octet-stream',
+          size: file.size || 0,
+          data_url: dataUrl
+        };
+        return _call_('FILEUTIL_upload', payload);
+      });
+    },
+
+    /**
+     * 다운로드(서버 base64 -> 브라우저 저장)
+     * opts: { permKey?, file_id }
+     */
+    download: function(opts){
+      opts = opts || {};
+      var fileId = String(opts.file_id || '').trim();
+      if (!fileId) return Promise.reject(new Error('file_id가 없습니다.'));
+      var permKey = String(opts.permKey || '').trim();
+
+      return _call_('FILEUTIL_download', { permKey: permKey, file_id: fileId })
+        .then(function(res){
+          if (!res || !res.ok) throw new Error((res && res.message) ? res.message : '다운로드 실패');
+          var blob = _b64ToBlob_(String(res.data_base64 || ''), res.mime_type);
+          var finalName = res.file_name;
+          if (opts.filename) finalName = String(opts.filename);
+          if (opts.filenamePrefix) finalName = String(opts.filenamePrefix) + '_' + String(res.file_name || 'download');
+          _downloadBlob_(blob, finalName);
+         return { ok:true };
+        });
+    },
+
+    // ✅ 다중 다운로드(zip)
+    // opts: { permKey?, zip_name, items:[{file_id, filenamePrefix}] }
+    downloadZip: function(opts){
+      opts = opts || {};
+      var permKey = String(opts.permKey || '').trim();
+      var zipName = String(opts.zip_name || opts.zipName || '').trim() || 'download';
+      var items = Array.isArray(opts.items) ? opts.items : [];
+      if (!items.length) return Promise.reject(new Error('items가 없습니다.'));
+
+      return _call_('FILEUTIL_downloadZip', { permKey: permKey, zip_name: zipName, items: items })
+        .then(function(res){
+          if (!res || !res.ok) throw new Error((res && res.message) ? res.message : '다운로드 실패');
+          var blob = _b64ToBlob_(String(res.data_base64 || ''), res.mime_type || 'application/zip');
+          var finalName = String(res.file_name || zipName || 'download.zip');
+          if (!/\\.zip$/i.test(finalName)) finalName = finalName + '.zip';
+          _downloadBlob_(blob, finalName);
+          return { ok:true };
+        });
+    },    
+
+    /**
+     * 미리보기용 blob URL
+     * opts: { permKey?, file_id }
+     */
+    previewUrl: function(opts){
+      opts = opts || {};
+      var fileId = String(opts.file_id || '').trim();
+      if (!fileId) return Promise.reject(new Error('file_id가 없습니다.'));
+      var permKey = String(opts.permKey || '').trim();
+
+      return _call_('FILEUTIL_download', { permKey: permKey, file_id: fileId })
+        .then(function(res){
+         if (!res || !res.ok) throw new Error((res && res.message) ? res.message : '미리보기 실패');
+          var blob = _b64ToBlob_(String(res.data_base64 || ''), res.mime_type);
+          var url = URL.createObjectURL(blob);
+          return { ok:true, url:url, mime_type:res.mime_type, file_name:res.file_name };
+        });
+    }
+  };
+
+  window.DriveFileUtil = DriveFileUtil;
+})();
+</script>
+

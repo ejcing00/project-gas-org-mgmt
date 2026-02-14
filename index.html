@@ -1,0 +1,121 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <?!= include('meta'); ?>
+    <?!= include('driveFileUtil'); ?>
+    <?!= include('excelDownload'); ?>
+  </head>
+  <body>
+    <div id="app-shell">
+      <?!= include('aclUi'); ?>
+      <?!= include('sidebar'); ?>
+      <main id="main-content">
+        <div class="main-card">        
+          <div id="page-container"></div>
+          <?!= include('dashboard'); ?>
+          <?!= include('project'); ?>
+          <?!= include('employee'); ?>
+          <?!= include('payroll'); ?>
+          <?!= include('leave'); ?>
+          <?!= include('overtime'); ?>
+          <?!= include('workstudy'); ?>
+          <?!= include('accesscontrol'); ?>
+          <?!= include('styleguide'); ?>
+        </div>
+      </main>
+      <?!= include('alertmodal'); ?>
+      <?!= include('pagemodal'); ?>
+    </div>
+
+    <script>
+      window.App = (function () {
+        var PAGE_TEMPLATES = {
+          dashboard: 'tpl-dashboard',
+          project: 'tpl-project',
+          employee: 'tpl-employee',
+          payroll: 'tpl-payroll',
+          leave: 'tpl-leave',
+          overtime: 'tpl-overtime',
+          workstudy: 'tpl-workstudy',
+          accesscontrol: 'tpl-accesscontrol',
+          styleguide: 'tpl-styleguide'
+        };
+
+        function loadPage(page) {
+          var container = document.getElementById('page-container');
+          if (!container) return;
+
+          // fallback 은 dashboard 대신 home 이 더 안전
+          var tplId = PAGE_TEMPLATES[page] || PAGE_TEMPLATES.dashboard;
+          var tpl   = document.getElementById(tplId);
+
+          if (tpl && 'content' in tpl) {
+            container.innerHTML = '';
+            container.appendChild(tpl.content.cloneNode(true));
+          } else {
+            container.innerHTML = '<p>준비 중인 페이지입니다.</p>';
+          }
+
+          // 사이드바 active 표시
+          var links = document.querySelectorAll('#sidebar a[data-page]');
+          links.forEach(function (a) {
+            if (a.getAttribute('data-page') === page) {
+              a.classList.add('is-active');
+            } else {
+              a.classList.remove('is-active');
+            }
+          });
+          
+          if (window.initTooltipPortal) window.initTooltipPortal(container);
+          if (window.initIconTooltips) window.initIconTooltips(container);
+
+          if (window.initUiScope) window.initUiScope(container);
+          if (typeof ACL_applyToScope === 'function') ACL_applyToScope(container);
+
+          if (page === 'accesscontrol' && typeof window.AccessControl_init === 'function') {
+            window.AccessControl_init(container);
+          }
+          if (page === 'project' && typeof window.Project_init === 'function') {
+            window.Project_init(container);
+          }
+          if (page === 'employee' && typeof window.Employee_init === 'function') {
+            window.Employee_init(container);
+          }
+          if (page === 'payroll' && typeof window.Payroll_init === 'function') {
+            window.Payroll_init(container);
+          }
+          if (page === 'overtime' && typeof window.Overtime_init === 'function') {
+            window.Overtime_init(container);
+          }
+          if (page === 'leave' && typeof window.Leave_init === 'function') {
+            window.Leave_init(container);
+          }
+        }
+
+        return {
+          loadPage: loadPage
+        };
+      })();
+
+      document.addEventListener('DOMContentLoaded', function () {
+        console.log('[APP] app-shell loaded');
+
+        if (typeof ACL_bindSidebar === 'function') ACL_bindSidebar();
+
+        if (typeof ACL_bootstrap === 'function'){
+          ACL_bootstrap(function(ok, res){
+            if (!ok){
+              if (typeof showAlertError === 'function') {
+                showAlertError((res && res.message) ? res.message : 'ACL 로드 실패', '권한');
+              }
+            }
+            if (window.App) window.App.loadPage('dashboard');
+          });
+        } else {
+          if (window.App) window.App.loadPage('dashboard');
+        }
+      });
+    </script>
+  </body>
+</html>

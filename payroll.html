@@ -1,0 +1,2568 @@
+<!--payroll.html-->
+<template id="tpl-payroll">
+  <div class="page-root">
+    <div class="hr-opt">
+      <hr class="hr-out-bar">
+      <div class="hr-txt hr-left">
+        <div class="d-flex align-items-center gap-1">
+          <div style="margin-right: 0.25rem">근태/급여기간</div>
+          <select class="select1" style="width:100px;" data-payroll-from-year aria-label="FROM 연도"></select>
+          <select class="select1" style="width:80px;" data-payroll-from-month aria-label="FROM 월"></select>
+          <div style="opacity:.8;">~</div>
+          <select class="select1" style="width:100px;" data-payroll-to-year aria-label="TO 연도"></select>
+          <select class="select1" style="width:80px;" data-payroll-to-month aria-label="TO 월"></select>
+          <button type="button" class="btn-icon btn-icon-l" data-tt-disabled="true" data-action="payroll:search"><i class="fa-solid fa-magnifying-glass"></i></button>
+          <div class="d-flex align-items-center gap-1" style="margin-left:.35rem; padding:0 .25rem;">
+            <input type="checkbox" class="chk-anim" data-payroll-keep-filter aria-label="필터 유지">
+            <span style="font-size: var(--t-size-1); opacity:.85; pointer-events:none;">필터 유지</span>
+          </div>
+          <div data-payroll-status style="opacity:.75; margin-left:.5rem;"></div>
+        </div>
+      </div>
+      <div class="hr-txt hr-right">
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn-circle" data-action="btn:payroll:stdset" data-acl="btn:payroll:stdset">
+            <span class="icon"><i class="fa-solid fa-hand-holding-dollar"></i></span>
+            <span class="text">급여기준</span>
+          </button>
+          <button type="button" class="btn-circle" data-action="btn:payroll:paymentset" data-acl="btn:payroll:paymentset">
+            <span class="icon"><i class="fa-solid fa-receipt"></i></span>
+            <span class="text">급여지급내역</span>
+          </button>
+          <button type="button" class="btn-circle" data-sec-toggle="#payroll-filter-list">
+            <span class="icon"><i class="fa-solid fa-filter"></i></span>
+            <span class="text">필터 표시/숨김</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="sec" id="payroll-filter-list" style="min-height:175px; max-height:175px;">
+        <div class="sec-header">
+          <div></div>
+          <div class="d-flex gap-1">
+            <button type="button" class="btn-icon bubble btn-icon-s" data-wf-reset="active" data-wf-target="#payroll-filter-list .wrap-filter" aria-label="현재필터항목만 해제"><i class="fa-solid fa-xmark"></i></button>
+            <button type="button" class="btn-icon bubble btn-icon-s btn-icon-violet" data-wf-reset="all" data-wf-target="#payroll-filter-list .wrap-filter" aria-label="필터 전체해제"><i class="fa-solid fa-xmarks-lines"></i></button>
+          </div>
+        </div>
+        <div class="sec-body">
+          <div class="wrap-filter" data-mode="panel">
+            <div class="wf-left wf-sub wrap-list" aria-label="소분류">
+              <button type="button" class="wrap-list-item is-active" data-sub="staff">
+                <div class="wrap-list-main">
+                  <div class="wrap-list-name">직원</div>
+                  <span class="wf-ind" aria-hidden="true"></span>
+                </div>
+              </button>
+              <button type="button" class="wrap-list-item" data-sub="status_now">
+                <div class="wrap-list-main">
+                  <div class="wrap-list-name">고용상태(현재)</div>
+                  <span class="wf-ind" aria-hidden="true"></span>
+                </div>
+              </button>
+              <button type="button" class="wrap-list-item" data-sub="status_working">
+                <div class="wrap-list-main">
+                  <div class="wrap-list-name">고용상태(근무시점)</div>
+                  <span class="wf-ind" aria-hidden="true"></span>
+                </div>
+              </button>
+              <button type="button" class="wrap-list-item" data-sub="working_yearcount">
+                <div class="wrap-list-main">
+                  <div class="wrap-list-name">총근무연차</div>
+                  <span class="wf-ind" aria-hidden="true"></span>
+                </div>
+              </button>
+              <button type="button" class="wrap-list-item" data-sub="position">
+                <div class="wrap-list-main">
+                  <div class="wrap-list-name">직위</div>
+                  <span class="wf-ind" aria-hidden="true"></span>
+                </div>
+              </button>
+              <button type="button" class="wrap-list-item" data-sub="expertise">
+                <div class="wrap-list-main">
+                  <div class="wrap-list-name">직무전문성</div>
+                  <span class="wf-ind" aria-hidden="true"></span>
+                </div>
+              </button>
+            </div>
+            <div class="wf-right">
+              <div class="wf-panel scroll-y is-active" data-sub="staff">
+                <div class="wf-search">
+                  <div class="input-search-wrap">
+                    <i class="fa-solid fa-magnifying-glass input-search-icon"></i>
+                    <input type="search" class="input1 input-search" placeholder="필터 검색" data-wf-q>
+                  </div>
+                </div>
+                <div class="wf-chips" data-payroll-staff-chips></div>
+              </div>
+              <div class="wf-panel scroll-y" data-sub="status_now">
+                <div class="wf-chips">
+                  <button type="button" class="wf-chip" data-key="status_now" data-value="재직">재직</button>
+                  <button type="button" class="wf-chip" data-key="status_now" data-value="퇴직">퇴직</button>
+                </div>
+              </div>
+              <div class="wf-panel scroll-y" data-sub="status_working">
+                <div class="wf-chips">
+                  <button type="button" class="wf-chip" data-key="status_working" data-value="재직">재직</button>
+                  <button type="button" class="wf-chip" data-key="status_working" data-value="퇴직">퇴직</button>
+                </div>
+              </div>
+              <div class="wf-panel scroll-y" data-sub="status_contract">
+                <div class="wf-chips">
+                  <button type="button" class="wf-chip" data-key="status_contract" data-value="계약시작">계약시작</button>
+                  <button type="button" class="wf-chip" data-key="status_contract" data-value="계약종료">계약종료</button>
+                </div>
+              </div>
+              <div class="wf-panel scroll-y" data-sub="working_yearcount">
+                <div class="wf-chips">
+                  <button type="button" class="wf-chip" data-key="working_yearcount" data-value="1년치">1년차</button>
+                  <button type="button" class="wf-chip" data-key="working_yearcount" data-value="2년차">2년차</button>
+                  <button type="button" class="wf-chip" data-key="working_yearcount" data-value="3년차">3년차</button>
+                  <button type="button" class="wf-chip" data-key="working_yearcount" data-value="4년차">4년차</button>
+                  <button type="button" class="wf-chip" data-key="working_yearcount" data-value="5년차">5년차</button>
+                  <button type="button" class="wf-chip" data-key="working_yearcount" data-value="6년차">6년차</button>
+                  <button type="button" class="wf-chip" data-key="working_yearcount" data-value="7년차">7년차</button>
+                  <button type="button" class="wf-chip" data-key="working_yearcount" data-value="8년차">8년차</button>
+                  <button type="button" class="wf-chip" data-key="working_yearcount" data-value="9년차">9년차</button>
+                  <button type="button" class="wf-chip" data-key="working_yearcount" data-value="10년차">10년차</button>
+                  <button type="button" class="wf-chip" data-key="working_yearcount" data-value="11년차이상">11년차이상</button>
+                </div>
+              </div>
+              <div class="wf-panel scroll-y" data-sub="position">
+                <div class="wf-chips">
+                  <button type="button" class="wf-chip" data-key="position" data-value="매니저">매니저</button>
+                  <button type="button" class="wf-chip" data-key="position" data-value="선임매니저">선임매니저</button>
+                  <button type="button" class="wf-chip" data-key="position" data-value="책임매니저">책임매니저</button>
+                  <button type="button" class="wf-chip" data-key="position" data-value="수석매니저">수석매니저</button>
+                  <button type="button" class="wf-chip" data-key="position" data-value="총괄매니저">총괄매니저</button>
+                </div>
+              </div>
+              <div class="wf-panel scroll-y" data-sub="expertise">
+                <div class="wf-chips">
+                  <button type="button" class="wf-chip" data-key="expertise" data-value="미보유">미보유</button>
+                  <button type="button" class="wf-chip" data-key="expertise" data-value="자격보유">자격보유</button>
+                  <button type="button" class="wf-chip" data-key="expertise" data-value="석사보유">석사보유</button>
+                  <button type="button" class="wf-chip" data-key="expertise" data-value="전체보유">전체보유</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sec fill" data-sec-tabs>
+        <div class="sec-header">
+          <div class="sec-tabs" role="tablist">
+            <button type="button" class="sec-tab is-active" data-tab="payroll-info1-list" role="tab" aria-selected="true">직원 근태</button>
+            <button type="button" class="sec-tab" data-tab="payroll-info2-list" role="tab" aria-selected="true">직원 급여</button>
+          </div>
+          <div class="sec-action" aria-label="탭 액션"></div>
+          <div class="sec-action-bank" hidden>
+            <div data-actions="payroll-info1-list">
+              <button type="button" class="btn-icon bubble btn-icon-green" aria-label="Download" data-acl="btn:payroll:download" data-action="export:payroll:list" data-payroll-sheets="attendance,budget,actual"><i class="fa-solid fa-file-excel"></i></button>
+            </div>
+            <div data-actions="payroll-info2-list">
+              <button type="button" class="btn-icon bubble btn-icon-green" aria-label="Download" data-acl="btn:payroll:download" data-action="export:payroll:list" data-payroll-sheets="attendance,budget,actual"><i class="fa-solid fa-file-excel"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="sec-body">
+          <div class="sec-panel is-active" data-panel="payroll-info1-list" role="tabpanel">
+            <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th rowspan="2">근태기간</th>
+                    <th colspan="3">직원정보</th>
+                    <th colspan="6">근무정보</th>
+                    <th colspan="2">직위정보</th>
+                    <th rowspan="2">직무전문성</th>
+                  </tr>
+                  <tr>
+                    <th>사번</th><th>성명</th><th>고용상태(현재)</th>
+                    <th>고용상태(근무시점)</th><th>계약시작일</th><th>계약종료일</th><th>근무일수</th><th>총근무연수</th><th>총근무연차</th>
+                    <th>직위</th><th>직위유지기간</th>
+                  </tr>
+                </thead>
+                <tbody data-payroll-tbody="attendance">
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="sec-panel gap-2" data-panel="payroll-info2-list" role="tabpanel">
+            <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th rowspan="2">급여기간<br>(예정산출)</th>
+                    <th colspan="3">직원정보</th>
+                    <th rowspan="2">기준연봉</th>
+                    <th colspan="4">고정급</th>
+                    <th rowspan="2">초과근무수당</th>
+                    <th rowspan="2">월급여 합계</th>
+                    <th colspan="5">4대보험 회사부담금</th>
+                    <th rowspan="2">월급여+4대</th>
+                    <th rowspan="2">퇴직금</th>
+                    <th rowspan="2">총인건비<br>(월급여+4대+퇴직금)</th>
+                  </tr>
+                  <tr>
+                    <th>사번</th><th>성명</th><th>고용상태(현재)</th>
+                    <th>기본급</th><th>직위수당</th><th>자격수당</th><th>고정급 합계</th>
+                    <th>국민연금</th><th>건강보험</th><th>고용보험</th><th>산재보험</th><th>4대 합계</th>
+                  </tr>
+                </thead>
+                <tbody data-payroll-tbody="budget">
+                </tbody>
+              </table>
+            </div>
+            <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th rowspan="2">급여기간<br>(지급완료)</th>
+                    <th colspan="3">직원정보</th>
+                    <th colspan="3">월급여</th>
+                    <th colspan="5">4대보험 회사부담금</th>
+                    <th rowspan="2">월급여+4대</th>
+                    <th rowspan="2">퇴직금</th>
+                    <th rowspan="2">총인건비<br>(월급여+4대+퇴직금)</th>
+                  </tr>
+                  <tr>
+                    <th>사번</th><th>성명</th><th>고용상태(현재)</th>
+                    <th>고정급</th><th>초과근무수당</th><th>월급여 합계</th>
+                    <th>국민연금</th><th>건강보험</th><th>고용보험</th><th>산재보험</th><th>4대 합계</th>
+                  </tr>
+                </thead>
+                <tbody data-payroll-tbody="actual">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!--페이지모달: 급여기준-->
+<template id="tpl-payroll-salary-std-page-modal">
+  <div class="d-flex gap-3 fill">
+    <div style="flex: 1; min-width: 0;" class="col-fill">
+      <div class="sec fill">
+        <div class="sec-header"><div class="text">급여연도</div></div>
+        <div class="sec-body">
+          <div class="wrap wrap-list fill" data-salarystd-years></div>
+        </div>
+      </div>
+    </div>
+    <div style="flex: 6; min-width: 0;" class="col-fill">
+      <div class="sec">
+        <div class="sec-header"><div class="text">연봉기준</div></div>
+        <div class="sec-body">
+          <div class="wrap wrap-tbl">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th rowspan="2" style="min-width: 80px">총근무연차</th>
+                  <th colspan="2">직무전문성 보유</th>
+                  <th colspan="2">직무전문성 미보유</th>
+                </tr>
+                <tr>
+                  <th>연봉</th><th>기본급</th>
+                  <th>연봉</th><th>기본급</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">1년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                  <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">2년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">3년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">4년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">5년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">6년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">7년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">8년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">9년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">10년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">11년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">12년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">13년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">14년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">15년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">16년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">17년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">18년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">19년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="working_yearcount">20년차</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="flex: 3; min-width: 0;" class="col-fill">
+      <div class="sec">
+        <div class="sec-header">
+          <div class="text">연봉기준 예외</div>
+          <div class="d-flex gap-1">
+            <button type="button" class="btn-icon bubble btn-icon-s btn-icon-blue" data-tbl-action="add" data-clone="clear" aria-label="추가"><i class="fa-solid fa-plus"></i></button>
+            <button type="button" class="btn-icon bubble btn-icon-s btn-icon-red" data-tbl-action="delete" data-delete-keep="blank" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
+          </div>
+        </div>
+        <div class="sec-body">
+          <div class="wrap wrap-tbl">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" class="chk-anim" aria-label="전체선택"></th>
+                  <th>사번</th>
+                  <th>성명</th>
+                  <th style="min-width: 90px;">연봉</th>
+                  <th style="min-width: 80px;">기본급</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl" data-field="employee_id"></td>
+                  <td><input type="text" class="input-tbl" data-field="name"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_year" placeholder="숫자입력"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount_month" placeholder="숫자입력"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-header">
+          <div class="text">수당기준-직위수당</div>
+        </div>
+        <div class="sec-body">
+          <div class="wrap wrap-tbl">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>직위</th>
+                  <th>수당금액</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><div class="text-tbl" data-field="criteria">매니저</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="criteria">선임매니저</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="criteria">책임매니저</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="criteria">수석매니저</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="criteria">총괄매니저</div></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount" placeholder="숫자입력"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-header">
+          <div class="text">수당기준-자격수당</div>
+        </div>
+        <div class="sec-body">
+          <div class="wrap wrap-tbl">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th style="min-width: 80px">보유여부</th>
+                  <th>수당금액</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><div class="text-tbl" data-field="criteria">미보유</td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount" placeholder="숫자입력"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="criteria">보유</td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount" placeholder="숫자입력"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-header">
+          <div class="text">수당기준-초과근무수당</div>
+        </div>
+        <div class="sec-body">
+          <div class="wrap wrap-tbl">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th style="min-width: 80px">산출조건</th>
+                  <th>수당금액</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><div class="text-tbl" data-field="criteria">상한액</td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="amount" placeholder="숫자입력"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-header">
+          <div class="text">4대보험 회사부담금 기준</div>
+        </div>
+        <div class="sec-body">
+          <div class="wrap wrap-tbl">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>4대보험 구분</th>
+                  <th>요율</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><div class="text-tbl" data-field="category">국민연금</div></td>
+                  <td><input type="text" class="input-tbl" data-field="rate" placeholder="0.000%"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="category">건강보험</div></td>
+                  <td><input type="text" class="input-tbl" data-field="rate" placeholder="0.000%"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="category">고용보험</div></td>
+                  <td><input type="text" class="input-tbl" data-field="rate" placeholder="0.000%"></td>
+                </tr>
+                <tr>
+                  <td><div class="text-tbl" data-field="category">산재보험</div></td>
+                  <td><input type="text" class="input-tbl" data-field="rate" placeholder="0.000%"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!--페이지모달: 급여지급내역-->
+<template id="tpl-payment-page-modal">
+  <div class="d-flex fill gap-3">
+    <div style="flex: 1; min-width: 0;" class="col-fill">
+      <div style="flex: 5" class="col-fill">
+        <div class="sec fill">
+          <div class="sec-header"><div class="text">급여기간</div></div>
+          <div class="sec-body fill">
+            <div class="wrap wrap-list fill" data-payment-years></div>
+          </div>
+        </div>
+      </div>
+      <div style="flex: 5" class="col-fill">
+        <div class="sec fill">
+          <div class="sec-body fill">
+            <div class="wrap wrap-list fill" data-payment-months>
+              <button type="button" class="wrap-list-item" data-payment-month="1"><div class="wrap-list-main"><div class="wrap-list-name">1월</div></div></button>
+              <button type="button" class="wrap-list-item" data-payment-month="2"><div class="wrap-list-main"><div class="wrap-list-name">2월</div></div></button>
+              <button type="button" class="wrap-list-item" data-payment-month="3"><div class="wrap-list-main"><div class="wrap-list-name">3월</div></div></button>
+              <button type="button" class="wrap-list-item" data-payment-month="4"><div class="wrap-list-main"><div class="wrap-list-name">4월</div></div></button>
+              <button type="button" class="wrap-list-item" data-payment-month="5"><div class="wrap-list-main"><div class="wrap-list-name">5월</div></div></button>
+              <button type="button" class="wrap-list-item" data-payment-month="6"><div class="wrap-list-main"><div class="wrap-list-name">6월</div></div></button>
+              <button type="button" class="wrap-list-item" data-payment-month="7"><div class="wrap-list-main"><div class="wrap-list-name">7월</div></div></button>
+              <button type="button" class="wrap-list-item" data-payment-month="8"><div class="wrap-list-main"><div class="wrap-list-name">8월</div></div></button>
+              <button type="button" class="wrap-list-item" data-payment-month="9"><div class="wrap-list-main"><div class="wrap-list-name">9월</div></div></button>
+              <button type="button" class="wrap-list-item" data-payment-month="10"><div class="wrap-list-main"><div class="wrap-list-name">10월</div></div></button>
+              <button type="button" class="wrap-list-item" data-payment-month="11"><div class="wrap-list-main"><div class="wrap-list-name">11월</div></div></button>
+              <button type="button" class="wrap-list-item" data-payment-month="12"><div class="wrap-list-main"><div class="wrap-list-name">12월</div></div></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>  
+    <div style="flex: 9; min-width: 0;" class="col-fill">
+      <div class="sec fill">
+        <div class="sec-header">
+          <div class="text">지급내역</div>
+          <div class="d-flex gap-1">
+            <button type="button" class="btn-icon bubble btn-icon-s btn-icon-blue" data-tbl-action="add" data-clone="clear" aria-label="추가"><i class="fa-solid fa-plus"></i></button>
+            <button type="button" class="btn-icon bubble btn-icon-s btn-icon-red" data-tbl-action="delete" data-delete-keep="blank" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
+          </div>
+        </div>
+        <div class="sec-body fill">
+          <div class="wrap wrap-tbl fill">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th rowspan="2"><input type="checkbox" class="chk-anim" aria-label="전체선택"></th>
+                  <th colspan="2">직원</th>
+                  <th colspan="3">월급여</th>
+                  <th colspan="5">4대보험 회사부담금</th>
+                  <th rowspan="2">월급여+4대</th>
+                  <th rowspan="2">퇴직금</th>
+                  <th rowspan="2">총인건비</th>
+                </tr>
+                <tr>
+                  <th>사번</th><th>성명</th>
+                  <th>고정급</th><th>초과근무수당</th><th>월급여 합계</th>
+                  <th>국민연금</th><th>건강보험</th><th>고용보험</th><th>산재보험</th><th>4대 합계</th>
+                </tr>
+              </thead>
+              <tbody data-payment-tbody>
+                <tr data-payment-row>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl" data-field="employee_id" placeholder="00000"></td>
+                  <td><input type="text" class="input-tbl" data-field="employee_name"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="salary" placeholder="숫자입력"></td> <!--고정급: 직접입력-->
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="alw_overtime" placeholder="숫자입력"></td> <!--초과근무수당: 직접입력-->
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-calc="month_pay_sum" placeholder="자동" disabled></td> <!--월급여 합계-->
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="socialins_np" placeholder="숫자입력"></td> <!--국민연금: 직접입력-->
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="socialins_hi" placeholder="숫자입력"></td> <!--건강보험: 직접입력-->
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="socialins_ei" placeholder="숫자입력"></td> <!--고용보험: 직접입력-->
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="socialins_ii" placeholder="숫자입력"></td> <!--산재보험: 직접입력-->
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-calc="ins_total" placeholder="자동" disabled></td> <!--4대 합계-->
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-calc="month_plus_ins" placeholder="자동" disabled></td> <!--월급여+4대-->
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-field="severance" placeholder="숫자입력"></td> <!--퇴직금: 직접입력-->
+                  <td><input type="text" class="input-tbl input-unit" data-unit="원" data-calc="labor_total" placeholder="자동" disabled></td> <!--총인건비-->
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+(function(){
+  function qs_(root, sel){ return (root||document).querySelector(sel); }
+  function qsa_(root, sel){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
+  function esc_(s){
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function periodKr_(p){
+    p = String(p || '').trim(); // "YYYY-MM"
+    var m = p.match(/^(\d{4})-(\d{1,2})$/);
+    if (!m) return p;
+    var y = Number(m[1]);
+    var mo = Number(m[2]);
+    return y + '년 ' + mo + '월';
+  }
+
+  function num_(v){
+    if (v === '\u00A0') return 0; // NBSP
+    if (typeof v === 'number') return isFinite(v) ? v : 0;
+    var s = String(v == null ? '' : v).trim();
+    if (!s) return 0;
+    // "1,000,000원" "1 000 000" "1000000" 모두 처리
+    s = s.replace(/[^0-9.\-]/g, '');
+    var n = Number(s || 0);
+    return isFinite(n) ? n : 0;
+  }
+  function yyyymm_(y,m){ return y + '-' + (m<10?('0'+m):m); }
+
+  // ===== 금액셀 렌더(프로젝트 기존 포맷 사용) =====
+  // - 숫자는 "가공 없이" 넣는다. (예: 10000)
+  // - 기존 text-unit 포맷 로직이 10,000원으로 표시해줌.
+  function unitWonDiv_(v){
+    if (v === '\u00A0') return '<div class="text-tbl text-unit" data-unit="원">\u00A0</div>';
+    var n = num_(v);
+    return '<div class="text-tbl text-unit" data-unit="원">' + String(n) + '</div>';
+  }
+
+  // 페이지 진입 시 호출되는 entry (index loadPage에서 Payroll_init 호출 전제)
+  window.Payroll_init = function(scopeEl){
+    if (!scopeEl) return;
+
+    // ✅ wrap-filter/커스텀 체크박스 초기화
+    if (typeof initFilterWraps === 'function') initFilterWraps(scopeEl);
+    if (typeof initAnimatedCheckboxes === 'function') initAnimatedCheckboxes(scopeEl);
+
+    var fyEl = qs_(scopeEl, '[data-payroll-from-year]');
+    var fmEl = qs_(scopeEl, '[data-payroll-from-month]');
+    var tyEl = qs_(scopeEl, '[data-payroll-to-year]');
+    var tmEl = qs_(scopeEl, '[data-payroll-to-month]');
+
+    // ✅ 필터 유지 체크박스 (체크박스만 클릭 시 동작하도록 별도 클릭 핸들러 없음)
+    var keepCb   = qs_(scopeEl, 'input[data-payroll-keep-filter]');
+
+    // 옵션 채우기(연도/월)
+    var now = new Date();
+    var curY = now.getFullYear();
+    var curM = now.getMonth() + 1;
+    // ✅ 연도 옵션: BaseSalary_Std.year 유니크 목록 기반
+    fillYearsFromServer_(scopeEl, fyEl, tyEl, curY, function(){
+      // ✅ (연도) 옵션/기본값 세팅 완료 후 has-value 동기화
+      if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(scopeEl);
+      // 연도 셀렉트가 채워지고 기본값까지 세팅된 뒤에 1회 자동조회
+      loadPayrollRange_(scopeEl, readRange_());
+    });
+    fillMonths_(fmEl, curM);
+    fillMonths_(tmEl, curM);
+
+    if (fmEl) fmEl.value = String(curM);
+    if (tmEl) tmEl.value = String(curM);
+
+    // ✅ 초기 진입 시(프로그램으로 value 세팅) has-value 동기화
+    if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(scopeEl);
+
+    // ✅ 기간 변경 후: 자동조회 X (아무 이벤트도 연결하지 않음)
+    // 조회 버튼 클릭 시에만 재조회
+    // - 기본: 필터 초기화 후 조회
+    // - "필터 유지" 체크 시: 필터 유지한 채 조회
+    qsa_(scopeEl, '[data-action="payroll:search"]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var keep = !!(keepCb && keepCb.checked);
+        if (!keep) resetPayrollFiltersAll_(scopeEl);
+        loadPayrollRange_(scopeEl, readRange_());
+      });
+    });
+
+    // ✅ 급여기준 설정 / 급여지급내역 관리 : 모달 오픈만 연결
+    qsa_(scopeEl, '[data-action="btn:payroll:stdset"]').forEach(function(btn){
+      if (btn.__payrollBoundStd) return;
+      btn.__payrollBoundStd = true;
+      btn.addEventListener('click', function(){
+        openPayrollSalaryStdModal_();
+      });
+    });
+    qsa_(scopeEl, '[data-action="btn:payroll:paymentset"]').forEach(function(btn){
+      if (btn.__payrollBoundPay) return;
+      btn.__payrollBoundPay = true;
+      btn.addEventListener('click', function(){
+        openPayrollPaymentModal_();
+      });
+    });
+
+    // ✅ 필터 변경 시: 서버 재조회 없이(직원/프로젝트와 동일) 클라이언트 필터만 적용
+    var filterWrap = qs_(scopeEl, '#payroll-filter-list .wrap-filter');
+    if (filterWrap && !filterWrap.__payrollFilterBound){
+      filterWrap.__payrollFilterBound = true;
+      var t = null;
+      filterWrap.addEventListener('filterwrap:change', function(){
+        if (t) clearTimeout(t);
+        t = setTimeout(function(){
+          applyPayrollFilter_(scopeEl);
+        }, 120);
+      });
+    }
+
+    function readRange_(){
+      var fy = Number(String(fyEl && fyEl.value ? fyEl.value : curY).replace(/[^0-9]/g,'')) || curY;
+      var fm = Number(fmEl && fmEl.value ? fmEl.value : curM);
+      var ty = Number(String(tyEl && tyEl.value ? tyEl.value : curY).replace(/[^0-9]/g,'')) || curY;
+      var tm = Number(tmEl && tmEl.value ? tmEl.value : curM);
+      return { from_year: fy, from_month: fm, to_year: ty, to_month: tm };
+    }
+  };
+
+  // =========================================================
+  // Modal Open (UI only)
+  // =========================================================
+  function openPayrollSalaryStdModal_(){
+    if (!window.openPageModal){
+      alert('openPageModal 함수가 없습니다. pagemodal.html 로딩을 확인하세요.');
+      return;
+    }
+
+    openPageModal({
+      title: '급여기준',
+      size: 'full',
+      templateId: 'tpl-payroll-salary-std-page-modal',
+
+    // ✅ 푸터: 직전년도 복사 / 입력값 비우기 / 저장(닫지 않음)
+    footerButtons: [
+      {
+        action:'copy_prev',
+        text:'전년도 데이터 복사',
+        icon:'fa-copy',
+        className:'btn-box',
+        close:false,
+
+        // ✅ openPageModal 기본 confirm 사용 (지금 니가 말한 “컨펌모달”은 여기서 처리)
+        confirm: true,
+        confirmType: 'info',
+        confirmTitle: '전년도 데이터 복사',
+        confirmMessage: '선택된 적용연도의 전년도 급여기준을 불러와 화면에 덮어씁니다.\n(저장은 저장 버튼을 눌러야 반영됩니다.)',
+
+        autoAlert: true,
+        successTitle: '복사 완료',
+        successMessage: '전년도 데이터를 불러왔습니다. 저장을 눌러 반영하세요.',
+
+        // ✅ 비동기 처리: return false + done() 직접 호출
+        onClick: function(e, modalEl, bodyHost, done){
+          // openPageModal이 (e, modalEl, bodyHost, done)으로 넘겨주므로 그대로 쓰면 됨
+          PAYROLL_STD_copyPrevYearAsync_(modalEl)
+            .then(function(ret){
+              // pagemodal은 성공 시 message를 안 쓰므로, ok만 넘기고 성공문구는 cfg.successMessage로 띄움
+              done({ ok:true });
+            })
+            .catch(function(err){
+              done({ ok:false, error: (err && err.message) ? err.message : String(err) });
+            });
+          return false; // ✅ 비동기(done 직접 호출)
+        }
+      },
+      { action:'clear_ui',  text:'입력값 전체 비우기',     icon:'fa-solid fa-eraser', className:'btn-box', close:false },
+      { action:'save',      text:'저장',                   icon:'fa-floppy-disk', className:'btn-box btn-box-blue', close:false }
+    ],
+
+    // ✅ 커스텀 액션 처리
+    onAction: function(action){
+      // openPageModal 구현마다 인자 형태가 달라서, modalEl을 최대한 안전하게 찾는다.
+      var modalEl = null;
+      for (var i=0; i<arguments.length; i++){
+        var a = arguments[i];
+        if (a && a.nodeType === 1){
+          // 급여기준 모달 바디 템플릿을 포함하고 있으면 modalEl로 인정
+          if (a.querySelector && a.querySelector('[data-salarystd-years]')) { modalEl = a; break; }
+          if (a.dataset && (a.dataset.salarystdYear != null)) { modalEl = a; break; }
+        }
+      }
+      if (!modalEl){
+        // fallback: 현재 열린 모달
+        modalEl = document.querySelector('.modal.show') || document.querySelector('.app-page-modal.show');
+      }
+      if (!modalEl) return;
+
+      var year = String(modalEl.dataset.salarystdYear || '').trim();
+      if (!/^\d{4}$/.test(year)){
+        if (window.showAlertError) window.showAlertError('적용연도를 먼저 선택해주세요.', '급여기준');
+        else alert('적용연도를 먼저 선택해주세요.');
+        return;
+      }
+
+      // (A) 입력값 전체 비우기 (DB 영향 X)
+      if (action === 'clear_ui'){
+        PAYROLL_STD_clearAllUi_(modalEl);
+        PAYROLL_STD_applyUnitFormat_(modalEl);
+        return;
+      }
+
+      // (B) 직전년도 급여기준 복사 (DB 저장 X, UI만 채움)
+      if (action === 'copy_prev'){
+        // ✅ copy_prev는 footerButtons.onClick에서 비동기로 처리함 (여기서는 아무 것도 하지 않음)
+        return;
+      }
+    },
+
+    // ✅ 저장 로직은 공통 저장 액션(onSave)로: Promise return (버튼 잠금/해제 정상 동작)
+    onSave: function(e, modalEl, bodyHost){
+      var year = String(modalEl.dataset.salarystdYear || '').trim();
+      if (!/^\d{4}$/.test(year)){
+        // 공통 알림을 쓰고 싶으면 ok:false로 돌려도 되고,
+        // 여기선 즉시 에러 알림 한번만 띄움
+        if (window.showAlertError) window.showAlertError('적용연도를 먼저 선택해주세요.', '급여기준');
+        else alert('적용연도를 먼저 선택해주세요.');
+        return { ok:false };
+      }
+
+      var payload = PAYROLL_STD_collectPayload_(modalEl, year);
+      PAYROLL_STD_setBusy_(modalEl, true, '저장 중...');
+
+      return new Promise(function(resolve){
+        google.script.run
+          .withSuccessHandler(function(res){
+            PAYROLL_STD_setBusy_(modalEl, false);
+            if (!res || !res.ok){
+              resolve({ ok:false, error: (res && res.message) ? res.message : '저장 실패' });
+              return;
+            }
+            // ✅ 저장 성공 후 재로드(모달은 close:false라 안 닫힘)
+            PAYROLL_STD_loadYear_(modalEl, year);
+            resolve({ ok:true });
+          })
+          .withFailureHandler(function(err){
+            PAYROLL_STD_setBusy_(modalEl, false);
+            resolve({ ok:false, error: (err && err.message) ? err.message : String(err || 'Unknown error') });
+          })
+          .PAYROLL_saveSalaryStd(payload);
+      });
+    },
+
+      onOpen: function(modalEl){
+        // ===============================
+        // 1) 적용연도 목록 자동 생성
+        // - 시작: 2025
+        // - 10월(>=10)이면 내년도까지 자동 생성
+        // - 모달 최초 진입 시 오늘 기준 연도 자동 선택
+        // ===============================
+
+        var listEl =
+          modalEl.querySelector('[data-salarystd-years]') ||
+          modalEl.querySelector('.wrap.wrap-list.fill') || null;
+        if (!listEl){
+          // 연도 영역을 못 찾으면 여기서 종료(HTML 구조 확인 필요)
+          console.warn('적용연도 목록 컨테이너를 찾지 못했습니다.');
+          return;
+        }
+
+        // 버튼 생성(중복 생성 방지)
+        if (!listEl.__yearsFilled){
+          listEl.__yearsFilled = true;
+
+          var now = new Date();
+          var curY = now.getFullYear();
+          var curM = now.getMonth() + 1;
+
+          var startY = 2025;
+          var endY = (curM >= 10) ? (curY + 1) : curY;
+          if (endY < startY) endY = startY;
+
+          // 컨테이너 비우고 생성
+          listEl.innerHTML = '';
+          for (var y = startY; y <= endY; y++){
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'wrap-list-item';
+            btn.setAttribute('data-salarystd-year', String(y));
+            btn.innerHTML =
+              '<div class="wrap-list-main">' +
+                '<div class="wrap-list-name">' + y + '년</div>' +
+              '</div>';
+            listEl.appendChild(btn);
+          }
+
+          // 클릭 → 선택 + 로드
+          listEl.addEventListener('click', function(e){
+            // ✅ 공용 wrap-list 토글(document click)과 충돌 방지
+            // - PAYROLL_STD_selectYear_가 is-active를 붙이면 공용 핸들러가 '이미 활성 항목 클릭'으로 판단해
+            //   다시 is-active를 제거해버릴 수 있음.
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
+            var btn = e.target.closest('.wrap-list-item[data-salarystd-year]');
+            if (!btn) return;
+            var y = String(btn.getAttribute('data-salarystd-year') || '').trim();
+            if (!/^\d{4}$/.test(y)) return;
+            PAYROLL_STD_selectYear_(modalEl, listEl, y);
+            PAYROLL_STD_loadYear_(modalEl, y);
+          }, true);
+        }
+
+        // 기본 선택(오늘 기준)
+        var now2 = new Date();
+        var defaultY = String(Math.max(2025, now2.getFullYear()));
+        PAYROLL_STD_selectYear_(modalEl, listEl, defaultY);
+        PAYROLL_STD_loadYear_(modalEl, defaultY);
+      }
+    });
+  }
+
+// =========================================================
+// Payroll Salary Standard - UI ↔ DB 연결 유틸
+// =========================================================
+
+function PAYROLL_STD_selectYear_(modalEl, listEl, year){
+  var yy = String(year||'').trim();
+
+  // ✅ 항상 모달 루트에 저장(footer onClick이 bodyHost를 넘겨도 문제 없게)
+  var root = PAYROLL_STD_normModalRoot_(modalEl) || modalEl;
+  root.dataset.salarystdYear = yy;
+  if (modalEl && modalEl !== root) modalEl.dataset.salarystdYear = yy;
+
+  Array.prototype.slice.call(listEl.querySelectorAll('.wrap-list-item')).forEach(function(b){
+    b.classList.toggle('is-active', b.getAttribute('data-salarystd-year') === yy);
+  });
+}
+function PAYROLL_STD_setBusy_(modalEl, busy, msg){
+  // ✅ UI 로딩표시는 나중에 스피너로 교체 예정 → 현재는 완전 제외(no-op)
+  modalEl.__stdBusy = !!busy; // 내부 플래그만 유지
+}
+
+// =========================================================
+// ✅ Footer button show/hide (copy_prev)
+// - openPageModal 구현 차이를 고려해서 버튼 탐색을 최대한 넓게 함
+// =========================================================
+function PAYROLL_STD_findFooterBtn_(modalEl, action){
+  action = String(action||'').trim();
+  if (!modalEl || !action) return null;
+
+  // 1) modalEl 내부에서 먼저 찾기
+  var roots = [];
+  roots.push(modalEl);
+
+  // 2) 상위 모달 컨테이너에서도 찾기
+  var host = modalEl.closest('.modal') || modalEl.closest('.app-page-modal') || modalEl.parentElement;
+ if (host && roots.indexOf(host) < 0) roots.push(host);
+
+  for (var r=0; r<roots.length; r++){
+    var root = roots[r];
+    var btns = root.querySelectorAll('button');
+    for (var i=0; i<btns.length; i++){
+      var b = btns[i];
+      // 흔한 케이스들: data-action / data-pm-action / data-modal-action 등
+      var a =
+        (b.getAttribute('data-action') || '') ||
+        (b.getAttribute('data-pm-action') || '') ||
+        (b.getAttribute('data-modal-action') || '') ||
+        (b.dataset && (b.dataset.action || b.dataset.pmAction || b.dataset.modalAction)) ||
+        '';
+      a = String(a||'').trim();
+      if (a === action) return b;
+    }
+  }
+  return null;
+}
+
+function PAYROLL_STD_isEmptyYearRes_(res){
+  if (!res) return true;
+  var a = Array.isArray(res.baseStd) ? res.baseStd.length : 0;
+  var b = Array.isArray(res.baseExc) ? res.baseExc.length : 0;
+  var c = Array.isArray(res.alwStd)  ? res.alwStd.length  : 0;
+  var d = Array.isArray(res.insStd)  ? res.insStd.length  : 0;
+  return (a + b + c + d) === 0;
+}
+
+function PAYROLL_STD_toggleCopyPrevBtn_(modalEl, res){
+  var btn = PAYROLL_STD_findFooterBtn_(modalEl, 'copy_prev');
+  if (!btn) return;
+
+  // ✅ 항상 보이게
+  btn.style.display = '';
+}
+
+// =========================================================
+// 값 보존 규칙
+// - "0"은 0으로 유지(표시/저장 모두)
+// - 공백('')은 공백으로 유지(0으로 바꾸지 않음)
+// =========================================================
+function PAYROLL_STD_isBlank_(v){
+  return v == null || String(v).trim() === '';
+}
+function PAYROLL_STD_valOrBlank_(v){
+  // 0/false도 문자열로 반환되어야 함
+  return PAYROLL_STD_isBlank_(v) ? '' : String(v);
+}
+function PAYROLL_STD_numOrBlank_(v){
+  // 공백이면 '' 반환, 숫자면 Number 반환 (0 포함)
+  if (PAYROLL_STD_isBlank_(v)) return '';
+  var s = String(v).trim().replace(/[^0-9\-]/g,'');
+  // "-" 같은 이상치는 공백 취급
+  if (!s || s === '-') return '';
+  var n = Number(s);
+  return isFinite(n) ? n : '';
+}
+
+// =========================================================
+// 요율(rate) 변환 규칙
+// - UI 입력: "4.500%" 또는 "4.500" (텍스트)
+// - DB 저장: 0.045 (decimal number)
+// - DB 로드: 0.045 또는 "4.500%" 등 혼재 가능 → UI는 "4.500%"로 표시
+// =========================================================
+function PAYROLL_STD_rateDbToUi_(v){
+  if (PAYROLL_STD_isBlank_(v)) return '';
+  var s = String(v).trim();
+
+  // 이미 "x%" 문자열이면 x를 3자리로 정규화
+  if (/%\s*$/.test(s)){
+    var p = parseFloat(s.replace(/[^0-9.\-]/g,''));
+    if (!isFinite(p)) return '';
+    return p.toFixed(3) + '%';
+  }
+
+  // 숫자(또는 숫자문자): 0~1이면 decimal로 보고 *100 해서 %
+  var n = parseFloat(s.replace(/[^0-9.\-]/g,''));
+  if (!isFinite(n)) return '';
+  var pct = (Math.abs(n) <= 1) ? (n * 100) : n; // 혹시 4.5로 오는 케이스도 %
+  return pct.toFixed(3) + '%';
+}
+
+function PAYROLL_STD_rateUiToDb_(v){
+  if (PAYROLL_STD_isBlank_(v)) return '';
+  var s = String(v).trim();
+  var hasPct = /%/.test(s);
+  var n = parseFloat(s.replace(/[^0-9.\-]/g,''));
+  if (!isFinite(n)) return '';
+
+  // "4.500%" 또는 "4.500" => 0.045
+  // "0.045" 같이 0~1이고 %가 없으면 decimal로 인정
+  var dec = (Math.abs(n) <= 1 && !hasPct) ? n : (n / 100);
+  return dec; // number
+}
+
+// 급여기준 모달: 서버 데이터로 값 세팅/렌더 후 단위(input-unit) & floating UI 재적용
+function PAYROLL_STD_applyUnitFormat_(modalEl){
+  if (!modalEl) return;
+  try { if (window.initUnitTextTbl) window.initUnitTextTbl(modalEl); } catch(e){}
+  try { if (window.initUnitInputs)   window.initUnitInputs(modalEl);   } catch(e){}
+  try { if (window.refreshFloatingInputs) window.refreshFloatingInputs(modalEl); } catch(e){}
+}
+
+function PAYROLL_STD_loadYear_(modalEl, year){
+  var yy = String(year||'').trim();
+  if (!/^\d{4}$/.test(yy)) return;
+
+  // ✅ 최신 요청만 유효하게 만드는 토큰
+  modalEl.__stdReqSeq = (modalEl.__stdReqSeq || 0) + 1;
+  var reqSeq = modalEl.__stdReqSeq;
+
+  // ✅ 로딩 중에도 이전 데이터가 남아 보이지 않게(특히 예외 테이블)
+  // 필요하면 전체 섹션 clear도 가능하지만, 최소한 BaseExc는 즉시 비우는 게 체감에 좋음
+  try{
+    var secExc = PAYROLL_STD_findSecByTitle_(modalEl, ['연봉기준 예외']);
+    if (secExc){
+      var tb = secExc.querySelector('tbody');
+      if (tb){
+        var tpl = secExc.__baseExcTpl || tb.querySelector('tr');
+        tb.innerHTML = '';
+        if (tpl){
+          if (!secExc.__baseExcTpl) secExc.__baseExcTpl = PAYROLL_STD_clearRow_(tpl.cloneNode(true));
+          tb.appendChild(PAYROLL_STD_clearRow_(secExc.__baseExcTpl.cloneNode(true)));
+        }
+      }
+    }
+  }catch(e){}
+
+  if (modalEl.__stdBusy) return;
+  PAYROLL_STD_setBusy_(modalEl, true, '불러오는 중...');
+
+  google.script.run
+    .withSuccessHandler(function(res){
+      PAYROLL_STD_setBusy_(modalEl, false);
+
+      // ✅ (1) 최신 요청이 아니면 폐기
+      if (reqSeq !== modalEl.__stdReqSeq) return;
+
+      // ✅ (2) 현재 선택된 연도와 요청 연도가 다르면 폐기
+      // (사용자가 이미 다른 연도를 클릭했을 수 있음)
+      if (String(modalEl.dataset.salarystdYear||'').trim() !== yy) return;
+
+      if (!res || !res.ok){
+        var msg = (res && res.message) ? res.message : '불러오기 실패';
+        if (window.showAlertError) window.showAlertError(msg, '급여기준');
+        else alert(msg);
+        return;
+      }
+      // ✅ 최근 로드 결과 캐시(직전년도 복사 가능 여부(prefill.available/from) 판단에 사용)
+      modalEl.__stdLastRes = res;
+
+      PAYROLL_STD_renderAll_(modalEl, res);
+      PAYROLL_STD_applyUnitFormat_(modalEl);
+    })
+    .withFailureHandler(function(err){
+      PAYROLL_STD_setBusy_(modalEl, false);
+
+      // ✅ 실패도 최신 요청만 처리
+      if (reqSeq !== modalEl.__stdReqSeq) return;
+      if (String(modalEl.dataset.salarystdYear||'').trim() !== yy) return;
+
+      var msg = (err && err.message) ? err.message : String(err || 'Unknown error');
+      if (window.showAlertError) window.showAlertError(msg, '급여기준');
+      else alert(msg);
+    })
+    .PAYROLL_getSalaryStd({ year: yy });
+}
+
+function PAYROLL_STD_normModalRoot_(el){
+  if (!el) return null;
+  // bodyHost가 들어와도 항상 .modal / .app-page-modal 루트를 쓰도록
+  var root = el.closest('.modal') || el.closest('.app-page-modal') || el;
+
+  // 혹시 dataset이 bodyHost에만 있거나(root에만 있거나) 섞인 케이스 대비해서 전파
+  var y = (el.dataset && el.dataset.salarystdYear) || (root.dataset && root.dataset.salarystdYear) || '';
+  y = String(y || '').trim();
+  if (y){
+    root.dataset.salarystdYear = y;
+    el.dataset.salarystdYear = y;
+  }
+  return root;
+}
+
+// =========================================================
+// ✅ 직전년도 급여기준 복사 (비동기, openPageModal용)
+// - confirm/alert는 openPageModal에서 처리
+// - 성공/실패는 {ok:true|false, message|error} 로 resolve
+// =========================================================
+function PAYROLL_STD_copyPrevYearAsync_(modalEl){
+  return new Promise(function(resolve){
+    modalEl = PAYROLL_STD_normModalRoot_(modalEl);
+
+    if (!modalEl) {
+      if (window.showAlertError) window.showAlertError('모달을 찾지 못했습니다.', '급여기준');
+      return resolve({ ok:false, error:'모달을 찾지 못했습니다.' });
+    }
+
+    var yy = String(modalEl.dataset.salarystdYear||'').trim();
+    if (!/^\d{4}$/.test(yy)){
+      // ✅ autoAlert:false여도 사용자가 이유를 보게
+      if (window.showAlertError) window.showAlertError('적용연도를 먼저 선택해주세요.', '급여기준');
+      return resolve({ ok:false, error:'적용연도를 먼저 선택해주세요.' });
+    }
+
+    var prev = String((Number(yy) - 1));
+    if (!/^\d{4}$/.test(prev)){
+      return resolve({ ok:false, error:'전년도 데이터가 없습니다.' });
+    }
+
+    if (modalEl.__stdBusy) return resolve({ ok:false, error:'처리 중입니다. 잠시 후 다시 시도해주세요.' });
+    PAYROLL_STD_setBusy_(modalEl, true, '복사 중...');
+
+    google.script.run
+      .withSuccessHandler(function(res){
+        PAYROLL_STD_setBusy_(modalEl, false);
+
+        if (!res || !res.ok){
+          return resolve({ ok:false, error: (res && res.message) ? res.message : '전년도 불러오기 실패' });
+        }
+        if (!res.prefilled_from){
+          return resolve({ ok:false, error: prev + '년 기준 데이터가 없습니다.' });
+        }
+
+        // ✅ 현재 연도 화면에 덮어쓰기
+        PAYROLL_STD_renderAll_(modalEl, res);
+        PAYROLL_STD_applyUnitFormat_(modalEl);
+
+        var fromY = String(res.prefilled_from || prev);
+        resolve({ ok:true, message: fromY + '년 기준을 복사했습니다. 저장을 눌러 반영하세요.' });
+      })
+      .withFailureHandler(function(err){
+        PAYROLL_STD_setBusy_(modalEl, false);
+        resolve({ ok:false, error: (err && err.message) ? err.message : String(err||'Unknown error') });
+      })
+      // ✅ 타겟연도(yy) + prefill:true => 서버가 (yy-1)을 (yy)로 클론해서 반환
+      .PAYROLL_getSalaryStd({ year: yy, prefill: true });
+  });
+}
+
+function PAYROLL_STD_clearRow_(tr){
+  if (!tr) return tr;
+  Array.prototype.slice.call(tr.querySelectorAll('input,textarea,select')).forEach(function(el){
+    if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
+    else el.value = '';
+  });
+  return tr;
+}
+
+// =========================================================
+// ✅ UI 전체 비우기 (DB 영향 X)
+// - 고정 테이블(input들) 값 초기화
+// - 예외 테이블(BaseSalary_Std_Exc)은 "빈 행 1개"만 남김
+// - year 선택 상태는 유지
+// =========================================================
+function PAYROLL_STD_clearAllUi_(modalEl){
+  if (!modalEl) return;
+
+  // 1) 모든 입력 초기화(단, 연도 목록 버튼/텍스트 영역은 건드리지 않음)
+  Array.prototype.slice.call(
+    modalEl.querySelectorAll('input, textarea, select')
+  ).forEach(function(el){
+    if (el.closest('[data-salarystd-years]')) return; // 연도 버튼 영역 제외
+    if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
+    else el.value = '';
+  });
+
+  // 2) 연봉기준 예외는 빈 행 1개 유지
+  try{
+    var secExc = PAYROLL_STD_findSecByTitle_(modalEl, ['연봉기준 예외']);
+    if (secExc){
+      var tbody = secExc.querySelector('tbody');
+      if (tbody){
+        // 템플릿 확보(없으면 현재 첫 행을 템플릿으로 저장)
+        if (!secExc.__baseExcTpl){
+          var first = tbody.querySelector('tr');
+          if (first) secExc.__baseExcTpl = PAYROLL_STD_clearRow_(first.cloneNode(true));
+        }
+        tbody.innerHTML = '';
+        if (secExc.__baseExcTpl){
+          tbody.appendChild(PAYROLL_STD_clearRow_(secExc.__baseExcTpl.cloneNode(true)));
+        }
+      }
+    }
+  }catch(e){}
+
+  // 3) lastRes 캐시는 "현재 연도는 데이터 없음" 상태로 갱신(복사 버튼 조건 판단에 영향)
+  //    (굳이 없애도 되지만 UX상 '비웠는데 복사가능' 여부가 lastRes에 남는 걸 방지)
+  if (modalEl.__stdLastRes){
+    try{
+      var cp = JSON.parse(JSON.stringify(modalEl.__stdLastRes));
+      cp.baseStd = []; cp.baseExc = []; cp.alwStd = []; cp.insStd = [];
+      modalEl.__stdLastRes = cp;
+    }catch(e){}
+  }
+}
+
+function PAYROLL_STD_findSecByTitle_(modalEl, titleStarts){
+  var titles = Array.isArray(titleStarts) ? titleStarts : [titleStarts];
+  var nodes = modalEl.querySelectorAll('.sec .sec-header .text');
+  for (var i=0; i<nodes.length; i++){
+    var t = String(nodes[i].textContent || '').trim();
+    for (var k=0; k<titles.length; k++){
+      var s = String(titles[k]||'').trim();
+      if (!s) continue;
+      if (t.indexOf(s) === 0) return nodes[i].closest('.sec');
+    }
+  }
+  return null;
+}
+
+function PAYROLL_STD_renderAll_(modalEl, res){
+  // res: { ok, year, baseStd, baseExc, alwStd, insStd }
+  var baseStd = res.baseStd || [];
+  var baseExc = res.baseExc || [];
+  var alwStd  = res.alwStd  || [];
+  var insStd  = res.insStd  || [];
+
+  // 1) 연봉기준(BaseSalary_Std) - 고정 1~10년차 + 보유/미보유(각 2칸)
+  PAYROLL_STD_renderBaseStd_(modalEl, baseStd);
+
+  // 2) 연봉기준 예외(BaseSalary_Std_Exc) - tbody 재구성
+  PAYROLL_STD_renderBaseExc_(modalEl, baseExc);
+
+  // 3) 수당기준(Alw_Std) - 3개 테이블에 카테고리별 반영
+  PAYROLL_STD_renderAlw_(modalEl, alwStd);
+
+  // 4) 4대보험(Socialins_Std) - 4행 고정
+  PAYROLL_STD_renderIns_(modalEl, insStd);
+
+  // ✅ 데이터 주입/동적 행 렌더링 이후 커스텀 UI(예: input-unit) 재초기화
+  // - 모달 오픈 시 1회 initUiScope가 돌지만, 로드 후 새로 생성된 input에는 다시 적용 필요
+  if (typeof initUiScope === 'function') initUiScope(modalEl);
+}
+
+function PAYROLL_STD_renderBaseStd_(modalEl, rows){
+ var sec = PAYROLL_STD_findSecByTitle_(modalEl, ['연봉기준']);
+  if (!sec) return;
+  // '연봉기준 예외'도 걸릴 수 있으니 table 구조로 첫번째(헤더가 2줄인) 테이블을 우선
+  var table = sec.querySelector('table.tbl');
+  if (!table) return;
+  var tbody = table.querySelector('tbody');
+  if (!tbody) return;
+
+  var map = {};
+  rows.forEach(function(r){
+    if (!r) return;
+    var exp = String(r.expertise||'').trim(); // '보유'/'미보유'
+    var rawYc = String(r.working_yearcount||'').trim(); // "1년차" or "1"
+    var m = rawYc.match(/(\d+)/);
+    var yc = m ? String(Number(m[1]||0)||0) : '';
+    if (!yc || yc === '0') return;
+    map[exp + '|' + yc] = r;
+  });
+
+  Array.prototype.slice.call(tbody.querySelectorAll('tr')).forEach(function(tr){
+    var ycEl = tr.querySelector('[data-field="working_yearcount"]');
+    if (!ycEl) return;
+    var ycTxt = String(ycEl.textContent||'').trim(); // "1년차"
+    var m = ycTxt.match(/(\d+)/);
+    if (!m) return;
+    var yc = String(Number(m[1]||0) || 0);
+    if (!yc || yc === '0') return;
+
+    // 입력 4개(보유:연봉/기본, 미보유:연봉/기본)
+    var inputs = tr.querySelectorAll('input[data-field="amount_year"], input[data-field="amount_month"]');
+    if (!inputs || inputs.length < 4) return;
+
+    var rYes = map['보유|' + yc] || null;
+    var rNo  = map['미보유|' + yc] || null;
+
+    // 순서 가정: amount_year, amount_month, amount_year, amount_month
+    inputs[0].value = rYes ? PAYROLL_STD_valOrBlank_(rYes.amount_year)  : '';
+    inputs[1].value = rYes ? PAYROLL_STD_valOrBlank_(rYes.amount_month) : '';
+    inputs[2].value = rNo  ? PAYROLL_STD_valOrBlank_(rNo.amount_year)   : '';
+    inputs[3].value = rNo  ? PAYROLL_STD_valOrBlank_(rNo.amount_month)  : '';
+  });
+}
+
+function PAYROLL_STD_renderBaseExc_(modalEl, rows){
+  var sec = PAYROLL_STD_findSecByTitle_(modalEl, ['연봉기준 예외']);
+  if (!sec) return;
+  var tbody = sec.querySelector('tbody');
+  if (!tbody) return;
+
+  // ✅ 최초 1회 깨끗한 템플릿 저장
+  if (!sec.__baseExcTpl){
+    var first = tbody.querySelector('tr');
+    if (!first) return;
+    sec.__baseExcTpl = PAYROLL_STD_clearRow_(first.cloneNode(true));
+  }
+  var tpl = sec.__baseExcTpl;
+
+  // 기존 비우고 다시 그림
+  tbody.innerHTML = '';
+
+  rows.forEach(function(r){
+    var tr = tpl.cloneNode(true);
+    var eid = tr.querySelector('[data-field="employee_id"]');
+    var name= tr.querySelector('[data-field="name"]');
+    var ay  = tr.querySelector('[data-field="amount_year"]');
+    var am  = tr.querySelector('[data-field="amount_month"]');
+    if (eid)  eid.value  = (r.employee_id || '');
+    if (name) name.value = (r.name || '');
+    if (ay)   ay.value   = PAYROLL_STD_valOrBlank_(r.amount_year);
+    if (am)   am.value   = PAYROLL_STD_valOrBlank_(r.amount_month);
+    tbody.appendChild(tr);
+  });
+
+  // 데이터가 없으면 빈 행 1개 유지(편의)
+  if (!rows.length){
+    tbody.appendChild(PAYROLL_STD_clearRow_(tpl.cloneNode(true)));
+  }
+}
+
+function PAYROLL_STD_renderAlw_(modalEl, rows){
+  function buildMap(cat){
+    var m = {};
+    rows.forEach(function(r){
+      if (!r) return;
+      if (String(r.category||'').trim() !== cat) return;
+      var k = String(r.criteria||'').trim();
+      m[k] = r;
+    });
+    return m;
+  }
+
+  // 직위수당
+  var secPos = PAYROLL_STD_findSecByTitle_(modalEl, ['수당기준-직위수당']);
+  if (secPos){
+    var mapPos = buildMap('직위수당');
+    Array.prototype.slice.call(secPos.querySelectorAll('tbody tr')).forEach(function(tr){
+      var kEl = tr.querySelector('[data-field="criteria"]');
+      var vEl = tr.querySelector('input[data-field="amount"]');
+      if (!kEl || !vEl) return;
+      var k = String(kEl.textContent||'').trim();
+      vEl.value = mapPos[k] ? PAYROLL_STD_valOrBlank_(mapPos[k].amount) : '';
+    });
+  }
+
+  // 자격수당
+  var secExp = PAYROLL_STD_findSecByTitle_(modalEl, ['수당기준-자격수당']);
+  if (secExp){
+    var mapExp = buildMap('자격수당');
+    Array.prototype.slice.call(secExp.querySelectorAll('tbody tr')).forEach(function(tr){
+      var kEl = tr.querySelector('[data-field="criteria"]');
+      var vEl = tr.querySelector('input[data-field="amount"]');
+      if (!kEl || !vEl) return;
+      var k = String(kEl.textContent||'').trim();
+      vEl.value = mapExp[k] ? PAYROLL_STD_valOrBlank_(mapExp[k].amount) : '';
+    });
+  }
+
+  // 초과근무수당
+  var secOt = PAYROLL_STD_findSecByTitle_(modalEl, ['수당기준-초과근무수당']);
+  if (secOt){
+    var mapOt = buildMap('초과근무수당');
+    Array.prototype.slice.call(secOt.querySelectorAll('tbody tr')).forEach(function(tr){
+      var kEl = tr.querySelector('[data-field="criteria"]');
+      var vEl = tr.querySelector('input[data-field="amount"]');
+      if (!kEl || !vEl) return;
+      var k = String(kEl.textContent||'').trim();
+      vEl.value = mapOt[k] ? PAYROLL_STD_valOrBlank_(mapOt[k].amount) : '';
+    });
+  }
+}
+
+function PAYROLL_STD_renderIns_(modalEl, rows){
+  var sec = PAYROLL_STD_findSecByTitle_(modalEl, ['4대보험']);
+  if (!sec) return;
+  var map = {};
+  rows.forEach(function(r){
+    if (!r) return;
+    map[String(r.category||'').trim()] = r;
+  });
+  Array.prototype.slice.call(sec.querySelectorAll('tbody tr')).forEach(function(tr){
+    var cEl = tr.querySelector('[data-field="category"]');
+    var rEl = tr.querySelector('input[data-field="rate"]');
+    if (!cEl || !rEl) return;
+    var c = String(cEl.textContent||'').trim();
+    // ✅ DB(0.045) -> UI("4.500%")
+    rEl.value = map[c] ? PAYROLL_STD_rateDbToUi_(map[c].rate) : '';
+  });
+}
+
+function PAYROLL_STD_collectPayload_(modalEl, year){
+  var yy = String(year||'').trim();
+  var yearLabel = yy + '년';
+
+  // 1) BaseSalary_Std
+  var baseStd = [];
+  (function(){
+    var sec = PAYROLL_STD_findSecByTitle_(modalEl, ['연봉기준']);
+    if (!sec) return;
+    var table = sec.querySelector('table.tbl');
+    if (!table) return;
+    var tbody = table.querySelector('tbody');
+    if (!tbody) return;
+
+    Array.prototype.slice.call(tbody.querySelectorAll('tr')).forEach(function(tr){
+      var ycEl = tr.querySelector('[data-field="working_yearcount"]');
+      if (!ycEl) return;
+      var m = String(ycEl.textContent||'').match(/(\d+)/);
+      if (!m) return;
+      var yc = Number(m[1]||0) || 0;
+      if (!yc) return;
+
+      var inputs = tr.querySelectorAll('input[data-field="amount_year"], input[data-field="amount_month"]');
+      if (!inputs || inputs.length < 4) return;
+
+      // 보유(왼쪽 2칸)
+      // ✅ 공백은 공백으로, "0"은 0으로 저장하기 위해 raw 기준으로 포함여부 판단
+      var rawYY = String(inputs[0].value||'').trim();
+      var rawYM = String(inputs[1].value||'').trim();
+      if (rawYY !== '' || rawYM !== ''){
+        var yY = PAYROLL_STD_numOrBlank_(rawYY);
+        var yM = PAYROLL_STD_numOrBlank_(rawYM);
+        baseStd.push({
+          year: yearLabel,
+          expertise: '보유',
+          working_yearcount: String(yc) + '년차',
+          amount_year: yY,
+          amount_month: yM
+        });
+      }
+
+      // 미보유(오른쪽 2칸)
+      var rawNY = String(inputs[2].value||'').trim();
+      var rawNM = String(inputs[3].value||'').trim();
+      if (rawNY !== '' || rawNM !== ''){
+        var nY = PAYROLL_STD_numOrBlank_(rawNY);
+        var nM = PAYROLL_STD_numOrBlank_(rawNM);
+        baseStd.push({
+          year: yearLabel,
+          expertise: '미보유',
+          working_yearcount: String(yc) + '년차',
+          amount_year: nY,
+          amount_month: nM
+        });
+      }
+    });
+  })();
+
+  // 2) BaseSalary_Std_Exc
+  var baseExc = [];
+  (function(){
+    var sec = PAYROLL_STD_findSecByTitle_(modalEl, ['연봉기준 예외']);
+    if (!sec) return;
+    var tbody = sec.querySelector('tbody');
+    if (!tbody) return;
+    Array.prototype.slice.call(tbody.querySelectorAll('tr')).forEach(function(tr){
+      var eid = tr.querySelector('[data-field="employee_id"]');
+      var name= tr.querySelector('[data-field="name"]');
+      var ay  = tr.querySelector('[data-field="amount_year"]');
+      var am  = tr.querySelector('[data-field="amount_month"]');
+      if (!eid || !name || !ay || !am) return;
+
+      var vE = String(eid.value||'').trim();
+      var vN = String(name.value||'').trim();
+      var rawY = String(ay.value||'').trim();
+      var rawM = String(am.value||'').trim();
+      var vY = PAYROLL_STD_numOrBlank_(rawY);
+      var vM = PAYROLL_STD_numOrBlank_(rawM);
+
+      // ✅ 완전 공백 row는 제외(0은 공백이 아님)
+      var allBlank = (!vE && !vN && rawY === '' && rawM === '');
+      if (allBlank) return;
+
+      baseExc.push({
+        year: yearLabel,
+        employee_id: vE,
+        name: vN,
+        amount_year: vY,
+        amount_month: vM
+      });
+    });
+  })();
+
+  // 3) Alw_Std
+  var alwStd = [];
+  function collectAlw_(title, category){
+    var sec = PAYROLL_STD_findSecByTitle_(modalEl, [title]);
+    if (!sec) return;
+    Array.prototype.slice.call(sec.querySelectorAll('tbody tr')).forEach(function(tr){
+      var kEl = tr.querySelector('[data-field="criteria"]');
+      var vEl = tr.querySelector('input[data-field="amount"]');
+      if (!kEl || !vEl) return;
+      var k = String(kEl.textContent||'').trim();
+      var raw = String(vEl.value||'').trim();
+      if (!k) return;
+      if (raw === '') return;        // ✅ 공백만 제외
+      var v = PAYROLL_STD_numOrBlank_(raw); // ✅ 0도 허용
+      alwStd.push({ year: yearLabel, category: category, criteria: k, amount: v });
+    });
+  }
+  collectAlw_('수당기준-직위수당', '직위수당');
+  collectAlw_('수당기준-자격수당', '자격수당');
+  collectAlw_('수당기준-초과근무수당', '초과근무수당');
+
+  // 4) Socialins_Std
+  var insStd = [];
+  (function(){
+    var sec = PAYROLL_STD_findSecByTitle_(modalEl, ['4대보험']);
+    if (!sec) return;
+    Array.prototype.slice.call(sec.querySelectorAll('tbody tr')).forEach(function(tr){
+      var cEl = tr.querySelector('[data-field="category"]');
+      var rEl = tr.querySelector('input[data-field="rate"]');
+      if (!cEl || !rEl) return;
+      var c = String(cEl.textContent||'').trim();
+      // ✅ UI("4.500%") -> DB(0.045)
+      var v = PAYROLL_STD_rateUiToDb_(rEl.value);
+      if (!c) return;
+      if (v === '') return; // 공백만 제외
+      insStd.push({ year: yearLabel, category: c, rate: v });
+    });
+  })();
+
+  return {
+    year: yy, // 서버에서 yearLabel도 처리하지만, 현재는 숫자 year를 기준키로 사용
+    baseStd: baseStd,
+    baseExc: baseExc,
+    alwStd:  alwStd,
+    insStd:  insStd
+  };
+}
+
+/*급여지급내역 페이지모달 기능*/
+function openPayrollPaymentModal_(){
+  if (!window.openPageModal){
+    alert('openPageModal 함수가 없습니다. pagemodal.html 로딩을 확인하세요.');
+    return;
+  }
+
+  openPageModal({
+    title: '급여지급내역',
+    size: 'full',
+    templateId: 'tpl-payment-page-modal',
+
+    // ✅ 급여기준처럼 footerButtons 명시
+    footerButtons: [
+      { action:'save',   text:'저장', icon:'fa-floppy-disk', className:'btn-box btn-box-blue', close:false },
+    ],
+
+    // ✅ 급여기준처럼 onOpen에서 UI스코프 초기화
+    onOpen: function(modalEl){
+      try { if (typeof initUiScope === 'function') initUiScope(modalEl); } catch(e){}
+      PAYMENT_initModal_(modalEl);   // ✅ 연/월 UI + 로드 + 계산 바인딩
+    },
+
+    // ✅ 급여기준처럼 onSave 훅 형태 맞춰둠 (현재는 준비중)
+    onSave: function(e, modalEl, bodyHost){
+      // ✅ 선택된 연/월 기준으로 저장
+      var root = PAYMENT_normModalRoot_(modalEl);
+      var y = String(root.dataset.paymentYear||'').trim();
+      var m = String(root.dataset.paymentMonth||'').trim();
+      if (!/^\d{4}$/.test(y) || !(Number(m)>=1 && Number(m)<=12)){
+        if (window.showAlertError) window.showAlertError('연도/월을 먼저 선택해주세요.', '급여지급내역');
+        else alert('연도/월을 먼저 선택해주세요.');
+        return { ok:false };
+      }
+
+      var payload = PAYMENT_collectPayload_(root, y, Number(m));
+      return new Promise(function(resolve){
+        google.script.run
+          .withSuccessHandler(function(res){
+            if (!res || !res.ok){
+              resolve({ ok:false, error:(res && res.message) ? res.message : '저장 실패' });
+              return;
+            }
+            // ✅ 저장 후 재로드
+            PAYMENT_loadMonth_(root, y, Number(m));
+            resolve({ ok:true });
+          })
+          .withFailureHandler(function(err){
+            resolve({ ok:false, error:(err && err.message) ? err.message : String(err) });
+          })
+          .PAYMENT_saveMonth(payload);   // ✅ 서버에 이 함수만 만들어두면 됨
+      });
+    }
+  });
+}
+// =========================================================
+// Payment Modal (UI/로드/계산) - 급여기준 진행방식 동일 패턴
+// =========================================================
+function PAYMENT_normModalRoot_(el){
+  if (!el) return null;
+  return el.closest('.modal') || el.closest('.app-page-modal') || el;
+}
+
+function PAYMENT_num_(v){
+  if (v === '\u00A0') return 0;
+  if (typeof v === 'number') return isFinite(v) ? v : 0;
+  var s = String(v == null ? '' : v).trim();
+  if (!s) return 0;
+  s = s.replace(/[^0-9.\-]/g, '');
+  var n = Number(s || 0);
+  return isFinite(n) ? n : 0;
+}
+
+// ✅ 급여기준과 동일 정책: 공백은 공백(''), 0은 0
+function PAYMENT_isBlank_(v){
+  return v == null || String(v).trim() === '';
+}
+function PAYMENT_numOrBlank_(v){
+  if (PAYMENT_isBlank_(v)) return '';     // ✅ 공백 유지
+  var s = String(v).trim().replace(/[^0-9.\-]/g,'');
+  if (!s || s === '-' ) return '';        // 이상치 공백
+  var n = Number(s);
+  return isFinite(n) ? n : '';
+}
+
+function PAYMENT_valOrBlank_(v){
+  return (v == null || String(v).trim()==='') ? '' : String(v);
+}
+
+function PAYMENT_initModal_(modalEl){
+  var root = PAYMENT_normModalRoot_(modalEl);
+  if (!root) return;
+
+  var yearsBox  = root.querySelector('[data-payment-years]');
+  var monthsBox = root.querySelector('[data-payment-months]');
+  var tbody     = root.querySelector('tbody[data-payment-tbody]');
+  if (!yearsBox || !monthsBox || !tbody) return;
+
+  // ✅ 템플릿 확보(최초 1회)
+  if (!root.__paymentRowTpl){
+    var tpl = tbody.querySelector('tr[data-payment-row]') || tbody.querySelector('tr');
+    if (tpl){
+      root.__paymentRowTpl = tpl.cloneNode(true);
+      // 화면은 일단 비워두고(로드 후 렌더)
+      tbody.innerHTML = '';
+    }
+  }
+
+  // ✅ (1) 연도 목록 생성: 급여기준과 동일 (2025 시작, 10월이면 내년까지)
+  if (!yearsBox.__filled){
+    yearsBox.__filled = true;
+    var now = new Date();
+    var curY = now.getFullYear();
+    var curM = now.getMonth()+1;
+    var startY = 2025;
+    var endY = (curM >= 10) ? (curY + 1) : curY;
+    if (endY < startY) endY = startY;
+
+    yearsBox.innerHTML = '';
+    for (var y=startY; y<=endY; y++){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'wrap-list-item';
+      btn.setAttribute('data-payment-year', String(y));
+      btn.innerHTML = '<div class="wrap-list-main"><div class="wrap-list-name">'+y+'년</div></div>';
+      yearsBox.appendChild(btn);
+    }
+
+    // 클릭(연도)
+    yearsBox.addEventListener('click', function(e){
+      e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+      var btn = e.target.closest('.wrap-list-item[data-payment-year]');
+      if (!btn) return;
+      var y = String(btn.getAttribute('data-payment-year')||'').trim();
+      if (!/^\d{4}$/.test(y)) return;
+      PAYMENT_selectYear_(root, yearsBox, y);
+      var m = Number(root.dataset.paymentMonth||0) || (new Date().getMonth()+1);
+      PAYMENT_loadMonth_(root, y, m);
+    }, true);
+  }
+
+  // ✅ (2) 월 클릭 바인딩(고정)
+  if (!monthsBox.__bound){
+    monthsBox.__bound = true;
+    monthsBox.addEventListener('click', function(e){
+      e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+      var btn = e.target.closest('.wrap-list-item[data-payment-month]');
+      if (!btn) return;
+      var m = Number(btn.getAttribute('data-payment-month')||0);
+      if (!(m>=1 && m<=12)) return;
+      PAYMENT_selectMonth_(root, monthsBox, m);
+      var y = String(root.dataset.paymentYear||'').trim();
+      if (/^\d{4}$/.test(y)){
+        PAYMENT_loadMonth_(root, y, m);
+      }
+    }, true);
+  }
+
+  // ✅ (3) 입력 변화 → 합계 자동계산(행 단위)
+  if (!tbody.__calcBound){
+    tbody.__calcBound = true;
+    tbody.addEventListener('input', function(e){
+      var tr = e.target.closest('tr');
+      if (!tr) return;
+      PAYMENT_recalcRow_(tr);
+    });
+    tbody.addEventListener('change', function(e){
+      var tr = e.target.closest('tr');
+      if (!tr) return;
+      PAYMENT_recalcRow_(tr);
+    });
+  }
+
+  // ✅ (4) 기본 선택(오늘 기준)
+  var now2 = new Date();
+  var defY = String(Math.max(2025, now2.getFullYear()));
+  var defM = now2.getMonth()+1;
+  PAYMENT_selectYear_(root, yearsBox, defY);
+  PAYMENT_selectMonth_(root, monthsBox, defM);
+  PAYMENT_loadMonth_(root, defY, defM);
+}
+
+function PAYMENT_selectYear_(root, yearsBox, y){
+  root.dataset.paymentYear = String(y);
+  Array.prototype.slice.call(yearsBox.querySelectorAll('.wrap-list-item[data-payment-year]')).forEach(function(b){
+    b.classList.toggle('is-active', b.getAttribute('data-payment-year') === String(y));
+  });
+}
+function PAYMENT_selectMonth_(root, monthsBox, m){
+  root.dataset.paymentMonth = String(m);
+  Array.prototype.slice.call(monthsBox.querySelectorAll('.wrap-list-item[data-payment-month]')).forEach(function(b){
+    b.classList.toggle('is-active', Number(b.getAttribute('data-payment-month')) === Number(m));
+  });
+}
+
+function PAYMENT_loadMonth_(root, year, month){
+  if (!root) return;
+  var y = String(year||'').trim();
+  var m = Number(month||0) || 0;
+  if (!/^\d{4}$/.test(y) || !(m>=1 && m<=12)) return;
+
+  var tbody = root.querySelector('tbody[data-payment-tbody]');
+  if (!tbody) return;
+  var tpl = root.__paymentRowTpl;
+  if (!tpl) return;
+
+  // ✅ 최신요청만 반영
+  root.__paymentReqSeq = (root.__paymentReqSeq||0) + 1;
+  var reqSeq = root.__paymentReqSeq;
+
+  // (옵션) 로딩 중 표시
+  tbody.innerHTML = '<tr><td colspan="99"><div class="text-tbl">불러오는 중…</div></td></tr>';
+
+  google.script.run
+    .withSuccessHandler(function(res){
+      if (reqSeq !== root.__paymentReqSeq) return;
+      if (String(root.dataset.paymentYear||'') !== y) return;
+      if (Number(root.dataset.paymentMonth||0) !== m) return;
+
+      if (!res || !res.ok){
+        tbody.innerHTML = '<tr><td colspan="99"><div class="text-tbl">데이터를 불러오지 못했습니다.</div></td></tr>';
+        return;
+      }
+
+      // res: {ok:true, rows:[...]} 만 사용
+      PAYMENT_renderRows_(root, res.rows || []);
+      try { if (window.initUiScope) window.initUiScope(root); } catch(e){}
+      try { if (window.initUnitInputs) window.initUnitInputs(root); } catch(e){}
+    })
+    .withFailureHandler(function(err){
+      if (reqSeq !== root.__paymentReqSeq) return;
+      tbody.innerHTML = '<tr><td colspan="99"><div class="text-tbl">오류: '+(err && err.message ? err.message : err)+'</div></td></tr>';
+    })
+    .PAYMENT_getMonth({ year: y, month: m }); // ✅ 서버에 이 함수만 만들어두면 됨
+}
+
+function PAYMENT_renderRows_(root, rows){
+  var tbody = root.querySelector('tbody[data-payment-tbody]');
+  var tpl = root.__paymentRowTpl;
+  if (!tbody || !tpl) return;
+
+  tbody.innerHTML = '';
+  rows = Array.isArray(rows) ? rows : [];
+
+  // ✅ 지급내역 모달: 사번(employee_id) 기준 정렬
+  // - 숫자형 사번("2","10")도 올바르게 정렬되도록 padStart 처리
+  function _payEmpIdKey_(v){
+    var s = String(v == null ? '' : v).trim();
+    if (/^\d+$/.test(s)) return s.padStart(20, '0'); // 숫자만이면 자리수 보정
+    return s.toLowerCase();
+  }
+  rows = rows.slice().sort(function(a, b){
+    var ka = _payEmpIdKey_(a && a.employee_id);
+    var kb = _payEmpIdKey_(b && b.employee_id);
+    if (ka < kb) return -1;
+    if (ka > kb) return 1;
+    return 0;
+  });
+ 
+  if (!rows.length){
+    // 빈 화면: 템플릿 1행(추가 편의)
+    var tr0 = tpl.cloneNode(true);
+    PAYMENT_clearRow_(tr0);
+    tbody.appendChild(tr0);
+    return;
+  }
+
+  rows.forEach(function(r){
+    var tr = tpl.cloneNode(true);
+    PAYMENT_clearRow_(tr);
+
+    // 식별자(수정/삭제에 필요)
+    if (r && r.payment_id != null) tr.dataset.paymentId = String(r.payment_id);
+
+    // 직원 셀렉트 옵션 채우기(행마다 동일 옵션)
+    PAYMENT_setInput_(tr, 'employee_id',   r.employee_id);
+    PAYMENT_setInput_(tr, 'employee_name', r.employee_name);
+
+    // 입력 필드들
+    PAYMENT_setInput_(tr, 'salary',        r.salary);
+    PAYMENT_setInput_(tr, 'alw_overtime',  r.alw_overtime);
+    PAYMENT_setInput_(tr, 'socialins_np',  r.socialins_np);
+    PAYMENT_setInput_(tr, 'socialins_hi',  r.socialins_hi);
+    PAYMENT_setInput_(tr, 'socialins_ei',  r.socialins_ei);
+    PAYMENT_setInput_(tr, 'socialins_ii',  r.socialins_ii);
+    PAYMENT_setInput_(tr, 'severance',     r.severance);
+
+    // 합계 계산
+    PAYMENT_recalcRow_(tr);
+    tbody.appendChild(tr);
+  });
+}
+
+function PAYMENT_hasOption_(sel, value){
+  value = String(value||'');
+  if (!sel || !value) return false;
+  for (var i=0; i<sel.options.length; i++){
+    if (String(sel.options[i].value) === value) return true;
+  }
+  return false;
+}
+
+function PAYMENT_ensureOption_(sel, value, text){
+  value = String(value||'').trim();
+  if (!sel || !value) return;
+  if (PAYMENT_hasOption_(sel, value)) return;
+  var opt = document.createElement('option');
+  opt.value = value;
+  opt.textContent = String(text == null ? value : text);
+  // ✅ "선택" 다음(상단)에 넣고 싶으면 index 1에 insert, 아니면 append
+  try{
+    if (sel.options.length > 1) sel.insertBefore(opt, sel.options[1]);
+    else sel.appendChild(opt);
+  }catch(e){
+    sel.appendChild(opt);
+  }
+}
+
+
+function PAYMENT_setInput_(tr, field, v){
+  var el = tr.querySelector('[data-field="'+field+'"]');
+  if (!el) return;
+  el.value = PAYMENT_valOrBlank_(v);
+}
+
+function PAYMENT_clearRow_(tr){
+  Array.prototype.slice.call(tr.querySelectorAll('input,select,textarea')).forEach(function(el){
+    if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
+    else el.value = '';
+  });
+  // 계산칸도 비우기
+  Array.prototype.slice.call(tr.querySelectorAll('input[data-calc]')).forEach(function(el){
+    el.value = '';
+  });
+  // 식별자 제거(신규행)
+  delete tr.dataset.paymentId;
+}
+
+function PAYMENT_recalcRow_(tr){
+  // 월급여 합계 = salary + alw_overtime
+  var salary = PAYMENT_num_(PAYMENT_getVal_(tr, 'salary'));
+  var ot     = PAYMENT_num_(PAYMENT_getVal_(tr, 'alw_overtime'));
+  var monthPay = salary + ot;
+
+  // 4대 합계 = np + hi + ei + ii
+  var np = PAYMENT_num_(PAYMENT_getVal_(tr, 'socialins_np'));
+  var hi = PAYMENT_num_(PAYMENT_getVal_(tr, 'socialins_hi'));
+  var ei = PAYMENT_num_(PAYMENT_getVal_(tr, 'socialins_ei'));
+  var ii = PAYMENT_num_(PAYMENT_getVal_(tr, 'socialins_ii'));
+ var insTotal = np + hi + ei + ii;
+
+  // 월급여+4대 = monthPay + insTotal
+  var monthPlusIns = monthPay + insTotal;
+
+  // 총인건비 = (monthPay + insTotal) + severance
+  var sev = PAYMENT_num_(PAYMENT_getVal_(tr, 'severance'));
+  var laborTotal = monthPlusIns + sev;
+
+  PAYMENT_setCalc_(tr, 'month_pay_sum', monthPay);
+  PAYMENT_setCalc_(tr, 'ins_total', insTotal);
+  PAYMENT_setCalc_(tr, 'month_plus_ins', monthPlusIns);
+  PAYMENT_setCalc_(tr, 'labor_total', laborTotal);
+
+  // 단위 포맷(프로젝트/급여기준과 동일 initUnitInputs가 처리)
+  try { if (window.initUnitInputs) window.initUnitInputs(tr); } catch(e){}
+
+  // ✅ 자동계산으로 채워진 input들도 has-value / floating-label 갱신
+  try { if (window.refreshFloatingInputs) window.refreshFloatingInputs(tr); } catch(e){}
+}
+
+function PAYMENT_getVal_(tr, field){
+  var el = tr.querySelector('[data-field="'+field+'"]');
+  return el ? el.value : '';
+}
+function PAYMENT_setCalc_(tr, key, n){
+  var el = tr.querySelector('input[data-calc="'+key+'"]');
+  if (!el) return;
+  // ✅ 숫자는 가공 없이 넣기(기존 unit 포맷이 콤마 처리)
+  el.value = String(isFinite(n) ? n : 0);
+}
+
+function PAYMENT_collectPayload_(root, year, month){
+  var y = String(year||'').trim();
+  var m = Number(month||0) || 0;
+  var yearLabel  = y + '년';
+  var monthLabel = m + '월';
+
+  var tbody = root.querySelector('tbody[data-payment-tbody]');
+  var rows = [];
+  if (tbody){
+    Array.prototype.slice.call(tbody.querySelectorAll('tr')).forEach(function(tr){
+      if (tr.querySelector('td[colspan]')) return;
+
+      var employee_id   = String(PAYMENT_getVal_(tr,'employee_id')||'').trim();
+      var employee_name = String(PAYMENT_getVal_(tr,'employee_name')||'').trim();
+
+      // 완전 빈 행은 제외(체크만/공백만)
+      var hasAny =
+        employee_id ||
+        employee_name ||
+        String(PAYMENT_getVal_(tr,'salary')).trim() ||
+        String(PAYMENT_getVal_(tr,'alw_overtime')).trim() ||
+        String(PAYMENT_getVal_(tr,'socialins_np')).trim() ||
+        String(PAYMENT_getVal_(tr,'socialins_hi')).trim() ||
+        String(PAYMENT_getVal_(tr,'socialins_ei')).trim() ||
+        String(PAYMENT_getVal_(tr,'socialins_ii')).trim() ||
+        String(PAYMENT_getVal_(tr,'severance')).trim();
+      if (!hasAny) return;
+
+      var raw_salary       = String(PAYMENT_getVal_(tr,'salary')||'').trim();
+      var raw_alw_overtime = String(PAYMENT_getVal_(tr,'alw_overtime')||'').trim();
+      var raw_np           = String(PAYMENT_getVal_(tr,'socialins_np')||'').trim();
+      var raw_hi           = String(PAYMENT_getVal_(tr,'socialins_hi')||'').trim();
+      var raw_ei           = String(PAYMENT_getVal_(tr,'socialins_ei')||'').trim();
+      var raw_ii           = String(PAYMENT_getVal_(tr,'socialins_ii')||'').trim();
+      var raw_severance    = String(PAYMENT_getVal_(tr,'severance')||'').trim();
+
+      rows.push({
+        payment_id: tr.dataset.paymentId ? String(tr.dataset.paymentId) : '',
+        year: yearLabel,
+        month: monthLabel,
+        employee_id: employee_id,
+        employee_name: employee_name,
+
+        // ✅ 공백은 ''로 저장, "0"은 0으로 저장
+        salary:       PAYMENT_numOrBlank_(raw_salary),
+        alw_overtime: PAYMENT_numOrBlank_(raw_alw_overtime),
+        socialins_np: PAYMENT_numOrBlank_(raw_np),
+        socialins_hi: PAYMENT_numOrBlank_(raw_hi),
+        socialins_ei: PAYMENT_numOrBlank_(raw_ei),
+        socialins_ii: PAYMENT_numOrBlank_(raw_ii),
+        severance:    PAYMENT_numOrBlank_(raw_severance),
+      });
+    });
+  }
+
+  return { year: y, month: m, yearLabel: yearLabel, monthLabel: monthLabel, rows: rows };
+}
+
+
+/*본페이지 관련*/
+  function fillYearsFromServer_(scopeEl, fromSel, toSel, fallbackYear, done){
+    google.script.run
+      .withSuccessHandler(function(list){
+        // list: [{value:"2026", label:"2026년"}, ...]
+        if (!Array.isArray(list) || !list.length){
+          fillYears_(fromSel, fallbackYear);
+          fillYears_(toSel, fallbackYear);
+          if (fromSel) fromSel.value = String(fallbackYear);
+          if (toSel) toSel.value = String(fallbackYear);
+          // ✅ 비어있는 목록 케이스도 has-value/후속처리 수행
+          if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(scopeEl);
+          if (typeof done === 'function') done();
+          return;
+        }
+        var html = list.map(function(it){
+          return '<option value="'+esc_(it.value)+'">'+esc_(it.label)+'</option>';
+        }).join('');
+        if (fromSel) fromSel.innerHTML = html;
+        if (toSel) toSel.innerHTML = html;
+
+        // ✅ 기본값: 현재연도가 목록에 있으면 그걸, 없으면 마지막(가장 최신)
+        var cur = String(fallbackYear);
+        var hasCur = list.some(function(it){ return String(it.value) === cur; });
+        var def = hasCur ? cur : String(list[list.length-1].value);
+        if (fromSel) fromSel.value = def;
+        if (toSel) toSel.value = def;
+        // ✅ 연도값 세팅 후 has-value 동기화
+        if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(scopeEl);
+        if (typeof done === 'function') done();
+      })
+      .withFailureHandler(function(err){
+        console.error(err);
+        fillYears_(fromSel, fallbackYear);
+        fillYears_(toSel, fallbackYear);
+        if (fromSel) fromSel.value = String(fallbackYear);
+        if (toSel) toSel.value = String(fallbackYear);
+        // ✅ 프로그램 value 세팅 후 has-value 동기화
+        if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(scopeEl);
+        if (typeof done === 'function') done();
+      })
+      .PAYROLL_listBaseSalaryYears();
+  }
+
+  function loadPayrollRange_(scopeEl, range){
+    range = range || {};
+    var fy = Number(range.from_year||0), fm = Number(range.from_month||0);
+    var ty = Number(range.to_year||0), tm = Number(range.to_month||0);
+
+    // 로딩 표시(있으면): data-payroll-status
+    var st = qs_(scopeEl, '[data-payroll-status]');
+    if (st) st.textContent = '불러오는 중…';
+
+    // from <= to 검증
+    if ((fy*100+fm) > (ty*100+tm)) {
+      if (st) st.textContent = '오류: 기간이 올바르지 않습니다(FROM > TO)';
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(res){
+        console.log('[PAYROLL] response sample attendance[0]=', res && res.attendance && res.attendance[0]);
+        try{
+          if (st) st.textContent = '';
+          if (!res || res.ok !== true) throw new Error('Invalid response');
+          renderPayroll_(scopeEl, res);
+        } catch(err){
+          console.error(err);
+          if (st) st.textContent = '오류: ' + (err && err.message ? err.message : err);
+        }
+      })
+      .withFailureHandler(function(err){
+        console.error(err);
+        if (st) st.textContent = '오류: ' + (err && err.message ? err.message : err);
+      })
+      .PAYROLL_computeRange({ from_year: fy, from_month: fm, to_year: ty, to_month: tm });
+  }
+
+  function renderPayroll_(scopeEl, res){
+    // =========================================================
+    // ✅ 공통 정렬: (1)근태기간 (2)고용상태(현재: 재직→퇴직) (3)사번
+    // =========================================================
+    function _payrollPeriodKey_(v){
+      // 기대: 'YYYY-MM' / 'YYYYMM' / 'YYYY.MM' / 'YYYY년 M월' 등
+      var s = String(v == null ? '' : v).trim();
+      if (!s) return 0;
+      var m = s.match(/(\d{4})\D?(\d{1,2})/);
+      if (!m) return 0;
+      var yy = Number(m[1]) || 0;
+      var mm = Number(m[2]) || 0;
+      return (yy * 100) + mm;
+    }
+    function _statusNowKey_(v){
+      var s = String(v == null ? '' : v).trim();
+      // 요구사항: 재직, 퇴직 순
+      if (s === '재직') return 0;
+      if (s === '퇴직') return 1;
+      return 2; // 그 외(재직예정 등)는 뒤로
+    }
+    function _empIdKey_(v){
+      return String(v == null ? '' : v).trim();
+    }
+    function _sortPayrollRows_(rows){
+      rows = Array.isArray(rows) ? rows.slice() : [];
+      rows.sort(function(a,b){
+        var ap = _payrollPeriodKey_(a && a.payroll_period);
+        var bp = _payrollPeriodKey_(b && b.payroll_period);
+        if (ap !== bp) return ap - bp;
+        var as = _statusNowKey_(a && a.status_now);
+        var bs = _statusNowKey_(b && b.status_now);
+        if (as !== bs) return as - bs;
+        // 사번: 숫자 포함 비교(예: 0012 < 0100 < 1000)
+        return _empIdKey_(a && a.employee_id).localeCompare(_empIdKey_(b && b.employee_id), 'ko', { numeric:true, sensitivity:'base' });
+      });
+      return rows;
+    }
+
+    var attendanceRows = _sortPayrollRows_(res.attendance || []);
+    var budgetRows     = _sortPayrollRows_(res.budget || []);
+    var actualRows     = _sortPayrollRows_(res.actual || []);
+
+    renderAttendance_(scopeEl, attendanceRows);
+    renderBudget_(scopeEl, budgetRows);
+    renderActual_(scopeEl, actualRows);
+    // ✅ 기간 내 직원목록을 "직원" 필터칩으로 동적 생성
+    buildPayrollStaffChips_(scopeEl, res);
+
+    // ✅ 프로젝트와 동일: 숫자/단위 표시 포맷(콤마+단위) 재적용
+    if (window.initUnitTextTbl) window.initUnitTextTbl(scopeEl);
+
+    // ✅ 렌더 이후 현재 필터 재적용
+    applyPayrollFilter_(scopeEl);
+  }
+
+  function fillYears_(sel, baseYear){
+    if (!sel) return;
+    var y = Number(baseYear||new Date().getFullYear());
+    var start = y - 3;
+    var end = y + 2;
+    var html = '';
+    for (var i=start; i<=end; i++){
+      html += '<option value="'+i+'">'+i+'년</option>';
+    }
+    sel.innerHTML = html;
+  }
+
+  // ===== Filter: Client-side 적용 =====
+  function buildPayrollStaffChips_(scopeEl, res){
+    var box = qs_(scopeEl, '[data-payroll-staff-chips]');
+    if (!box) return;
+
+    // 현재 선택된 staff(직원) 필터 유지(keep-filter ON일 때도 자연스럽게)
+    var prevActive = {};
+    Array.from(box.querySelectorAll('.wf-chip.is-active')).forEach(function(btn){
+      var v = String(btn.getAttribute('data-value') || btn.textContent || '').trim();
+      if (v) prevActive[v] = true;
+    });
+
+    // res에서 기간 내 등장한 직원(사번+성명) 유니크 추출
+    var map = {}; // key: employee_id -> name
+    function take_(arr){
+      if (!Array.isArray(arr)) return;
+      arr.forEach(function(r){
+        if (!r) return;
+        var id = String(r.employee_id || '').trim();
+        var nm = String(r.name || '').trim();
+        if (!id || !nm) return;
+        if (!map[id]) map[id] = nm;
+      });
+    }
+    take_(res && res.attendance);
+    take_(res && res.budget);
+    take_(res && res.actual);
+
+    var list = Object.keys(map).map(function(id){
+      var nm = map[id];
+      var label = (id + ' ' + nm).trim();   // ✅ "00000 가나다"
+      return { id: id, name: nm, label: label };
+    });
+
+    // 사번 기준 정렬(숫자우선)
+    list.sort(function(a,b){
+      var an = parseInt(a.id, 10), bn = parseInt(b.id, 10);
+      var aNum = isFinite(an), bNum = isFinite(bn);
+      if (aNum && bNum) return an - bn;
+      if (aNum && !bNum) return -1;
+      if (!aNum && bNum) return 1;
+      return String(a.id).localeCompare(String(b.id));
+    });
+
+    // 칩 렌더
+    if (!list.length){
+      box.innerHTML = '<div style="opacity:.6; font-size: var(--t-size-1); padding:.25rem .1rem;">(직원 없음)</div>';
+      return;
+    }
+
+    var html = list.map(function(it){
+      var v = esc_(it.label);
+      var cls = 'wf-chip' + (prevActive[it.label] ? ' is-active' : '');
+      return '<button type="button" class="'+cls+'" data-key="staff" data-value="'+v+'">'+v+'</button>';
+    }).join('');
+    box.innerHTML = html;
+  }
+
+  function resetPayrollFiltersAll_(scopeEl){
+    // wrap-filter 공용 전체해제 버튼을 클릭(인디케이터/이벤트까지 정상 처리)
+    var btn = qs_(scopeEl, '[data-wf-reset="all"][data-wf-target="#payroll-filter-list .wrap-filter"]');
+    if (btn) { btn.click(); return; }
+    // fallback
+    var wrap = qs_(scopeEl, '#payroll-filter-list .wrap-filter');
+    if (!wrap) return;
+    qsa_(wrap, '.wf-chip.is-active').forEach(function(ch){ ch.classList.remove('is-active'); });
+    qsa_(wrap, 'input[data-wf-q]').forEach(function(ip){ ip.value = ''; });
+    applyPayrollFilter_(scopeEl);
+  }
+
+  function collectPayrollFilters_(scopeEl){
+    var wrap = qs_(scopeEl, '#payroll-filter-list .wrap-filter');
+    var out = {};
+    if (!wrap) return out;
+
+    qsa_(wrap, '.wf-chip.is-active').forEach(function(chip){
+      var k = String(chip.dataset.key || '').trim();
+      if (!k) return;
+      var v = String(chip.dataset.value || chip.textContent || '').trim();
+      if (!v) return;
+      out[k] = out[k] || [];
+      if (out[k].indexOf(v) < 0) out[k].push(v);
+    });
+
+    return out;
+  }
+
+  function parseYearCount_(v){
+    var s = String(v || '').trim();
+    if (!s) return null;
+    // "11년차이상" 같이 "이상"이 붙는 케이스
+    if (s.indexOf('이상') >= 0){
+      var min = parseInt(s.replace(/[^0-9]/g,''), 10);
+      return { min: isFinite(min) ? min : 11 };
+    }
+    var n = parseInt(s.replace(/[^0-9]/g,''), 10);
+    return isFinite(n) ? { eq: n } : null;
+  }
+
+  function matchYearCount_(rowVal, chipVal){
+    var rv = parseYearCount_(rowVal);
+    var cv = parseYearCount_(chipVal);
+    if (!cv) return true;
+    if (!rv) return false;
+
+    var rnum = (rv.eq != null) ? rv.eq : rv.min;
+    if (cv.min != null) return (rnum != null) ? (rnum >= cv.min) : false;
+    if (cv.eq  != null) return (rnum != null) ? (rnum === cv.eq) : false;
+    return true;
+  }
+
+  function rowMatchesFilters_(tr, filters){
+    var keys = Object.keys(filters || {});
+    if (!keys.length) return true;
+
+    var empId = String(tr.getAttribute('data-employee-id') || '');
+    var name  = String(tr.getAttribute('data-name') || '');
+    var hayStaff = (empId + ' ' + name).toLowerCase();
+
+    for (var i=0; i<keys.length; i++){
+      var k = keys[i];
+      var vals = filters[k] || [];
+      if (!vals.length) continue;
+
+      if (k === 'staff'){
+        var okStaff = vals.some(function(v){
+          v = String(v||'').trim().toLowerCase();
+          if (!v) return false;
+          return hayStaff.indexOf(v) >= 0;
+        });
+        if (!okStaff) return false;
+        continue;
+      }
+
+      if (k === 'working_yearcount'){
+        var rowYC = tr.getAttribute('data-working-yearcount') || '';
+        var okYC = vals.some(function(v){ return matchYearCount_(rowYC, v); });
+        if (!okYC) return false;
+        continue;
+      }
+
+      var attrName =
+        (k === 'status_now')     ? 'data-status-now' :
+        (k === 'status_working') ? 'data-status-working' :
+        (k === 'position')       ? 'data-position' :
+        (k === 'expertise')      ? 'data-expertise' :
+        null;
+
+      if (!attrName) continue; // 알 수 없는 키는 무시(확장 가능)
+      var rv2 = String(tr.getAttribute(attrName) || '').trim();
+      var ok2 = vals.indexOf(rv2) >= 0;
+      if (!ok2) return false;
+    }
+    return true;
+  }
+
+  function applyPayrollFilter_(scopeEl){
+    var filters = collectPayrollFilters_(scopeEl);
+
+    qsa_(scopeEl, 'tbody[data-payroll-tbody]').forEach(function(tb){
+      Array.from(tb.querySelectorAll('tr')).forEach(function(tr){
+        // "데이터가 없습니다" 같은 placeholder row는 그대로 표시
+        if (tr.querySelector('td[colspan]')) { tr.hidden = false; return; }
+        tr.hidden = !rowMatchesFilters_(tr, filters);
+      });
+    });
+  }
+
+
+  function fillMonths_(sel, currentMonth){
+    if (!sel) return;
+    var m = Number(currentMonth||1);
+    var html = '';
+    for (var i=1; i<=12; i++){
+      var label = i + '월';
+      html += '<option value="'+i+'"'+(i===m?' selected':'')+'>'+label+'</option>';
+    }
+    sel.innerHTML = html;
+  }
+
+  // ===== Render: Attendance =====
+  function renderAttendance_(scopeEl, rows){
+    var tb = qs_(scopeEl, 'tbody[data-payroll-tbody="attendance"]');
+    if (!tb) return;
+    tb.innerHTML = '';
+
+    if (!rows.length){
+      tb.innerHTML = '<tr><td colspan="99"><div class="text-tbl">데이터가 없습니다.</div></td></tr>';
+      return;
+    }
+
+    rows.forEach(function(r){
+      var html = '<tr'
+        + ' data-employee-id="'+esc_(r.employee_id||'')+'"'
+        + ' data-name="'+esc_(r.name||'')+'"'
+        + ' data-status-now="'+esc_(r.status_now||'')+'"'
+        + ' data-status-working="'+esc_(r.status_working||'')+'"'
+        + ' data-position="'+esc_(r.position||'')+'"'
+        + ' data-expertise="'+esc_(r.expertise||'')+'"'
+        + ' data-working-yearcount="'+esc_(r.working_yearcount||'')+'"'
+        + '>'
+        + '<td><div class="text-tbl">'+esc_(periodKr_(r.payroll_period || ''))+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.employee_id || '')+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.name || '')+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.status_now || '')+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.status_working || '')+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.contract_start || '')+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.contract_end || '')+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.working_days || '')+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.total_working_tenure || '')+'</div></td>'  // 총근무연수
+        + '<td><div class="text-tbl">'+esc_(r.working_yearcount ? (r.working_yearcount + '년차') : '')+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.position || '')+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.position_keep || '')+'</div></td>'         // 직위유지기간
+        + '<td><div class="text-tbl">'+esc_(r.expertise || '')+'</div></td>'
+        + '</tr>';
+      tb.insertAdjacentHTML('beforeend', html);
+    });
+  }
+
+  // ===== Render: Budget =====
+  function renderBudget_(scopeEl, rows){
+    var tb = qs_(scopeEl, 'tbody[data-payroll-tbody="budget"]');
+    if (!tb) return;
+    tb.innerHTML = '';
+
+    if (!rows.length){
+      tb.innerHTML = '<tr><td colspan="99"><div class="text-tbl">데이터가 없습니다.</div></td></tr>';
+      return;
+    }
+
+    rows.forEach(function(r){
+      var BLANK = '\u00A0';
+      var isBlankRow = (r && (r.fixed_sum === BLANK || r.base_month === BLANK || r.month_pay_sum === BLANK));
+
+      var fixed = isBlankRow ? BLANK : num_(r.fixed_sum);
+      var ot    = isBlankRow ? BLANK : num_(r.alw_overtime);
+      var insNp = isBlankRow ? BLANK : num_(r.ins_np);
+      var insHi = isBlankRow ? BLANK : num_(r.ins_hi);
+      var insEi = isBlankRow ? BLANK : num_(r.ins_ei);
+      var insIi = isBlankRow ? BLANK : num_(r.ins_ii);
+      var insTotal = isBlankRow ? BLANK : num_(r.ins_total);
+      var sev   = isBlankRow ? BLANK : num_(r.severance);
+      var labor = isBlankRow ? BLANK : num_(r.labor_total);
+      var monthPay = isBlankRow ? BLANK : num_(r.month_pay_sum);
+      var monthPlusIns = isBlankRow ? BLANK : (monthPay + insTotal); // ✅ 월급여+4대
+
+      // 예산표는 컬럼이 많아 페이지마다 다를 수 있어서, 핵심 컬럼 중심으로 채움
+      var html = '<tr'
+        + ' data-employee-id="'+esc_(r.employee_id||'')+'"'
+        + ' data-name="'+esc_(r.name||'')+'"'
+        + ' data-status-now="'+esc_(r.status_now||'')+'"'
+        + ' data-position="'+esc_(r.position||'')+'"'
+        + ' data-expertise="'+esc_(r.expertise||'')+'"'
+        + ' data-working-yearcount="'+esc_(r.working_yearcount||'')+'"'
+        + '>'
+        + '<td><div class="text-tbl">'+esc_(periodKr_(r.payroll_period || ''))+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.employee_id || '')+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.name || '')+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.status_now || '')+'</div></td>'
+        + '<td>' + unitWonDiv_(r.base_year)      + '</td>'  // ✅ 기준연봉
+        + '<td>' + unitWonDiv_(r.base_month)    + '</td>'  // 기본급
+        + '<td>' + unitWonDiv_(r.alw_position)  + '</td>'  // 직위수당
+        + '<td>' + unitWonDiv_(r.alw_expertise) + '</td>'  // 자격수당
+        + '<td>' + unitWonDiv_(fixed)           + '</td>'  // 고정급 합계
+        + '<td>' + unitWonDiv_(ot)              + '</td>'  // 초과근무수당
+        + '<td>' + unitWonDiv_(monthPay)        + '</td>'  // 월급여 합계
+        + '<td>' + unitWonDiv_(insNp)           + '</td>'
+        + '<td>' + unitWonDiv_(insHi)           + '</td>'
+        + '<td>' + unitWonDiv_(insEi)           + '</td>'
+        + '<td>' + unitWonDiv_(insIi)           + '</td>'
+        + '<td>' + unitWonDiv_(insTotal)        + '</td>'
+        + '<td>' + unitWonDiv_(monthPlusIns)    + '</td>' // ✅ (월급여 합계 + 4대 합계)
+        + '<td>' + unitWonDiv_(sev)             + '</td>'
+        + '<td>' + unitWonDiv_(labor)           + '</td>'
+        + '</tr>';
+      tb.insertAdjacentHTML('beforeend', html);
+    });
+  }
+
+  // ===== Render: Actual (Payment) =====
+  function renderActual_(scopeEl, rows){
+    var tb = qs_(scopeEl, 'tbody[data-payroll-tbody="actual"]');
+    if (!tb) return;
+    tb.innerHTML = '';
+
+    if (!rows.length){
+      tb.innerHTML = '<tr><td colspan="99"><div class="text-tbl">데이터가 없습니다.</div></td></tr>';
+      return;
+    }
+
+    rows.forEach(function(r){
+      var BLANK = '\u00A0';
+      // 공백행(NBSP) 처리: 0원으로 보이는 것 방지
+      var fixed    = (r && r.fixed_sum    === BLANK) ? BLANK : num_(r.fixed_sum);
+      var monthPay = (r && r.month_pay_sum === BLANK) ? BLANK : num_(r.month_pay_sum);
+      var insTotal = (r && r.ins_total     === BLANK) ? BLANK : num_(r.ins_total);
+
+      // ✅ 둘 다 공백이면 합계도 공백, 그 외는 공백을 0으로 간주해 합산
+      var monthPlusIns = (monthPay === BLANK && insTotal === BLANK)
+        ? BLANK
+        : ((monthPay === BLANK ? 0 : monthPay) + (insTotal === BLANK ? 0 : insTotal));
+
+
+      var html = '<tr'
+        + ' data-employee-id="'+esc_(r.employee_id||'')+'"'
+        + ' data-name="'+esc_(r.name||'')+'"'
+        + ' data-status-now="'+esc_(r.status_now||'')+'"'
+        + ' data-position="'+esc_(r.position||'')+'"'
+        + ' data-expertise="'+esc_(r.expertise||'')+'"'
+        + ' data-working-yearcount="'+esc_(r.working_yearcount||'')+'"'
+        + '>'
+        + '<td><div class="text-tbl">'+esc_(periodKr_(r.payroll_period || ''))+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.employee_id || '')+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.name || '')+'</div></td>'
+        + '<td><div class="text-tbl">'+esc_(r.status_now || '')+'</div></td>'
+        + '<td>' + unitWonDiv_(r.fixed_sum)     + '</td>'
+        + '<td>' + unitWonDiv_(r.alw_overtime)  + '</td>'
+        + '<td>' + unitWonDiv_(monthPay)        + '</td>'
+        + '<td>' + unitWonDiv_(r.ins_np)        + '</td>'
+        + '<td>' + unitWonDiv_(r.ins_hi)        + '</td>'
+        + '<td>' + unitWonDiv_(r.ins_ei)        + '</td>'
+        + '<td>' + unitWonDiv_(r.ins_ii)        + '</td>'
+        + '<td>' + unitWonDiv_(insTotal)        + '</td>'
+        + '<td>' + unitWonDiv_(monthPlusIns)    + '</td>'
+        + '<td>' + unitWonDiv_(r.severance)     + '</td>'
+        + '<td>' + unitWonDiv_(r.labor_total)   + '</td>'
+        + '</tr>';
+      tb.insertAdjacentHTML('beforeend', html);
+    });
+  }
+})();
+</script>

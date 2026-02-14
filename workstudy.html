@@ -1,0 +1,413 @@
+<!--workstudy.html-->
+<template id="tpl-workstudy">
+  <div class="page-root">
+    <div class="hr-opt">
+      <hr class="hr-out-bar">
+      <div class="hr-txt hr-left">
+        <div class="d-flex align-items-center gap-3">
+          <div class="d-flex align-items-center" style="width: 100%">
+            <div style="width: 60px">근로기간</div>
+            <select class="select1" style="width: 150px">
+              <option value="0">0000학년도 1학기</option>
+              <option value="0">0000학년도 여름방학</option>
+              <option value="0">0000학년도 2학기</option>
+              <option value="0">0000학년도 겨울방학</option>
+            </select>
+          </div>
+          <div class="d-flex align-items-center" style="width: 100%">
+            <div style="width: 60px">기간범위</div>
+            <input style="width: 230px" type="text" class="input1" value="0000-00-00 ~ 0000-00-00 (00주)" disabled>
+          </div>
+          <div class="d-flex align-items-center" style="width: 100%">
+            <div style="width: 60px">근로주차</div>
+            <select class="select1" style="width: 280px">
+              <option value="1">0주차~0주차 (0000-00-00 ~ 0000-00-00)</option>
+              <option value="1">0주차~0주차 (0000-00-00 ~ 0000-00-00)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="hr-txt hr-right">
+        <div class="d-flex gap-2">
+          <button type="button" class="btn-circle" onclick="workstudySet1PageModal()" data-acl="btn:workstudy:set1">
+            <span class="icon"><i class="fa-solid fa-gear"></i></span>
+            <span class="text">근로기간/대상 설정</span>
+          </button>
+          <button type="button" class="btn-circle" onclick="workstudySet2PageModal()" data-acl="btn:workstudy:set2">
+            <span class="icon"><i class="fa-solid fa-gear"></i></span>
+            <span class="text">근로장학생 설정</span>
+          </button>
+        </div>
+      </div>  
+    </div>
+    <div class="page-body">
+      <div class="d-flex fill">
+        <div style="flex: 2" class="col-fill">
+          <div class="sec fill">
+            <div class="sec-header" style="height: 40px">근로장학생 명단ㅇㅇ</div>
+            <div class="sec-body" style="min-height: 0">
+              <div class="wrap wrap-list fill">
+                <button type="button" class="wrap-list-item">
+                  <div class="wrap-list-icon"><i class="fa-solid fa-user"></i></div>
+                  <div class="wrap-list-main">
+                    <div class="wrap-list-name">202500001 각각각</div>
+                    <div class="wrap-list-sub">경영학과 · 010-0000-0000<br>0000-00-00~0000-00-00 · 주 00시간</div>
+                  </div>
+                </button>
+                <button type="button" class="wrap-list-item">
+                  <div class="wrap-list-icon"><i class="fa-solid fa-user"></i></div>
+                  <div class="wrap-list-main">
+                    <div class="wrap-list-name">202500002 난난난</div>
+                    <div class="wrap-list-sub">경영학과 · 010-0000-0000</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="flex: 8" class="col-fill">
+          <div class="sec fill">
+            <div class="sec-header" style="height: 40px">
+              <div>근로일정</div>
+              <button type="button" class="btn-icon bubble" aria-label="출력"><i class="fa-solid fa-print"></i></button>
+            </div>
+            <div class="sec-body fill">
+              <div class="wrap wrap-tbl fill">
+                <table class="tbl">
+                  <thead></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!--페이지모달: 근로기간/대상 설정-->
+<template id="workstudy-set1-page-modal">
+  <div class="d-flex fill">
+    <div style="flex: 5" class="col-fill">
+      <div class="sec fill">
+        <div class="sec-header">
+          <div class="text">근로기간</div>
+          <div class="d-flex gap-1">
+            <button type="button" class="btn-icon bubble btn-icon-s btn-icon-blue" data-tbl-action="add" data-clone="clear" aria-label="추가"><i class="fa-solid fa-plus"></i></button>
+            <button type="button" class="btn-icon bubble btn-icon-s btn-icon-red" data-tbl-action="delete" data-delete-keep="blank" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
+          </div>
+        </div>
+        <div class="sec-body">
+          <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" class="chk-anim" aria-label="전체선택"></th>
+                  <th style="min-width: 100px">학년도</th>
+                  <th style="min-width: 100px">학기</th>
+                  <th>시작일</th>
+                  <th>종료일</th>
+                  <th style="min-width: 90px">활성구분</th>
+                  <th>비고</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl input-unit" data-unit="학년도" data-group="0"></td>
+                  <td>
+                    <select class="select-tbl">
+                      <option value="">선택</option>
+                      <option value="1학기">1학기</option>
+                      <option value="여름방학">여름방학</option>
+                      <option value="2학기">2학기</option>
+                      <option value="겨울방학">겨울방학</option>
+                    </select>
+                  </td>
+                  <td><input type="text" class="input-tbl input-date"></td>
+                  <td><input type="text" class="input-tbl input-date"></td>
+                  <td>
+                    <select class="select-tbl">
+                      <option value="">선택</option>
+                      <option value="활성">활성</option>
+                      <option value="비활성">비활성</option>
+                    </select>
+                  </td>
+                  <td><input type="text" class="input-tbl"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="flex: 5" class="col-fill">
+      <div class="sec fill">
+        <div class="sec-header">
+          <div class="text">근로대상</div>
+          <div class="d-flex gap-1">
+            <button type="button" class="btn-icon bubble btn-icon-s btn-icon-blue" data-tbl-action="add" data-clone="clear" aria-label="추가"><i class="fa-solid fa-plus"></i></button>
+            <button type="button" class="btn-icon bubble btn-icon-s btn-icon-red" data-tbl-action="delete" data-delete-keep="blank" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
+          </div>
+        </div>
+        <div class="sec-body">
+          <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" class="chk-anim" aria-label="전체선택"></th>
+                  <th style="min-width: 90px">학번</th>
+                  <th style="min-width: 60px">성명</th>
+                  <th style="min-width: 120px">학과</th>
+                  <th style="min-width: 130px">휴대전화번호</th>
+                  <th style="min-width: 90px">활성구분</th>
+                  <th>비고</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl"></td>
+                  <td><input type="text" class="input-tbl"></td>
+                  <td><input type="text" class="input-tbl"></td>
+                  <td><input type="text" class="input-tbl"></td>
+                  <td>
+                    <select class="select-tbl">
+                      <option value="">선택</option>
+                      <option value="활성">활성</option>
+                      <option value="비활성">비활성</option>
+                    </select>
+                  </td>
+                  <td><input type="text" class="input-tbl"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!--페이지모달: 근로장학생 설정-->
+<template id="workstudy-set2-page-modal">
+  <div class="d-flex fill gap-3">
+    <div style="flex: 1; min-width: 0;" class="col-fill">
+      <div style="flex: 5" class="col-fill">
+        <div class="sec fill">
+          <div class="sec-header"><div class="text">근로기간</div></div>
+          <div class="sec-body">
+            <div class="wrap wrap-list fill">
+              <button type="button" class="wrap-list-item">
+                <div class="wrap-list-main">
+                  <div class="wrap-list-name">2025학년도</div>
+                </div>
+              </button>
+              <button type="button" class="wrap-list-item">
+                <div class="wrap-list-main">
+                  <div class="wrap-list-name">2026학년도</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="flex: 5" class="col-fill">
+        <div class="sec fill">
+          <div class="sec-body">
+            <div class="wrap wrap-list fill">
+              <button type="button" class="wrap-list-item">
+                <div class="wrap-list-main">
+                  <div class="wrap-list-name">1학기</div>
+                </div>
+              </button>
+              <button type="button" class="wrap-list-item">
+                <div class="wrap-list-main">
+                  <div class="wrap-list-name">여름방학</div>
+                </div>
+              </button>
+              <button type="button" class="wrap-list-item">
+                <div class="wrap-list-main">
+                  <div class="wrap-list-name">2학기</div>
+                </div>
+              </button>
+              <button type="button" class="wrap-list-item">
+                <div class="wrap-list-main">
+                  <div class="wrap-list-name">겨울방학</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>  
+    <div style="flex: 9; min-width: 0;" class="col-fill">
+      <div style="flex: 4" class="col-fill">
+        <div class="sec fill">
+          <div class="sec-header"><div class="text">근로대상</div></div>
+          <div class="sec-body flex-row">
+            <div style="flex: 4" class="col-fill">
+              <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th><input type="checkbox" class="chk-anim" aria-label="전체선택"></th>
+                      <th>학번</th>
+                      <th>성명</th>
+                      <th>학과</th>
+                      <th>휴대전화번호</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                      <td><div class="text-tbl">000000000</div></td>
+                      <td><div class="text-tbl">가나다</div></td>
+                      <td><div class="text-tbl">가나다라마바</div></td>
+                      <td><div class="text-tbl">000-0000-0000</div></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div style="flex: 0 0 50px" class="col-fill align-items-center justify-content-center gap-2">
+              <button type="button" class="btn-icon bubble btn-icon-blue" aria-label="대상 → 근로장학생"><i class="fa-solid fa-arrow-right"></i></button>
+              <button type="button" class="btn-icon bubble btn-icon-red" aria-label="대상 ← 근로장학생"><i class="fa-solid fa-arrow-left"></i></button>
+            </div>
+            <div style="flex: 5" class="col-fill">
+              <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th><input type="checkbox" class="chk-anim" aria-label="전체선택"></th>
+                      <th>학번</th>
+                      <th>성명</th>
+                      <th>학과</th>
+                      <th>휴대전화번호</th>
+                      <th>근로시작일</th>
+                      <th>근로종료일</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                      <td><div class="text-tbl">000000000</div></td>
+                      <td><div class="text-tbl">가나다</div></td>
+                      <td><div class="text-tbl">가나다라마바</div></td>
+                      <td><div class="text-tbl">000-0000-0000</div></td>
+                      <td><input type="text" class="input-tbl input-date"></td>
+                      <td><input type="text" class="input-tbl input-date"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="flex: 6" class="col-fill">
+        <div class="sec fill">
+          <div class="sec-header">
+            <div class="text">근로일정</div>
+            <div class="d-flex gap-1">
+              <button type="button" class="btn-icon bubble btn-icon-s btn-icon-blue" data-tbl-action="add" data-clone="clear" aria-label="추가"><i class="fa-solid fa-plus"></i></button>
+              <button type="button" class="btn-icon bubble btn-icon-s btn-icon-red" data-tbl-action="delete" data-delete-keep="blank" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
+            </div>
+          </div>
+          <div class="sec-body">
+            <div class="wrap wrap-tbl fill scroll-xy tbl-sticky">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th><input type="checkbox" class="chk-anim" aria-label="전체선택"></th>
+                    <th>근로장학생</th>
+                    <th>근로시작일</th>
+                    <th>근로종료일</th>
+                    <th style="min-width: 80px">근로요일</th>
+                    <th>시작시간</th>
+                    <th>종료시간</th>
+                    <th style="min-width: 110px">근로장소</th>
+                    <th style="min-width: 90px">우편업무</th>
+                    <th>비고</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                    <td><div class="text-tbl">000000000 가나다</div></td>
+                    <td><input type="text" class="input-tbl input-date" value="20250101" disabled></td>
+                    <td><input type="text" class="input-tbl input-date" value="20250101" disabled></td>
+                    <td>
+                      <select class="select-tbl">
+                        <option value="">선택</option>
+                        <option value="월">월</option>
+                        <option value="화">화</option>
+                        <option value="수">수</option>
+                        <option value="목">목</option>
+                        <option value="금">금</option>
+                      </select>
+                    </td>
+                    <td><input type="text" class="input-tbl input-time"></td>
+                    <td><input type="text" class="input-tbl input-time"></td>
+                    <td>
+                      <select class="select-tbl">
+                        <option value="">선택</option>
+                        <option value="대학본관">대학본관</option>
+                        <option value="벤처창업관">벤처창업관</option>
+                      </select>
+                    </td>
+                    <td>
+                      <select class="select-tbl">
+                        <option value="">선택</option>
+                        <option value="해당">해당</option>
+                        <option value="미해당">미해당</option>
+                      </select>
+                    </td>
+                    <td><input type="text" class="input-tbl"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  function workstudySet1PageModal() {
+    openPageModal({
+      title: '근로기간/대상 설정',
+      size: 'full',
+      templateId: 'workstudy-set1-page-modal',
+      onSave: function () {
+        // 여기서 폼값 읽고 저장 로직 실행
+        // 예: validate 실패 시 false 리턴
+        // if (!isValid) { showAlertWarn('필수값을 입력해 주세요.'); return false; }
+
+        console.log('저장 실행!');
+        // Google Apps Script 호출 등...
+        return true; // 또는 아무것도 안 리턴
+      }
+    });
+  }
+
+  function workstudySet2PageModal() {
+    openPageModal({
+      title: '근로장학생 설정',
+      size: 'full',
+      templateId: 'workstudy-set2-page-modal',
+      onSave: function () {
+        // 여기서 폼값 읽고 저장 로직 실행
+        // 예: validate 실패 시 false 리턴
+        // if (!isValid) { showAlertWarn('필수값을 입력해 주세요.'); return false; }
+
+        console.log('저장 실행!');
+        // Google Apps Script 호출 등...
+        return true; // 또는 아무것도 안 리턴
+      }
+    });
+  }
+</script>

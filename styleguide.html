@@ -1,0 +1,1083 @@
+<!--styleguide.html-->
+<template id="tpl-styleguide">
+  <div class="page-header">스타일가이드(Style Guide)</div>
+  <div class="d-flex" style="row-gap: 0.5rem">
+    <div class="sec">
+      <div class="sec-header">Font-Size</div>
+      <div class="sec-body">
+        <div style="font-size: var(--t-size-3)">0.6rem</div>
+        <div style="font-size: var(--t-size-2)">0.65rem</div>
+        <div style="font-size: var(--t-size-1)">0.7rem</div>
+        <div style="font-size: var(--t-size)">0.75rem(기본값)</div>
+        <div style="font-size: var(--t-size1)">0.8rem</div>
+        <div style="font-size: var(--t-size2)">0.9rem</div>
+        <div style="font-size: var(--t-size3)">1rem</div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-header">Font-Weight</div>
+      <div class="sec-body">
+        <div style="font-weight: var(--t-weight-1)">400</div>
+        <div>500(기본값)</div>
+        <div style="font-weight: var(--t-weight1)">600</div>
+        <div style="font-weight: var(--t-weight2)">700</div>
+        <div style="font-weight: var(--t-weight3)">800</div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-header">Font-Color</div>
+      <div class="sec-body">
+        <div style="color: var(--t-color-2); font-weight: var(--t-weight2);">연한기본색</div>
+        <div style="color: var(--t-color-1); font-weight: var(--t-weight2);">연한기본색</div>
+        <div style="font-weight: var(--t-weight2);">기본색</div>
+        <div style="color: var(--t-color1); font-weight: var(--t-weight2);">진한기본색</div>
+        <div style="color: var(--t-color-on); font-weight: var(--t-weight2);">강조색</div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-header">Button-Icon</div>
+      <div class="sec-body">
+        <div class="d-flex align-items-center gap-1 mb-1">
+          <button type="button" class="btn-icon btn-icon-xl btn-icon-blue" aria-label="추가"><i class="fa-solid fa-plus"></i></button>
+          <button type="button" class="btn-icon btn-icon-l btn-icon-blue" aria-label="추가"><i class="fa-solid fa-plus"></i></button>
+          <button type="button" class="btn-icon btn-icon-blue" aria-label="추가"><i class="fa-solid fa-plus"></i></button>
+          <button type="button" class="btn-icon btn-icon-s btn-icon-blue" aria-label="추가"><i class="fa-solid fa-plus"></i></button>
+          <button type="button" class="btn-icon btn-icon-xs btn-icon-blue" aria-label="추가"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        <div class="d-flex align-items-center gap-1 mb-1">
+          <button type="button" class="btn-icon btn-icon-xl btn-icon-red" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
+          <button type="button" class="btn-icon btn-icon-l btn-icon-red" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
+          <button type="button" class="btn-icon btn-icon-red" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
+          <button type="button" class="btn-icon btn-icon-s btn-icon-red" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
+          <button type="button" class="btn-icon btn-icon-xs btn-icon-red" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
+        </div>
+        <div class="d-flex align-items-center gap-1 mb-1">
+          <button type="button" class="btn-icon btn-icon-xl btn-icon-green" aria-label="Excel"><i class="fa-solid fa-file-excel"></i></button>
+          <button type="button" class="btn-icon btn-icon-l btn-icon-green" aria-label="Excel"><i class="fa-solid fa-file-excel"></i></button>
+          <button type="button" class="btn-icon btn-icon-green" aria-label="Excel"><i class="fa-solid fa-file-excel"></i></button>
+          <button type="button" class="btn-icon btn-icon-s btn-icon-green" aria-label="Excel"><i class="fa-solid fa-file-excel"></i></button>
+          <button type="button" class="btn-icon btn-icon-xs btn-icon-green" aria-label="Excel"><i class="fa-solid fa-file-excel"></i></button>
+        </div>
+        <div class="d-flex align-items-center gap-1 mb-1">
+          <button type="button" class="btn-icon btn-icon-xl btn-icon-red" aria-label="PDF"><i class="fa-solid fa-file-pdf"></i></button>
+          <button type="button" class="btn-icon btn-icon-l btn-icon-red" aria-label="PDF"><i class="fa-solid fa-file-pdf"></i></button>
+          <button type="button" class="btn-icon btn-icon-red" aria-label="PDF"><i class="fa-solid fa-file-pdf"></i></button>
+          <button type="button" class="btn-icon btn-icon-s btn-icon-red" aria-label="PDF"><i class="fa-solid fa-file-pdf"></i></button>
+          <button type="button" class="btn-icon btn-icon-xs btn-icon-red" aria-label="PDF"><i class="fa-solid fa-file-pdf"></i></button>
+        </div>
+        <div class="d-flex align-items-center gap-1 mb-1">
+          <button type="button" class="btn-icon btn-icon-xl" aria-label="출력"><i class="fa-solid fa-print"></i></button>
+          <button type="button" class="btn-icon btn-icon-l" aria-label="출력"><i class="fa-solid fa-print"></i></button>
+          <button type="button" class="btn-icon" aria-label="출력"><i class="fa-solid fa-print"></i></button>
+          <button type="button" class="btn-icon btn-icon-s" aria-label="출력"><i class="fa-solid fa-print"></i></button>
+          <button type="button" class="btn-icon btn-icon-xs" aria-label="출력"><i class="fa-solid fa-print"></i></button>
+        </div>
+        <div class="d-flex align-items-center gap-1 mb-1">
+          <button type="button" class="btn-icon btn-icon-xl" aria-label="필터"><i class="fa-solid fa-filter"></i></button>
+          <button type="button" class="btn-icon btn-icon-l" aria-label="필터"><i class="fa-solid fa-filter"></i></button>
+          <button type="button" class="btn-icon" aria-label="필터"><i class="fa-solid fa-filter"></i></button>
+          <button type="button" class="btn-icon btn-icon-s" aria-label="필터"><i class="fa-solid fa-filter"></i></button>
+          <button type="button" class="btn-icon btn-icon-xs" aria-label="필터"><i class="fa-solid fa-filter"></i></button>
+        </div>
+        <div class="d-flex align-items-center gap-1 mb-1">
+          <button type="button" class="btn-icon btn-icon-xl" aria-label="정보"><i class="bi bi-info-circle"></i></button>
+          <button type="button" class="btn-icon btn-icon-l" aria-label="정보"><i class="bi bi-info-circle"></i></button>
+          <button type="button" class="btn-icon" aria-label="정보"><i class="bi bi-info-circle"></i></button>
+          <button type="button" class="btn-icon btn-icon-s" aria-label="정보"><i class="bi bi-info-circle"></i></button>
+          <button type="button" class="btn-icon btn-icon-xs" aria-label="정보"><i class="bi bi-info-circle"></i></button>
+        </div>
+        <div class="d-flex align-items-center gap-1 mb-1">
+          <button type="button" class="btn-icon btn-icon-xl btn-icon-violet" aria-label="승인관리"><i class="fa-solid fa-list-check"></i></button>
+          <button type="button" class="btn-icon btn-icon-l btn-icon-violet" aria-label="승인관리"><i class="fa-solid fa-list-check"></i></button>
+          <button type="button" class="btn-icon btn-icon-violet" aria-label="승인관리"><i class="fa-solid fa-list-check"></i></button>
+          <button type="button" class="btn-icon btn-icon-s btn-icon-violet" aria-label="승인관리"><i class="fa-solid fa-list-check"></i></button>
+          <button type="button" class="btn-icon btn-icon-xs btn-icon-violet" aria-label="승인관리"><i class="fa-solid fa-list-check"></i></button>
+        </div>
+        <div class="d-flex align-items-center gap-1 mb-1">
+          <button type="button" class="btn-icon btn-icon-xl" aria-label="조회"><i class="fa-solid fa-magnifying-glass"></i></button>
+          <button type="button" class="btn-icon btn-icon-l" aria-label="조회"><i class="fa-solid fa-magnifying-glass"></i></button>
+          <button type="button" class="btn-icon" aria-label="조회"><i class="fa-solid fa-magnifying-glass"></i></button>
+          <button type="button" class="btn-icon btn-icon-s" aria-label="조회"><i class="fa-solid fa-magnifying-glass"></i></button>
+          <button type="button" class="btn-icon btn-icon-xs" aria-label="조회"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+        <div class="d-flex align-items-center gap-1 mb-1">
+          <button type="button" class="btn-icon bubble btn-icon-xl" aria-label="조회"><i class="fa-solid fa-magnifying-glass"></i></button>
+          <button type="button" class="btn-icon bubble btn-icon-l" aria-label="조회"><i class="fa-solid fa-magnifying-glass"></i></button>
+          <button type="button" class="btn-icon bubble" aria-label="조회"><i class="fa-solid fa-magnifying-glass"></i></button>
+          <button type="button" class="btn-icon bubble btn-icon-s" aria-label="조회"><i class="fa-solid fa-magnifying-glass"></i></button>
+          <button type="button" class="btn-icon bubble btn-icon-xs" aria-label="조회"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+        <div class="d-flex align-items-center gap-1 mb-1">
+          <button type="button" class="btn-circle">
+            <span class="icon"><i class="fa-solid fa-plus"></i></span>
+            <span class="text">인력 설정</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-header">Button-Box</div>
+      <div class="sec-body">
+        <div class="mb-1">
+          <button class="btn-box btn-box-blue noselect">
+            <span class="text">확인</span>
+            <span class="icon"><i class="fa-solid fa-check"></i></span>
+          </button>
+        </div>
+        <div class="mb-1">
+          <button class="btn-box btn-box-grey noselect">
+            <span class="text">취소</span>
+            <span class="icon"><i class="fa-solid fa-xmark"></i></span>
+          </button>
+        </div>
+        <div class="mb-1">
+          <button class="btn-box btn-box-blue noselect">
+            <span class="text">저장</span>
+            <span class="icon"><i class="fa-solid fa-floppy-disk"></i></span>
+          </button>
+        </div>
+        <div class="mb-1">
+          <button class="btn-box btn-box-red noselect">
+            <span class="text">삭제</span>
+            <span class="icon"><i class="fa-solid fa-trash-can"></i></span>
+          </button>
+        </div>
+        <div class="mb-1">
+          <button class="btn-box noselect">
+            <span class="text">뒤로가기</span>
+            <span class="icon"><i class="fa-solid fa-backward-step"></i></span>
+          </button>
+        </div>
+        <div class="mb-1">
+          <button class="btn-box btn-box-violet noselect">
+            <span class="text">승인관리</span>
+            <span class="icon"><i class="fa-solid fa-stamp"></i></span>
+          </button>
+        </div>
+        <div>
+          <button class="btn-box btn-box-violet noselect">
+            <span class="text">수정</span>
+            <span class="icon"><i class="fa-solid fa-pen"></i></span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-header">Input</div>
+      <div class="sec-body">
+        <div class="mb-1"><input type="text" class="input1" autocomplete="off"></div>
+        <div class="mb-1"><select class="select1">
+          <option value=""></option>
+          <option value="가">가</option>
+        </select></div>
+        <div class="mb-1"><input type="text" class="input1 input-date"></div>
+        <div class="mb-1"><input type="text" class="input1 input-time"></div>
+        <div class="mb-1"><input type="text" class="input1" autocomplete="off" value="가나다라" disabled></div>
+        <div class="mb-1"><input type="text" class="input1" autocomplete="off" value="가나다라" readonly></div>
+        <div class="input-search-wrap" style="max-width: 260px;">
+          <i class="fa-solid fa-magnifying-glass input-search-icon"></i>
+          <input class="input1 input-search" type="text" placeholder="검색어를 입력하세요">
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-header">Input-Group1</div>
+      <div class="sec-body">
+        <div class="inputgroup1">
+          <input type="text" required="" autocomplete="off">
+          <label for="name">text</label>
+        </div>
+        <div class="inputgroup1">
+          <select>
+            <option value=""></option>
+            <option value="가">가가가가가</option>
+            <option value="나">나나나나나</option>
+          </select>
+          <label for="name">select</label>
+        </div>
+        <div class="inputgroup1">
+          <input type="text" class="input-date" required="" autocomplete="off">
+          <label for="name">date</label>
+        </div>
+        <div class="inputgroup1">
+          <input type="text" class="input-time" required="" autocomplete="off">
+          <label for="name">time</label>
+        </div>
+        <div class="inputgroup1">
+          <input type="text" required="" autocomplete="off" value="가나다라"disabled>
+          <label for="name">text</label>
+        </div>
+        <div class="inputgroup1">
+          <input type="text" required="" autocomplete="off" readonly>
+          <label for="name">text</label>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-header">Input-Group2</div>
+      <div class="sec-body">
+        <div class="inputgroup2 ">
+          <input type="text" required="" autocomplete="off">
+          <label for="name">text</label>
+        </div>
+        <div class="inputgroup2">
+          <select>
+            <option value=""></option>
+            <option value="가">가</option>
+          </select>
+          <label for="name">select</label>
+        </div>
+        <div class="inputgroup2">
+          <input type="text" class="input-date" required="" autocomplete="off">
+          <label for="name">date</label>
+        </div>
+          <div class="inputgroup2">
+          <input type="text" class="input-time" required="" autocomplete="off">
+          <label for="name">time</label>
+        </div>
+        <div class="inputgroup2 ">
+          <input type="text" required="" autocomplete="off" disabled>
+          <label for="name">text</label>
+        </div>
+        <div class="inputgroup2 ">
+          <input type="text" required="" autocomplete="off" value="가나다라" readonly>
+          <label for="name">text</label>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-header">Checkbox</div>
+      <div class="sec-body">
+        <input type="checkbox" class="chk-anim" aria-label="선택">
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-header">Modal-Alert</div>
+      <div class="sec-body">
+        <div>
+          <button type="button" class="btn-box noselect" onclick="showAlertInfo('정보 알림입니다.\n정상적으로 처리되었습니다.');">
+            <span class="text">알림 - Info</span>
+            <span class="icon"><i class="fa-solid fa-circle-info"></i></span>
+          </button>
+        </div>
+        <div>
+          <button type="button" class="btn-box btn-box-green noselect" onclick="alertSaveDone();">
+            <span class="text">알림 - Success</span>
+            <span class="icon"><i class="fa-solid fa-circle-check"></i></span>
+          </button>
+        </div>
+        <div>
+          <button type="button" class="btn-box btn-box-green noselect" onclick="alertDeleteDone();">
+            <span class="text">알림 - Success</span>
+            <span class="icon"><i class="fa-solid fa-circle-check"></i></span>
+          </button>
+        </div>
+        <div>
+          <button type="button" class="btn-box btn-box-violet noselect" onclick="showAlertWarn('선택된 항목이 없습니다.\n대상을 먼저 선택해 주세요.');">
+            <span class="text">알림 - Warn</span>
+            <span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+          </button>
+        </div>
+        <div>
+          <button type="button" class="btn-box btn-box-red noselect" onclick="alertErrorDone();">
+            <span class="text">알림 - Error</span>
+            <span class="icon"><i class="fa-solid fa-circle-xmark"></i></span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-header">Modal-Confirm</div>
+      <div class="sec-body">
+        <div>
+          <button type="button" class="btn-box noselect" onclick="showConfirmInfo('확인할래요? 말래요?')">
+            <span class="text">확인 - Info</span>
+            <span class="icon"><i class="fa-solid fa-circle-info"></i></span>
+          </button>
+        </div>
+        <div>
+          <button type="button" class="btn-box btn-box-green noselect" onclick="demoConfirmSuccess();">
+            <span class="text">확인 - Success</span>
+            <span class="icon"><i class="fa-solid fa-circle-check"></i></span>
+          </button>
+        </div>
+        <div>
+          <button type="button" class="btn-box btn-box-violet noselect" onclick="demoConfirmWarn();">
+            <span class="text">확인 - Warn</span>
+            <span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+          </button>
+        </div>
+        <div>
+          <button type="button" class="btn-box btn-box-red noselect" onclick="demoConfirmError();">
+            <span class="text">확인 - Error</span>
+            <span class="icon"><i class="fa-solid fa-circle-xmark"></i></span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-header">Modal-Page</div>
+      <div class="sec-body" >
+        <div>
+          <button type="button" class="btn-box btn-box-blue" onclick="testPageModalSavelg()">
+            <span class="text">페이지모달 - l(기본)</span>
+            <span class="icon"><i class="fa-solid fa-up-right-from-square"></i></span>
+          </button>
+        </div>
+        <div>
+          <button type="button" class="btn-box btn-box-blue" onclick="testPageModalSavexl()">
+            <span class="text">페이지모달 - xl</span>
+            <span class="icon"><i class="fa-solid fa-up-right-from-square"></i></span>
+          </button>
+        </div>
+        <div>
+          <button type="button" class="btn-box btn-box-blue" onclick="testPageModalSavefull()">
+            <span class="text">페이지모달 - full</span>
+            <span class="icon"><i class="fa-solid fa-up-right-from-square"></i></span>
+          </button>
+        </div>    
+      </div>
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <div style="width: 500px">
+      <div class="sec">
+        <div class="sec-header">Table</div>
+        <div class="sec-body">
+          <div class="wrap wrap-tbl">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th rowspan="2"></th>
+                  <th colspan="2">열1</th>
+                  <th rowspan="2">열2</th>
+                </tr>
+                <tr>
+                  <th>열1-1</th>
+                  <th>열1-2</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><button type="button" class="btn-icon btn-icon-s"><i class="fa-solid fa-magnifying-glass"></i></button></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                  <td><select class="select-tbl" disabled><option value=""></option><option value="가">가</option></select></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+                <tr>
+                  <td><button type="button" class="btn-icon btn-icon-s"><i class="fa-solid fa-magnifying-glass"></i></button></td>
+                  <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                  <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="width: 500px">
+      <div class="sec">
+        <div class="sec-header">Table-scroll-x</div>
+        <div class="sec-body">
+          <div class="wrap wrap-tbl wrap-tbl-x tbl-sticky" style="width: 500px">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>가나다라마바사아자차카파하자자자</th>
+                  <th>가나다라마바사아자차카파하자자자</th>
+                  <th>가나다라마바사아차파카파</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><button type="button" class="btn-icon btn-icon-s"><i class="fa-solid fa-magnifying-glass"></i></button></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                  <td><select class="select-tbl" disabled><option value=""></option><option value="가">가</option></select></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+                <tr>
+                  <td><button type="button" class="btn-icon btn-icon-s"><i class="fa-solid fa-magnifying-glass"></i></button></td>
+                  <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                  <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="width: 500px">
+      <div class="sec">
+        <div class="sec-header">Table-scroll-xy</div>
+        <div class="sec-body">
+          <div class="wrap wrap-tbl wrap-tbl-xy tbl-sticky" style="width:500px; height: 110px;">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th rowspan="2"><input type="checkbox" class="chk-anim" aria-label="전체 선택"></th>
+                  <th colspan="2">가나다라</th>
+                  <th rowspan="2">가나다라마바사아차파카파</th>
+                </tr>
+                <tr>
+                  <th>가나다라마바사아자차카파하자자자</th>
+                  <th>가나다라마바사아자차카파하자자자</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                  <td><select class="select-tbl" disabled><option value=""></option><option value="가">가</option></select></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                  <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                  <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                  <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="flex: 1 1 auto">
+      <div class="sec">
+        <div class="sec-header">Table-scroll-y</div>
+        <div class="sec-body">
+          <div class="wrap wrap-tbl wrap-tbl-y tbl-sticky" style="height: 110px;">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" class="chk-anim" aria-label="전체 선택"></th>
+                  <th>열1</th>
+                  <th>열2</th>
+                  <th>열3</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                  <td><select class="select-tbl" disabled><option value=""></option><option value="가">가</option></select></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                  <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                  <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                  <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="hr-out-bar">
+
+  <div class="d-flex gap-2">
+    <div class="crd" style="width: auto">
+      <div class="crd-header">
+        <div>Card</div>
+        <div>
+          <button class="btn-box btn-box-blue noselect">
+            <span class="text">확인</span>
+            <span class="icon"><i class="fa-solid fa-check"></i></span>
+          </button>
+        </div>
+      </div>
+      <div class="crd-body d-flex gap-1">
+        <div class="d-flex flex-column">
+          <div class="mb-1"><input type="text" class="input1" autocomplete="off"></div>
+          <div class="mb-1"><select class="select1">
+            <option value=""></option>
+            <option value="가">가</option>
+          </select></div>
+          <div class="mb-1"><input type="text" class="input1 input-date"></div>
+          <div class="mb-1"><input type="text" class="input1 input-time"></div>
+          <div class="mb-1"><input type="text" class="input1" autocomplete="off" value="가나다라" disabled></div>
+          <div><input type="text" class="input1" autocomplete="off" value="가나다라" readonly></div>
+        </div>
+        <div class="d-flex flex-column">
+          <div class="inputgroup1">
+            <input type="text" required="" autocomplete="off">
+            <label for="name">text</label>
+          </div>
+          <div class="inputgroup1">
+            <select>
+              <option value=""></option>
+              <option value="가">가가가가가</option>
+              <option value="나">나나나나나</option>
+            </select>
+            <label for="name">select</label>
+          </div>
+          <div class="inputgroup1">
+            <input type="text" class="input-date" required="" autocomplete="off">
+            <label for="name">date</label>
+          </div>
+          <div class="inputgroup1">
+            <input type="text" class="input-time" required="" autocomplete="off">
+            <label for="name">time</label>
+          </div>
+          <div class="inputgroup1">
+            <input type="text" required="" autocomplete="off" value="가나다라"disabled>
+            <label for="name">text</label>
+          </div>
+          <div class="inputgroup1">
+            <input type="text" required="" autocomplete="off" readonly>
+            <label for="name">text</label>
+          </div>
+        </div>
+        <div class="d-flex flex-column">
+          <div class="inputgroup2 ">
+            <input type="text" required="" autocomplete="off">
+            <label for="name">text</label>
+          </div>
+          <div class="inputgroup2">
+            <select>
+              <option value=""></option>
+              <option value="가">가</option>
+            </select>
+            <label for="name">select</label>
+          </div>
+          <div class="inputgroup2">
+            <input type="text" class="input-date" required="" autocomplete="off">
+            <label for="name">date</label>
+          </div>
+            <div class="inputgroup2">
+            <input type="text" class="input-time" required="" autocomplete="off">
+            <label for="name">time</label>
+          </div>
+          <div class="inputgroup2 ">
+            <input type="text" required="" autocomplete="off" disabled>
+            <label for="name">text</label>
+          </div>
+          <div class="inputgroup2 ">
+            <input type="text" required="" autocomplete="off" value="가나다라" readonly>
+            <label for="name">text</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="crd" style="width: 400px">
+      <div class="crd-header">Card-Table</div>
+      <div class="crd-body">
+        <div class="wrap wrap-tbl">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th rowspan="2"><input type="checkbox" class="chk-anim" aria-label="전체 선택"></th>
+                <th colspan="2">열1</th>
+              </tr>
+              <tr>
+                <th>열1-1</th>
+                <th>열1-2</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                <td><select class="select-tbl" disabled><option value=""></option><option value="가">가</option></select></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="crd" style="width: auto; height: fit-content;">
+      <div class="crd-header">Card-Table-Scroll-x</div>
+      <div class="crd-body">
+        <div class="wrap wrap-tbl wrap-tbl-x tbl-sticky" style="width: 300px; height: auto;">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th><input type="checkbox" class="chk-anim" aria-label="전체 선택"></th>
+                <th>가나다라마바사아자차카파하자자자</th>
+                <th>가나다라마바사아자차카파하자자자</th>
+                <th>가나다라마바사아차파카파</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                <td><select class="select-tbl" disabled><option value=""></option><option value="가">가</option></select></td>
+                <td><input type="text" class="input-tbl" autocomplete="off"></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                <td><input type="text" class="input-tbl" autocomplete="off"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="crd" style="width: auto; height: fit-content;">
+      <div class="crd-header">Card-Table-Scroll-y</div>
+      <div class="crd-body">
+        <div class="wrap wrap-tbl wrap-tbl-y tbl-sticky" style="height: 110px;">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th><input type="checkbox" class="chk-anim" aria-label="전체 선택"></th>
+                <th>열1</th>
+                <th>열2</th>
+                <th>열3</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                <td><select class="select-tbl" disabled><option value=""></option><option value="가">가</option></select></td>
+                <td><input type="text" class="input-tbl" autocomplete="off"></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                <td><input type="text" class="input-tbl" autocomplete="off"></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                <td><input type="text" class="input-tbl" autocomplete="off"></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                <td><input type="text" class="input-tbl" autocomplete="off"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="crd" style="width: auto; height: fit-content;">
+      <div class="crd-header">Card-Table-Scroll-xy</div>
+      <div class="crd-body">
+        <div class="wrap wrap-tbl wrap-tbl-xy tbl-sticky" style="width: 300px; height: 110px;">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th><input type="checkbox" class="chk-anim" aria-label="전체 선택"></th>
+                <th>열1</th>
+                <th>열2</th>
+                <th>열3</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                <td><select class="select-tbl" disabled><option value=""></option><option value="가">가</option></select></td>
+                <td><input type="text" class="input-tbl" autocomplete="off"></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                <td><input type="text" class="input-tbl" autocomplete="off"></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                <td><input type="text" class="input-tbl" autocomplete="off"></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                <td><input type="text" class="input-tbl" autocomplete="off"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <hr class="hr-out-bar">
+  <div class="d-flex gap-2">
+    <div class="sec" data-sec-tabs>
+      <div class="sec-header">
+        <div class="sec-tabs" role="tablist">
+          <button type="button" class="sec-tab is-active" data-tab="tab1" role="tab" aria-selected="true">Tab1</button>
+          <button type="button" class="sec-tab" data-tab="tab2" role="tab" aria-selected="false">Tab2</button>
+          <button type="button" class="sec-tab" data-tab="tab3" role="tab" aria-selected="false">Tab3</button>
+          <button type="button" class="sec-tab" data-tab="tab4" role="tab" aria-selected="false">Tab4</button>
+        </div>
+        <div class="sec-action" aria-label="탭 액션"></div>
+        <div class="sec-action-bank" hidden>
+          <div data-actions="tab1">
+            <button type="button" class="btn-icon btn-icon-blue" data-tbl-action="add" data-clone="clear" aria-label="추가"><i class="fa-solid fa-plus"></i></button>
+            <button type="button" class="btn-icon btn-icon-red" data-tbl-action="delete" data-delete-keep="blank" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
+          </div>
+
+          <div data-actions="tab2">
+            <button class="btn-box btn-box-red noselect">
+              <span class="text">버튼B</span><span class="icon"><i class="fa-solid fa-trash-can"></i></span>
+            </button>
+          </div>
+
+          <div data-actions="tab3">
+            <button class="btn-icon btn-icon-blue" aria-label="필터" data-tooltip="필터">
+              <i class="fa-solid fa-filter"></i>
+            </button>
+          </div>
+
+          <div data-actions="tab4">
+          </div>
+        </div>
+      </div>
+      <div class="sec-body">
+        <div class="sec-panel is-active" data-panel="tab1" role="tabpanel">
+          <div class="wrap wrap-tbl">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th rowspan="2"><input type="checkbox" class="chk-anim" aria-label="전체 선택"></th>
+                  <th colspan="2">열1</th>
+                  <th rowspan="2">열2</th>
+                </tr>
+                <tr>
+                  <th>열1-1</th>
+                  <th>열1-2</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                  <td><select class="select-tbl" disabled><option value=""></option><option value="가">가</option></select></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                  <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="sec-panel" data-panel="tab2" role="tabpanel">
+          <div class="wrap wrap-tbl wrap-tbl-x tbl-sticky">
+            <table class="tbl" style="width: 150%">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" class="chk-anim" aria-label="전체 선택"></th>
+                  <th>가나다라마바사아자차카파하자자자</th>
+                  <th>가나다라마바사아자차카파하자자자</th>
+                  <th>가나다라마바사아차파카파</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                  <td><select class="select-tbl" disabled><option value=""></option><option value="가">가</option></select></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                  <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="sec-panel" data-panel="tab3" role="tabpanel">
+          <div class="wrap wrap-tbl wrap-tbl-xy tbl-sticky" style="width:500px; height: 110px;">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th rowspan="2"><input type="checkbox" class="chk-anim" aria-label="전체 선택"></th>
+                  <th colspan="2">가나다라</th>
+                  <th rowspan="2">가나다라마바사아차파카파</th>
+                </tr>
+                <tr>
+                  <th>가나다라마바사아자차카파하자자자</th>
+                  <th>가나다라마바사아자차카파하자자자</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                  <td><select class="select-tbl" disabled><option value=""></option><option value="가">가</option></select></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                  <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                  <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox" class="chk-anim" aria-label="선택"></td>
+                  <td><input type="text" class="input-tbl input-date" autocomplete="off"></td>
+                  <td><input type="month" class="input-tbl input-time" autocomplete="off"></td>
+                  <td><input type="text" class="input-tbl" autocomplete="off"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="sec-panel" data-panel="tab4" role="tabpanel"></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- 페이지 모달 데모용 템플릿 -->
+<template id="tpl-demo-page-modal">
+  <div class="d-flex flex-column gap-2">
+    <div class="inputgroup2">
+      <input type="text" class="input1" autocomplete="off">
+      <label>이름</label>
+    </div>
+    <div class="inputgroup2">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+    <div class="inputgroup2">
+      <select class="select1">
+        <option value=""></option>
+        <option value="A">옵션 A</option>
+        <option value="B">옵션 B</option>
+      </select>
+      <label>옵션 선택</label>
+    </div>
+    <div class="inputgroup2">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+
+    <div class="inputgroup1">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+    <div class="inputgroup1">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+    <div class="inputgroup2">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+    <div class="inputgroup2">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+    <div class="inputgroup2">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+    <div class="inputgroup2">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+    <div class="inputgroup2">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+    <div class="inputgroup2">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+    <div class="inputgroup2">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+    <div class="inputgroup2">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+    <div class="inputgroup2">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+    <div class="inputgroup2">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+    <div class="inputgroup2">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+    <div class="inputgroup2">
+      <input type="text" class="input1 input-date" autocomplete="off">
+      <label>날짜</label>
+    </div>
+
+  </div>
+</template>
+
+<script>
+
+
+function testPageModalSavelg() {
+  openPageModal({
+    title: '근로정보 수정',
+    size: 'lg',
+    templateId: 'tpl-demo-page-modal',  // 이미 만들어둔 템플릿 ID
+    onSave: function () {
+      // 여기서 폼값 읽고 저장 로직 실행
+      // 예: validate 실패 시 false 리턴
+      // if (!isValid) { showAlertWarn('필수값을 입력해 주세요.'); return false; }
+
+      console.log('저장 실행!');
+      // Google Apps Script 호출 등...
+      return true; // 또는 아무것도 안 리턴
+    }
+  });
+}
+
+function testPageModalSavexl() {
+  openPageModal({
+    title: '근로정보 수정',
+    size: 'xl',
+    templateId: 'tpl-demo-page-modal',  // 이미 만들어둔 템플릿 ID
+    onSave: function () {
+      // 여기서 폼값 읽고 저장 로직 실행
+      // 예: validate 실패 시 false 리턴
+      // if (!isValid) { showAlertWarn('필수값을 입력해 주세요.'); return false; }
+
+      console.log('저장 실행!');
+      // Google Apps Script 호출 등...
+      return true; // 또는 아무것도 안 리턴
+    }
+  });
+}
+
+function testPageModalSavefull() {
+  openPageModal({
+    title: '근로정보 수정',
+    size: 'full',
+    templateId: 'tpl-demo-page-modal',  // 이미 만들어둔 템플릿 ID
+    onSave: function () {
+      // 여기서 폼값 읽고 저장 로직 실행
+      // 예: validate 실패 시 false 리턴
+      // if (!isValid) { showAlertWarn('필수값을 입력해 주세요.'); return false; }
+
+      console.log('저장 실행!');
+      // Google Apps Script 호출 등...
+      return true; // 또는 아무것도 안 리턴
+    }
+  });
+}
+</script>
+
+
+<script>
+    function logResult(label, result) {
+    console.log('[CONFIRM DEMO]', label, '→', result);
+    // 필요하면 여기서 showAlertInfo로 후속 알림도 띄울 수 있음
+    // showAlertInfo(label + ' 결과: ' + (result ? '확인' : '취소'));
+  }
+
+  function demoConfirmInfo() {
+    showConfirmInfo(
+      '이 작업을 진행하시겠습니까?',
+      '정보 확인',
+      function onOk() {
+        logResult('INFO', true);
+      },
+      function onCancel() {
+        logResult('INFO', false);
+      }
+    );
+  }
+
+  function demoConfirmSuccess() {
+    showConfirmSuccess(
+      '정상 처리되었습니다.\n추가로 계속 진행하시겠습니까?',
+      '성공 확인',
+      function onOk() {
+        logResult('SUCCESS', true);
+      },
+      function onCancel() {
+        logResult('SUCCESS', false);
+      }
+    );
+  }
+
+  function demoConfirmWarn() {
+    showConfirmWarn(
+      '선택한 데이터를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.',
+      '삭제 경고',
+      function onOk() {
+        logResult('WARN', true);
+      },
+      function onCancel() {
+        logResult('WARN', false);
+      }
+    );
+  }
+
+  function demoConfirmError() {
+    showConfirmError(
+      '심각한 오류가 발생했습니다.\n페이지를 새로고침 하시겠습니까?',
+      '오류 확인',
+      function onOk() {
+        logResult('ERROR', true);
+      },
+      function onCancel() {
+        logResult('ERROR', false);
+      }
+    );
+  }
+</script>

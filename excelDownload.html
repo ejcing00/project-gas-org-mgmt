@@ -1,0 +1,638 @@
+<!-- excelDownload.html -->
+<script>
+(function(){
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function formatNowForFile(){
+    var d = new Date();
+    return d.getFullYear()
+      + pad2(d.getMonth()+1)
+      + pad2(d.getDate())
+      + "_" + pad2(d.getHours()) + pad2(d.getMinutes()) + pad2(d.getSeconds());
+  }
+
+  function showOverlay(msg){
+    var el = document.createElement('div');
+    el.id = 'excel-download-overlay';
+    el.style.position = 'fixed';
+    el.style.left = '0';
+    el.style.top = '0';
+    el.style.right = '0';
+    el.style.bottom = '0';
+    el.style.background = 'rgba(15,23,42,0.35)';
+    el.style.zIndex = '99999';
+    el.style.display = 'flex';
+    el.style.alignItems = 'center';
+    el.style.justifyContent = 'center';
+
+    var box = document.createElement('div');
+    box.style.background = 'white';
+    box.style.borderRadius = '14px';
+    box.style.padding = '16px 18px';
+    box.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)';
+    box.style.minWidth = '260px';
+    box.style.maxWidth = '520px';
+
+    var title = document.createElement('div');
+    title.textContent = msg || '엑셀 파일을 생성 중입니다...';
+    title.style.fontWeight = '700';
+    title.style.marginBottom = '8px';
+
+    var sub = document.createElement('div');
+    sub.textContent = '잠시만 기다려주세요.';
+    sub.style.opacity = '0.8';
+    sub.style.fontSize = '13px';
+
+    box.appendChild(title);
+    box.appendChild(sub);
+    el.appendChild(box);
+    document.body.appendChild(el);
+
+    return function close(){
+      try { el.remove(); } catch(e){}
+    };
+  }
+
+  function base64ToBlob(b64, mimeType){
+    var byteChars = atob(b64);
+    var bytes = new Uint8Array(byteChars.length);
+    for (var i=0; i<byteChars.length; i++){
+      bytes[i] = byteChars.charCodeAt(i);
+    }
+    return new Blob([bytes], { type: mimeType || 'application/octet-stream' });
+  }
+
+  function triggerDownload(blob, fileName){
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = fileName || 'download.xls';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+  }
+
+  // ✅ 공용: 서버에 요청 → base64 받음 → 즉시 다운로드
+  function start(req){
+    var close = showOverlay('엑셀 파일을 생성 중입니다...');
+    google.script.run
+      .withSuccessHandler(function(res){
+        close();
+        if (!res || !res.ok){
+          if (window.showAlertError) window.showAlertError((res && res.message) ? res.message : '다운로드 실패', 'Excel');
+          else alert((res && res.message) ? res.message : '다운로드 실패');
+          return;
+        }
+        var blob = base64ToBlob(res.base64, res.mimeType);
+        triggerDownload(blob, res.fileName);
+      })
+      .withFailureHandler(function(err){
+        close();
+        var msg = (err && err.message) ? err.message : String(err || 'Unknown error');
+        if (window.showAlertError) window.showAlertError(msg, 'Excel');
+        else alert(msg);
+      })
+      .EXPORT_downloadExcel(req);
+  }
+
+  // ✅ 추가: 프로젝트 필터 상태 수집
+  function EXPORT_collectProjectFilters_(){
+    var wrap =
+      document.querySelector('#page-container #project-filter-list .wrap-filter') ||
+      document.querySelector('#project-filter-list .wrap-filter') ||
+      document.querySelector('#page-container .wrap-filter') ||
+      document.querySelector('.wrap-filter');
+
+    if (!wrap || !window.FilterWrap || !FilterWrap.getState) return null;
+    try { return FilterWrap.getState(wrap); } catch(e){ return null; }
+  }
+
+  // 현재 화면(목록)에 표시된 project_id 수집
+  function EXPORT_collectVisibleProjectIds_(){
+    var scope = document.querySelector('#page-container') || document;
+    var out = [];
+    var seen = {};
+
+    function add(v){
+      v = String(v || '').trim();
+      if (!v) return;
+      // project_id가 숫자라고 가정(아니면 이 줄 제거)
+      if (!/^\d+$/.test(v)) return;
+      if (seen[v]) return;
+      seen[v] = true;
+      out.push(v);
+    }
+
+    // 1) data-project-id / data-project_id 가 달려있는 경우(가장 정확)
+    scope.querySelectorAll('[data-project-id],[data-project_id],tr[data-project-id],tr[data-project_id]').forEach(function(el){
+      add(el.getAttribute('data-project-id'));
+      add(el.getAttribute('data-project_id'));
+    });
+
+    // 2) dataset.projectId가 달린 tr (렌더에서 tr.dataset.projectId = pid 형태)
+    scope.querySelectorAll('tr').forEach(function(tr){
+      if (tr.dataset && tr.dataset.projectId) add(tr.dataset.projectId);
+    });
+
+    // 3) 행 내부에 숨겨진 input[data-field="project_id"]가 있는 경우
+    scope.querySelectorAll('tr input[data-field="project_id"]').forEach(function(inp){
+      add(inp.value);
+    });
+
+    // 4) 최후 fallback: 테이블 첫 번째 셀에서 숫자 id 추정
+    if (!out.length){
+      scope.querySelectorAll('table tbody tr').forEach(function(tr){
+        var td = tr.querySelector('td');
+        if (!td) return;
+        add(td.textContent);
+      });
+    }
+
+    return out;
+  }
+
+
+  // ✅ 기존 함수 수정
+  function EXPORT_UI_projectListDownload(){
+    var req = {
+      domain: 'PROJECT',
+      mode: 'LIST',
+      permKey: 'btn:project:download',
+      options: { includeOPI: true, includeMembers: true },
+      fileName: '프로젝트_' + formatNowForFile() + '.xls',
+      filters: EXPORT_collectProjectFilters_(),   // 기존 유지
+      pids: EXPORT_collectVisibleProjectIds_()    // ✅ 추가: 화면에 보이는 목록
+    };
+    start(req);
+  }
+
+
+  function sanitizeFilePart_(s){
+    s = String(s || '').trim();
+    // 파일명 금지문자 제거(Windows 기준)
+    return s.replace(/[\\\/:\*\?"<>\|]/g, '').replace(/\s+/g, ' ').trim();
+  }
+
+  function EXPORT_collectProjectMetaFromOpenModal_(){
+    var modal = document.querySelector('.modal.show');
+    if (!modal) return null;
+
+    // project 상세 입력 필드들에서 year/business_name 읽기
+    var yearEl = modal.querySelector('input[data-field="year"], select[data-field="year"]');
+    var nameEl = modal.querySelector('input[data-field="business_name"], textarea[data-field="business_name"]');
+
+    var year = yearEl ? String(yearEl.value || '').trim() : '';
+    var businessName = nameEl ? String(nameEl.value || '').trim() : '';
+
+    return {
+      year: year,
+      business_name: businessName
+    };
+  }
+
+
+
+
+  // ✅ 추가: 프로젝트 상세(모달) 다운로드
+  function EXPORT_UI_projectDetailDownload(projectId){
+    var pid = projectId;
+
+    // 인자 없으면 "열려있는 모달"에서 project_id 찾기
+    if (!pid){
+      var modal = document.querySelector('.modal.show');
+      if (modal){
+        var inp = modal.querySelector('input[data-field="project_id"]');
+        if (inp) pid = inp.value;
+      }
+    }
+
+    pid = String(pid || '').trim();
+    if (!pid){
+      alert('project_id를 찾지 못했습니다.');
+      return;
+    }
+
+    var meta = EXPORT_collectProjectMetaFromOpenModal_() || {};
+    var year = String(meta.year || '').trim();
+    var biz  = sanitizeFilePart_(meta.business_name);
+
+    var prettyYear = year ? (year) : '연도없음';
+    var prettyBiz  = biz || '사업명없음';
+
+    var req = {
+      domain: 'PROJECT',
+      mode: 'DETAIL',
+      id: pid,
+      permKey: 'btn:project:download',
+      options: { includeOPI: true, includeMembers: true },
+      fileName: '프로젝트_' + prettyYear + '_' + prettyBiz + '_' + formatNowForFile() + '.xls'
+    };
+    start(req);
+  }
+
+  // =========================
+  // Employee Export UI
+  // =========================
+
+  // ✅ 소속인력(Employee) 필터 상태 수집
+  function EXPORT_collectEmployeeFilters_(){
+    var wrap =
+      document.querySelector('#page-container #employee-filter-list .wrap-filter') ||
+      document.querySelector('#employee-filter-list .wrap-filter') ||
+      document.querySelector('#page-container .wrap-filter') ||
+      document.querySelector('.wrap-filter');
+
+    if (!wrap || !window.FilterWrap || !FilterWrap.getState) return null;
+    try { return FilterWrap.getState(wrap); } catch(e){ return null; }
+  }
+
+  // 현재 화면(목록)에 표시된 employee_id 수집
+  function EXPORT_collectVisibleEmployeeIds_(){
+    var scope = document.querySelector('#page-container') || document;
+    var out = [];
+    var seen = {};
+
+    function add(v){
+      v = String(v || '').trim();
+      if (!v) return;
+      if (seen[v]) return;
+      seen[v] = true;
+      out.push(v);
+    }
+
+    // 1) view 버튼에 data-employee-id가 달려있는 경우(가장 정확)
+    scope.querySelectorAll('[data-employee-id]').forEach(function(el){
+      add(el.getAttribute('data-employee-id'));
+    });
+
+    // 2) tr.dataset.employeeId 케이스
+    scope.querySelectorAll('tr').forEach(function(tr){
+      if (tr.dataset && tr.dataset.employeeId) add(tr.dataset.employeeId);
+    });
+
+    // 3) 행 내부에 숨겨진 input[data-field="employee_id"]가 있는 경우
+    scope.querySelectorAll('tr input[data-field="employee_id"]').forEach(function(inp){
+      add(inp.value);
+    });
+
+    // 4) 최후 fallback: 테이블 두 번째 셀(사번 위치)에서 추정
+    if (!out.length){
+      scope.querySelectorAll('table tbody tr').forEach(function(tr){
+        var tds = tr.querySelectorAll('td');
+        if (!tds || tds.length < 2) return;
+        add(tds[1].textContent);
+      });
+    }
+
+    return out;
+  }
+
+  // ✅ 소속인력 목록 다운로드
+  function EXPORT_UI_employeeListDownload(){
+    var req = {
+      domain: 'EMPLOYEE',
+      mode: 'LIST',
+      permKey: 'btn:employee:download',
+      options: { includeChildren: true },
+      fileName: '소속인력_' + formatNowForFile() + '.xls',
+      filters: EXPORT_collectEmployeeFilters_(),
+      eids: EXPORT_collectVisibleEmployeeIds_()
+    };
+    start(req);
+  }
+
+  function EXPORT_collectEmployeeMetaFromOpenModal_(){
+    var modal = document.querySelector('.modal.show');
+    if (!modal) return null;
+
+    var idEl = modal.querySelector('input[data-field="employee_id"]');
+    var nameEl = modal.querySelector('input[data-field="name"]');
+
+    return {
+      employee_id: idEl ? String(idEl.value || '').trim() : '',
+      name: nameEl ? String(nameEl.value || '').trim() : ''
+    };
+  }
+
+  // ✅ 소속인력 상세(모달) 다운로드
+  function EXPORT_UI_employeeDetailDownload(employeeId){
+    var eid = employeeId;
+
+    // 인자 없으면 "열려있는 모달"에서 employee_id 찾기
+    if (!eid){
+      var modal = document.querySelector('.modal.show');
+      if (modal){
+        var inp = modal.querySelector('input[data-field="employee_id"]');
+        if (inp) eid = inp.value;
+      }
+    }
+
+    eid = String(eid || '').trim();
+    if (!eid){
+      alert('employee_id를 찾지 못했습니다.');
+      return;
+    }
+
+    var meta = EXPORT_collectEmployeeMetaFromOpenModal_() || {};
+    var name = sanitizeFilePart_(meta.name);
+    var prettyName = name || '성명없음';
+
+    var req = {
+      domain: 'EMPLOYEE',
+      mode: 'DETAIL',
+      id: eid,
+      permKey: 'btn:employee:download',
+      options: { includeChildren: true },
+      fileName: '소속인력_' + eid + '_' + prettyName + '_' + formatNowForFile() + '.xls'
+    };
+    start(req);
+  }
+
+// =========================
+// Payroll Export UI
+// =========================
+
+function EXPORT_collectPayrollFilters_(){
+  var wrap =
+    document.querySelector('#page-container #payroll-filter-list .wrap-filter') ||
+    document.querySelector('#payroll-filter-list .wrap-filter') ||
+    document.querySelector('#page-container .wrap-filter') ||
+    document.querySelector('.wrap-filter');
+
+  if (!wrap || !window.FilterWrap || !FilterWrap.getState) return null;
+  try { return FilterWrap.getState(wrap); } catch(e){ return null; }
+}
+
+// =========================
+// ✅ PAYROLL(UI 기준) Workbook 생성
+// - 화면에 렌더된 테이블에서 "보이는(tr.hidden==false)" 행만 수집
+// - thead의 colspan/rowspan을 고려해서 leaf header(열 헤더) 구성
+// =========================
+function EXPORT_payrollText_(el){
+  return String((el && (el.innerText || el.textContent)) || '')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function EXPORT_payrollBuildLeafHeaders_(table, colCount){
+  var thead = table ? table.querySelector('thead') : null;
+  if (!thead) return [];
+  var rows = Array.from(thead.querySelectorAll('tr'));
+  if (!rows.length) return [];
+
+  // grid[r][c] = text, rowspan tracking
+  var grid = rows.map(function(){ return []; });
+  var span = []; // span[c] = remaining rowspan count to skip
+
+  for (var r=0; r<rows.length; r++){
+    var c = 0;
+    var cells = Array.from(rows[r].children || []);
+    for (var i=0; i<cells.length; i++){
+      while (span[c] > 0) { span[c]--; c++; }
+
+      var th = cells[i];
+      var text = EXPORT_payrollText_(th);
+      var cs = parseInt(th.getAttribute('colspan') || '1', 10);
+      var rs = parseInt(th.getAttribute('rowspan') || '1', 10);
+      if (!isFinite(cs) || cs < 1) cs = 1;
+      if (!isFinite(rs) || rs < 1) rs = 1;
+
+      for (var k=0; k<cs; k++){
+        grid[r][c+k] = text;
+        if (rs > 1) span[c+k] = (span[c+k] || 0) + (rs - 1);
+      }
+      c += cs;
+    }
+    while (span[c] > 0) { span[c]--; c++; }
+  }
+
+  var headers = [];
+  for (var cc=0; cc<colCount; cc++){
+    var h = '';
+    for (var rr=rows.length-1; rr>=0; rr--){
+      var t = (grid[rr] && grid[rr][cc]) ? String(grid[rr][cc]).trim() : '';
+      if (t) { h = t; break; }
+    }
+    headers.push(h || ('COL' + (cc+1)));
+  }
+  return headers;
+}
+
+function EXPORT_payrollSheetName_(key){
+  if (key === 'attendance') return '근태';
+  if (key === 'budget') return '급여(예정산출)';
+  if (key === 'actual') return '급여(지급완료)';
+  return key || 'Sheet';
+}
+
+function EXPORT_collectPayrollUIWorkbook_(sheetKeys){
+  var scope = document.querySelector('#page-container') || document;
+  var keys = Array.isArray(sheetKeys) ? sheetKeys : [];
+  if (!keys.length) keys = ['attendance','budget','actual'];
+
+  // payroll 화면 방어
+  if (!scope.querySelector('tbody[data-payroll-tbody]')) return null;
+
+  var sheets = [];
+  keys.forEach(function(key){
+    key = String(key||'').trim();
+    if (!key) return;
+
+    var tb = scope.querySelector('tbody[data-payroll-tbody="' + key + '"]');
+    if (!tb) return;
+
+    var table = tb.closest('table');
+    if (!table) return;
+
+    // 보이는 행만 수집
+    var rows = [];
+    tb.querySelectorAll('tr').forEach(function(tr){
+      if (tr.querySelector('td[colspan]')) return; // placeholder 제외
+      if (tr.hidden) return;                       // ✅ 필터로 숨겨진 행 제외
+      var row = [];
+      tr.querySelectorAll('td').forEach(function(td){
+        row.push(EXPORT_payrollText_(td));
+      });
+      if (row.length) rows.push(row);
+    });
+
+    // 열 수 추정
+    var colCount = rows.length ? rows[0].length : 0;
+    if (!colCount){
+      // 데이터 0건이어도 header만 내려가도록 th 기반 추정
+      var guess = table.querySelectorAll('thead th').length;
+      colCount = Math.max(guess, 1);
+    }
+
+    var header = EXPORT_payrollBuildLeafHeaders_(table, colCount);
+    var values = [];
+    if (header && header.length) values.push(header);
+    rows.forEach(function(r){ values.push(r); });
+
+    sheets.push({ name: EXPORT_payrollSheetName_(key), values: values });
+  });
+
+  if (!sheets.length) return null;
+  return { sheets: sheets };
+}
+
+function EXPORT_collectPayrollRange_(){
+  var scope = document.querySelector('#page-container') || document;
+  var fyEl = scope.querySelector('[data-payroll-from-year]');
+  var fmEl = scope.querySelector('[data-payroll-from-month]');
+  var tyEl = scope.querySelector('[data-payroll-to-year]');
+  var tmEl = scope.querySelector('[data-payroll-to-month]');
+
+  function pickInt(el){
+    if (!el) return 0;
+    var v = String(el.value || '').trim();
+    v = v.replace(/[^0-9]/g,'');
+    return Number(v || 0) || 0;
+  }
+  var fy = pickInt(fyEl);
+  var fm = pickInt(fmEl);
+  var ty = pickInt(tyEl) || fy;
+  var tm = pickInt(tmEl) || fm;
+
+  function pad2(n){ return String(Number(n||0) || 0).padStart(2,'0'); }
+  // ✅ 파일명용: 00년00월~00년00월 (연도는 2자리)
+  function ymLabel2_(y, m){
+    y = Number(y || 0) || 0;
+    m = Number(m || 0) || 0;
+    if (!y || !m) return '';
+    var yy = y % 100;           // 2026 -> 26
+    return pad2(yy) + '년' + pad2(m) + '월';
+  }
+  var label = (fy && fm) ? (ymLabel2_(fy, fm) + '~' + ymLabel2_(ty, tm)) : '';
+
+  return { from_year: fy, from_month: fm, to_year: ty, to_month: tm, label: label };
+}
+
+function EXPORT_collectVisiblePayrollEmployeeIds_(sheetKeys){
+  var scope = document.querySelector('#page-container') || document;
+  var keys = Array.isArray(sheetKeys) ? sheetKeys : [];
+  if (!keys.length) keys = ['attendance','budget','actual'];
+
+  var out = [];
+  var seen = {};
+  function add(v){
+    v = String(v || '').trim();
+    if (!v) return;
+    if (seen[v]) return;
+    seen[v] = true;
+    out.push(v);
+  }
+
+  keys.forEach(function(key){
+    key = String(key||'').trim();
+    if (!key) return;
+    var tb = scope.querySelector('tbody[data-payroll-tbody=\"' + key + '\"]');
+    if (!tb) return;
+
+    tb.querySelectorAll('tr').forEach(function(tr){
+      if (tr.hidden) return; // ✅ UI 필터로 숨겨진 행 제외
+      if (tr.querySelector('td[colspan]')) return; // placeholder 제외
+
+      // 1) dataset/attribute로 먼저 시도
+      if (tr.dataset && tr.dataset.employeeId) { add(tr.dataset.employeeId); return; }
+      if (tr.dataset && tr.dataset.employee_id) { add(tr.dataset.employee_id); return; }
+      if (tr.getAttribute && tr.getAttribute('data-employee-id')) { add(tr.getAttribute('data-employee-id')); return; }
+
+      // 2) fallback: 사번은 두 번째 컬럼(0=기간,1=사번)
+      var tds = tr.querySelectorAll('td');
+      if (!tds || tds.length < 2) return;
+      add(tds[1].textContent);
+    });
+  });
+
+  return out;
+}
+
+function EXPORT_UI_payrollListDownload(btn){
+  var keys = [];
+  if (btn) {
+    var spec = String(btn.getAttribute('data-payroll-sheets') || '').trim();
+    if (spec) keys = spec.split(',').map(function(s){ return String(s||'').trim(); }).filter(Boolean);
+  }
+  if (!keys.length) keys = ['attendance','budget','actual'];
+  var range = EXPORT_collectPayrollRange_();
+  if (!range.from_year || !range.from_month) {
+    if (window.showAlertError) window.showAlertError('근태/급여기간을 먼저 선택해주세요.', 'Excel');
+    else alert('근태/급여기간을 먼저 선택해주세요.');
+    return;
+  }
+
+  // ✅ UI 기준 workbook 생성(필터 적용 후 "보이는 행"만)
+  var wb = EXPORT_collectPayrollUIWorkbook_(keys);
+  if (!wb){
+    if (window.showAlertError) window.showAlertError('다운로드할 데이터가 없습니다.', 'Excel');
+    else alert('다운로드할 데이터가 없습니다.');
+    return;
+  }
+
+  var req = {
+    domain: 'PAYROLL',
+    mode: 'UI', // ✅ 서버 재계산 방지 (workbook 그대로 사용)
+    permKey: 'btn:payroll:download',
+    options: { sheetKeys: keys },
+    fileName: '근태급여_' + (range.label ? (range.label + '_') : '') + formatNowForFile() + '.xls',
+    filters: EXPORT_collectPayrollFilters_(),
+    eids: EXPORT_collectVisiblePayrollEmployeeIds_(keys),
+    from_year: range.from_year,
+    from_month: range.from_month,
+    to_year: range.to_year,
+    to_month: range.to_month
+  };
+  // ✅ 핵심: UI workbook 동봉
+  req.workbook = wb;
+  start(req);
+}
+
+  window.EXPORT_UI_projectListDownload = EXPORT_UI_projectListDownload;
+  window.EXPORT_UI_projectDetailDownload = EXPORT_UI_projectDetailDownload;
+
+  window.EXPORT_UI_employeeListDownload = EXPORT_UI_employeeListDownload;
+  window.EXPORT_UI_employeeDetailDownload = EXPORT_UI_employeeDetailDownload;
+
+  window.EXPORT_UI_payrollListDownload = EXPORT_UI_payrollListDownload;
+
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-action]');
+    if (!btn) return;
+
+    var action = btn.getAttribute('data-action');
+
+    if (action === 'export:project:list'){
+      e.preventDefault();
+      window.EXPORT_UI_projectListDownload();
+      return;
+    }
+
+    if (action === 'export:project:detail'){
+      e.preventDefault();
+
+      // 모달에서 project_id 찾기 (기존 로직 재사용)
+      window.EXPORT_UI_projectDetailDownload();
+      return;
+    }
+
+    if (action === 'export:employee:list'){
+      e.preventDefault();
+      window.EXPORT_UI_employeeListDownload();
+      return;
+    }
+
+    if (action === 'export:employee:detail'){
+      e.preventDefault();
+      window.EXPORT_UI_employeeDetailDownload();
+      return;
+    }
+
+    if (action === 'export:payroll:list'){
+      e.preventDefault();
+      window.EXPORT_UI_payrollListDownload(btn);
+      return;
+    }
+  });
+})();
+</script>

@@ -1,0 +1,3390 @@
+<!-- meta.html -->
+<meta charset="utf-8">
+<base target="_top">
+<title>통합 관리 시스템</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+
+<style>
+  :root {
+    --bg-color-body: radial-gradient(40% 70% at 0% 0%, #CDDEE7 0%, #E7F0F6 40%, #EEF4F7 100%);
+    --bg-color-main: #EDF4F9;
+    --bg-color-card: #DDEBF5;
+    --bg-color-accent: #F7FBFF;
+    --bg-color-sum: #DDEBF5;
+
+    --accent-color: #074551;
+    --accent-color-1: #2A8F9B; /*더 밝은 느낌*/
+    --accent-color-1-a: rgba(42, 143, 155, 0.9);
+    --accent-color-2: #135A66;
+
+    --color-sub: #9BA9B2;
+    --color-info: #3f6f78;
+    --color-info-a: rgba(63, 111, 120, 0.9);
+    --color-red: #D32F2F;
+    --color-red-a: rgba(211, 47, 47, 0.9);
+    --color-blue: #1976D2;
+    --color-blue-a: rgba(25, 118, 210, 0.9);
+    --color-green: #217346;
+    --color-green-a: rgba(33, 115, 70, 0.9);
+    --color-violet: #673AB7;
+    --color-violet-a: rgba(103, 58, 183, 0.9);
+    --color-navy: #0A2E57;
+
+    --box-sha-main: inset 0 0 5px rgba(139, 151, 157, 0.75);
+    --box-sha-card: 0 0 5px rgba(20, 70, 120, 0.06), 0 8px 8px rgba(20, 70, 120, 0.10);
+    --box-sha-bb: 0 2px 3px 1px rgba(15, 23, 42, 0.15), inset 0 2px 2px 1px rgba(255, 255, 255, 0.9), inset 0 -1px 1px 1px rgba(15, 23, 42, 0.15);
+    --bd-color-main: #DFEAF0;
+    --bd-color-card: #FBFDFF;
+    --bd-color-wrap: #adb5bd;
+    --bd-color-sum: #C2CFD8;
+
+    --bd-radius-1: 0.25rem;
+    --bd-radius: 0.5rem;
+    --bd-radius1: 0.75rem; 
+    --bd-radius2: 50%;
+
+    --bd-size: 1px solid;
+
+    --t-size-3: 0.6rem;
+    --t-size-2: 0.65rem;
+    --t-size-1: 0.7rem;
+    --t-size: 0.75rem;
+    --t-size1: 0.8rem;
+    --t-size2: 0.9rem;
+    --t-size3: 1rem;
+
+    --t-color-2: #868e96;
+    --t-color-1: #656E77;
+    --t-color: #434A52;
+    --t-color1: #111827;
+    --t-color-on: var(--accent-color);
+
+    --t-weight-1: 400;
+    --t-weight: 500;
+    --t-weight1: 600;
+    --t-weight2: 700;
+    --t-weight3: 800;
+
+    --i-size-2: 0.7rem;
+    --i-size-1: 0.9rem;
+    --i-size: 1.1rem;
+    --i-size1: 1.3rem;
+    --i-size2: 1.5rem;
+
+    --i-bubble-size-2: 1.6rem;
+    --i-bubble-size-1: 1.8rem;
+    --i-bubble-size: 2rem;
+    --i-bubble-size1: 2.2rem;
+    --i-bubble-size2: 2.4rem;
+
+    
+    --i-color: var(--color-info);
+    
+    --btn-i-color-off: var(--t-color-1);
+    --btn-i-color-on: var(--accent-color-1);
+  
+    
+    --scroll-color: var(--color-sub) rgba(0,0,0,0);
+  }
+
+  body {
+    font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "맑은 고딕", "Malgun Gothic", sans-serif;
+    margin: 0;
+    padding: 0;
+    font-size: var(--t-size);
+    color: var(--t-color);
+    font-weight: var(--t-weight);
+  }
+
+  /* 앱 전체 프레임 */
+  #app-shell { display: flex; height: 100vh; overflow: hidden; background: var(--bg-color-body); }
+  
+  /*app-shell 내 사이드바*/
+  #sidebar {
+    flex: 0 0 180px;
+    max-width: 180px;
+    min-width: 180px;
+    padding: 1rem 1rem 1rem 1rem; /*상 우 하 좌*/
+    display: flex;
+    flex-direction: column;
+    scrollbar-color: var(--scroll-color);
+  }
+
+  /*app-shell 내 메인컨텐츠*/
+  #main-content {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    padding: 0.5rem 0.5rem 0;
+    display: flex;
+    flex-direction: column;
+    scrollbar-color: var(--scroll-color);
+  }
+
+  /*메인컨텐츠 내 전체영역 디자인요소*/
+  .main-card {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-color-main);
+    border-radius: var(--bd-radius);
+    overflow: hidden;
+  }
+
+  #page-container{ flex: 1 1 auto; min-height: 0; padding: 1rem 1rem 0; display: flex; flex-direction: column; }
+  .page-root { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  .page-header { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; font-size: var(--t-size3); font-weight: var(--t-weight3); color: var(--t-color1); padding: 0; }
+  .page-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+
+  .sec { display: flex; flex-direction: column; padding: 0.5rem; width: 100%; border-radius: var(--bd-radius1); }
+  .sec.sec-modal { padding: 0; }
+  .crd { display: flex; flex-direction: column; padding: 0.5rem 0.7rem; width: 100%; background: var(--bg-color-card); border-radius: var(--bd-radius1); }
+  .sec.is-hidden{ display:none !important; }
+
+  .sec-header,
+  .crd-header { height: auto; display: flex; align-items: center; justify-content: space-between; font-size: var(--t-size3); font-weight: var(--t-weight2); }
+  .sec-header { padding: 0 0.5rem 0.25rem 0.25rem;}
+  .sec-body,
+  .crd-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; scrollbar-width: thin; overflow: hidden; }
+
+  .fill { flex: 1 1 auto; min-height: 0; }
+  .sec .fill { display: flex; flex-direction: column; }
+  .sec .fill > .sec-body { flex: 1 1 auto; min-height: 0; }
+  .crd .fill { display: flex; flex-direction: column; }
+  .crd .fill > .crd-body { flex: 1 1 auto; min-height: 0; }
+
+  .col-fill { display:flex; flex-direction:column; min-width:0; min-height:0; } /* flex-column에서 flex 영역 구분할 경우 사용 */
+
+  .scroll-x  { overflow-x: auto; overflow-y: hidden; white-space:nowrap; }
+  .scroll-y  { overflow-x: hidden; overflow-y: auto; }
+  .scroll-xy { overflow: auto; white-space: nowrap; }
+
+
+/* 섹션 내 탭 */
+  .sec-tabs{ display:flex; padding: 2px 0; background: transparent; gap: 0 0.25rem; }
+  .sec-tab{ border: none; border-top: 2px solid transparent; border-radius: var(--bd-radius); background: transparent; padding: 0.125rem 0.5rem; font-size: var(--t-size2);font-weight: var(--t-weight1);color: var(--t-color-2); cursor: pointer; transition: all 0.15s ease; user-select: none; }
+  .sec-tab:hover{ background: rgba(7,69,81,0.08); }
+  /*.sec-tab.is-active{ border-top: 3px solid var(--accent-color-1); color: var(--accent-color-1); font-weight: var(--t-weight2); }*/
+  .sec-tab.is-active{
+    border-top: 2px solid var(--accent-color-2);
+    color: var(--accent-color-2);
+    font-weight: var(--t-weight2);
+    background: var(--bg-color-main);
+    border-radius: var(--bd-radius);
+    box-shadow: var(--box-sha-bb);
+   }
+
+  .sec-action{ display: flex; align-items:center; gap: 0.5rem; padding: 0; }
+  .sec-action > div { display:flex; align-items:center; justify-content: end; gap: 0.5rem; }
+  .sec-panel { display:none; min-height: 0;}
+  .sec-panel.is-active { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0;}
+  .sec[data-sec-tabs] .sec-header { height: auto; }
+
+/* 요소 감싸는 Wrap 기본 설정*/
+  .wrap{ background: transparent; padding: 0; margin: 0; scrollbar-width: thin; }
+
+/* 테이블 */
+  .wrap-tbl{ border: var(--bd-size) var(--bd-color-wrap); border-radius: var(--bd-radius); background: var(--bg-color-accent); }
+  .tbl { width: 100%; background: transparent; margin: 0; border-collapse: collapse; border-radius: var(--bd-radius); color: var(--t-color); }
+  .sec .tbl { background: var(--bg-color-accent); }
+  .crd .tbl { background: var(--bg-color-accent); }
+  .tbl thead tr:last-child th,
+  .tbl thead th[rowspan]:not([rowspan="1"]) { box-shadow: inset 0 -1px 0 0 var(--bd-color-wrap), inset 0 -2px 0 0 var(--bg-color-accent), inset 0 -3px 0 0 var(--bd-color-wrap); }
+  .crd .tbl thead tr:last-child th,
+  .crd .tbl thead th[rowspan]:not([rowspan="1"]) { box-shadow: inset 0 -1px 0 0 var(--bd-color-wrap), inset 0 -2px 0 0 var(--bg-color-accent), inset 0 -3px 0 0 var(--bd-color-wrap); }
+
+  .tbl tbody tr { border-bottom: var(--bd-size) var(--bd-color-wrap); transition: background 0.12s ease; }
+  .tbl tbody tr:last-child { border-bottom: 0; }
+  .tbl tbody tr:hover { background: rgba(7,69,81,0.06); cursor: default; }
+  .tbl th { padding: 0.2rem 0.5rem 0.3875rem 1rem; color: var(--t-color); font-weight: var(--t-weight2)}
+  .tbl td { padding: 0.2rem 0.5rem; vertical-align: middle; }
+
+  /* 테이블 헤더, 1열 고정 */
+  .tbl-sticky { position: relative; }
+  .tbl-sticky .tbl thead th { position: sticky; top: 0; z-index: 5; background: var(--bg-color-accent); }
+  .crd .tbl-sticky .tbl thead th { background: var(--bg-color-accent); }
+  .tbl-sticky .tbl { --th1: 26px; }
+  .tbl-sticky .tbl thead tr:nth-child(1) th { top: 0; }
+  .tbl-sticky .tbl thead tr:nth-child(2) th { top: var(--th1); }
+  .tbl-sticky .tbl thead th[rowspan]:not([rowspan="1"]):not(:first-child) { z-index: 8; }
+  .tbl-sticky .tbl tbody td:first-child { position: sticky; left: 0; z-index: 2; background: var(--bg-color-accent); }
+  .crd .tbl-sticky .tbl tbody td:first-child { background: var(--bg-color-accent); }
+  .tbl-sticky .tbl thead th:first-child { position: sticky; left: 0; z-index: 10; background: var(--bg-color-accent); }
+  .crd .tbl-sticky .tbl thead th:first-child { background: var(--bg-color-accent); }
+  .tbl-sticky .tbl thead:has(tr:first-child th:first-child[rowspan]:not([rowspan="1"])) tr:not(:first-child) th:first-child { left: auto; z-index: 5; }
+
+
+  /* 리스트 */
+  .wrap-list{ width:100%; min-height:0; border: var(--bd-size) var(--bd-color-wrap); border-radius: var(--bd-radius); background: var(--bg-color-accent); overflow:auto; }
+  .sec-body > .wrap-list,
+  .sec-body > .wrap.wrap-list { flex: 1 1 auto; min-height: 0; }
+
+  /* 리스트 아이템 */
+  .wrap-list .wrap-list-item{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:.6rem;
+
+    padding:.45rem .55rem;
+    background: transparent;
+    border: none;
+    outline: none;
+
+    text-align:left;
+    transition: background .12s ease, border-color .12s ease, transform .06s ease;
+  }
+  .wrap-list .wrap-list-item:hover{ background: rgba(7,69,81,.06); }
+  .wrap-list .wrap-list-item:active{ transform: translateY(1px); }
+
+  /* 선택 상태(클래스만 토글하면 됨) */
+  .wrap-list .wrap-list-item.is-active{ border-color: var(--accent-color-1); background: rgba(42,143,155,.12); }
+
+  .wrap-list .wrap-list-item:focus-visible{ outline: 2px solid rgba(42,143,155,.35); outline-offset: 2px; }
+
+  /* 왼쪽(텍스트 영역) */
+  .wrap-list .wrap-list-main{ min-width:0; flex:1 1 auto; }
+  .wrap-list .wrap-list-name{ font-size: var(--t-size2); font-weight: var(--t-weight2); color: var(--t-color); line-height: 1.2; }
+  .wrap-list .wrap-list-sub{ margin-top:.12rem; font-size: var(--t-size); color: var(--t-color-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* 오른쪽(상태 뱃지) */
+  .wrap-list .wrap-list-badge{
+    flex:0 0 auto;
+    font-size: var(--t-size1);
+    color: var(--t-color-1);
+    padding:.1rem .45rem;
+    border-radius: 999px;
+    border: var(--bd-size) var(--color-sub);
+    background: rgba(255,255,255,.55);
+  }
+
+  /* 옵션: 아이콘/아바타 자리(필요할 때만) */
+  .wrap-list .wrap-list-icon{
+    flex:0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: rgba(7,69,81,.08);
+    color: var(--accent-color);
+  }
+
+/* 설명 영역 */
+  .wrap-desc { width: 100%; min-height: 0; padding: 0.5rem; flex-direction: column; border: var(--bd-size) var(--bd-color-wrap); border-radius: var(--bd-radius); background: var(--bg-color-card); overflow:auto; }
+  .desc-item-group { width: 100%; display: flex; flex-direction: row; padding: 0.5rem; gap: 0.5rem; align-items: flex-start; }
+  .desc-item-group-col { width: 100%; display: flex; flex-direction: column; padding: 0.5rem; }
+  .desc-item-label { height: auto; padding: 0.15rem 0.25rem; border-radius: var(--bd-radius); border: var(--bd-size) var(--accent-color); color: var(--accent-color); font-weight: var(--t-weight3); background: var(--bg-color-accent); }
+  .desc-item-group-col .desc-item-label { width: max-content; }
+  .desc-item-value { font-weight: var(--t-weight2); }
+  .desc-item-group-col .desc-item-value { padding: 0.15rem; }
+  .sec-body > .wrap-desc,
+  .sec-body > .wrap.wrap-desc { flex: 1 1 auto; min-height: 0; }
+
+
+/* 요약 영역 */
+  .wrap-sum{ overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 0.75rem; }
+  .sum-grid{ flex: 0 0 auto; display: flex; flex-direction: column; border-radius: var(--bd-radius); overflow: hidden; gap: 0.125rem; }
+  .sum-row{ display: flex; gap: 0.125rem; }
+  .sum-item{ width: 100%; display:flex; flex-direction:column; padding: 0.25rem 0.5rem; background: transparent; border: var(--bd-size) var(--bd-color-sum); border-radius: var(--bd-radius); }
+  .sum-item.is-title{ background: var(--accent-color); border: var(--bd-size) var(--accent-color); color: #fff; }
+  .sum-item.is-accent{ background: var(--accent-color); color: #fff; }
+  .sum-item.is-accent1{ background: var(--bg-color-accent); }
+  .sum-item-label{ font-size: var(--t-size); font-weight: var(--t-weight2); white-space: nowrap; }
+  .sum-item-value{ font-size: var(--t-size1); font-weight: var(--t-weight3); white-space: nowrap; }
+  .sec-body > .wrap-sum,
+  .sec-body > .wrap.wrap-sum { flex: 1 1 auto; min-height: 0; }
+  /* 요약 타이틀 - 구분선 타입 */
+  .sum-title{ display:flex; align-items:center; }
+  .sum-title::before{ content:""; flex: 0 0 15px; height:2px; background: var(--accent-color); opacity:.7; }
+  .sum-title::after{ content:""; flex: 1 1 auto; height:2px; background: var(--accent-color); opacity:.7; }
+  .sum-title span{ flex: 0 0 auto; padding: 0 0.2rem; font-size: var(--t-size); font-weight: var(--t-weight2); color: var(--accent-color); background: var(--bg-color-main); border-radius: 999px; }
+
+/* =========================================================
+ * Filter Wrap (wrap-filter)
+ * - 좌측: 소분류 리스트(옵션) + 세로 스크롤
+ * - 우측: (옵션)검색창 + 패널(스위칭) + 내용(칩/인풋) + 넘치면 스크롤
+ * - 기존 클래스 수정 없이 "추가"만
+ * ========================================================= */
+
+
+/* =========================================================
+ * A) 레이아웃 보정 (네 HTML 구조용)
+ * - .sec-body > .wrap-filter 는 현재 구조에선 안 맞음
+ * - .sec-panel.fill > .wrap-filter 로 높이 채움 보정
+ * ========================================================= */
+.sec-panel.fill{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+.sec-panel.fill > .wrap-filter{
+  flex:1 1 auto;
+  min-height:0;
+}
+
+/* =========================================================
+ * Filter Wrap (wrap-filter)
+ * - 좌측: (대분류/소분류) 리스트 + 스크롤
+ * - 우측: 패널 스위칭 + (옵션)검색 + 내용(칩/인풋)
+ * ========================================================= */
+
+
+/* =========================================================
+ * 0) Layout: Root / Columns
+ * ========================================================= */
+
+/* 전체 랩 */
+.wrap-filter{
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+/* 좌측(기본: 소분류 1열) */
+.wrap-filter .wf-left{
+  flex: 0 0 var(--wf-left-w, 180px);
+  min-width: var(--wf-left-w, 180px);
+  max-width: var(--wf-left-w, 180px);
+
+  min-height: 0;
+  overflow: auto;
+}
+
+/* 좌측을 기존 wrap-list 스타일로 쓰는 경우(추천) */
+.wrap-filter .wf-left.wrap-list{
+  width: auto;
+  flex: 0 0 var(--wf-left-w, 180px);
+}
+
+/* 우측 */
+.wrap-filter .wf-right{
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* 검색(옵션) */
+.wrap-filter .wf-search{
+  flex: 0 0 auto;
+}
+
+
+/* =========================================================
+ * 1) Panel: Switching Surface
+ * ========================================================= */
+
+/* 패널 기본: 숨김 */
+.wrap-filter .wf-panel{
+  display: none;
+  min-height: 0;
+}
+
+/* 활성 패널: 서피스(배경/테두리/패딩) */
+.wrap-filter .wf-panel.is-active{
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+
+  overflow: auto;
+  padding: 0.5rem;
+
+  border: var(--bd-size) var(--bd-color-wrap);
+  border-radius: var(--bd-radius);
+  background: var(--bg-color-accent);
+}
+
+/* 패널 내부 간격(검색 ↔ 내용) */
+.wrap-filter[data-mode="panel"] .wf-panel.is-active{
+  gap: 0.5rem; /* 필요시 0.75rem */
+}
+
+/* (옵션) 검색창 아래 간격 보강 */
+.wrap-filter[data-mode="panel"] .wf-panel.is-active > .wf-search{
+  margin-bottom: 0.25rem; /* gap으로 충분하면 제거 가능 */
+}
+
+/* 패널 내부에서 스크롤이 필요하면 */
+.wrap-filter .wf-panel.scroll-y{
+  overflow-y: auto;
+}
+
+
+/* =========================================================
+ * 2) Chips: Container / Button
+ * ========================================================= */
+
+/* 칩 컨테이너(기본: wf-chips 자체가 서피스) */
+.wrap-filter .wf-chips{
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 0.35rem;
+
+  padding: 0.5rem;
+  border: var(--bd-size) var(--bd-color-wrap);
+  border-radius: var(--bd-radius);
+  background: var(--bg-color-accent);
+}
+
+/* 패널 모드: 패널이 서피스 → wf-chips 서피스 제거(이중 박스 방지) */
+.wrap-filter .wf-panel.is-active > .wf-chips{
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* 칩 버튼 */
+.wrap-filter .wf-chip{
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: var(--bd-size) var(--color-sub);
+  background: rgba(255,255,255,.65);
+
+  font-size: var(--t-size1);
+  font-weight: var(--t-weight2);
+  color: var(--t-color);
+  white-space: nowrap;
+
+  cursor: pointer;
+  user-select: none;
+  transition: background .12s ease, border-color .12s ease, transform .06s ease;
+}
+
+.wrap-filter .wf-chip:hover{ background: rgba(7,69,81,.06); }
+.wrap-filter .wf-chip:active{ transform: translateY(1px); }
+
+.wrap-filter .wf-chip.is-active{
+  border-color: var(--accent-color-1);
+  background: rgba(42,143,155,.12);
+  color: var(--accent-color-2);
+}
+
+
+/* =========================================================
+ * 3) Left List: wrap-list inside filter only
+ *    - row 배치 + 말줄임 안정화
+ * ========================================================= */
+
+.wrap-filter .wf-left .wrap-list-main{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  min-width: 0;
+}
+
+.wrap-filter .wf-left .wrap-list-sub{
+  margin-top: 0;
+  font-size: var(--t-size);
+  color: var(--t-color-1);
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 55%;
+}
+
+
+/* =========================================================
+ * 4) Nav2: Major + Sub (대분류/소분류) 전용
+ *    - data-nav="2" 인 wrap-filter에만 적용
+ * ========================================================= */
+
+.wrap-filter[data-nav="2"] .wf-left.wf-nav2{
+  flex: 0 0 calc(var(--wf-major-w, 140px) + var(--wf-sub-w, 180px) + 0.5rem);
+  min-width: calc(var(--wf-major-w, 140px) + var(--wf-sub-w, 180px) + 0.5rem);
+  max-width: calc(var(--wf-major-w, 140px) + var(--wf-sub-w, 180px) + 0.5rem);
+
+  display: flex;
+  gap: 0.5rem;
+  min-height: 0;
+}
+
+.wrap-filter[data-nav="2"] .wf-major{
+  flex: 0 0 var(--wf-major-w, 140px);
+  min-width: var(--wf-major-w, 140px);
+  max-width: var(--wf-major-w, 140px);
+  min-height: 0;
+  overflow: auto;
+}
+
+.wrap-filter[data-nav="2"] .wf-sub{
+  flex: 0 0 var(--wf-sub-w, 180px);
+  min-width: var(--wf-sub-w, 180px);
+  max-width: var(--wf-sub-w, 180px);
+  min-height: 0;
+  overflow: auto;
+}
+
+/* 선택된 대분류에 속하지 않는 소분류 숨김 */
+.wrap-filter[data-nav="2"] .wf-sub .wrap-list-item[hidden]{
+  display: none !important;
+}
+
+
+/* =========================================================
+ * Indicator Badge: wf-ind (필터 개수 표시) - 이전 디자인 + 10% 축소
+ * ========================================================= */
+.wrap-filter .wf-ind{
+  display: none;
+
+  /* 18px → 약 10% 축소 */
+  min-width: 16px;     /* 18 * 0.9 = 16.2 */
+  height: 16px;
+  line-height: 16px;
+
+  /* 6px → 약 10% 축소 */
+  padding: 0 5px;      /* 6 * 0.9 = 5.4 */
+
+  border-radius: 999px;
+  font-size: 11px;     /* 12 * 0.9 = 10.8 */
+  text-align: center;
+
+  /* ✅ 이전 디자인 */
+  background: var(--accent-color-2);
+  color: #fff;
+  box-shadow: 0 2px 3px 1px rgba(15, 23, 42, 0.15);
+
+  /* 필요 시 테두리는 사용 안함(이전과 동일 느낌) */
+  border: 0;
+}
+
+.wrap-filter .wf-ind.is-on{
+  display: inline-block;
+}
+
+/* wrap-filter 내부 스크롤바 얇게 (Firefox) + 색상 */
+.wrap-filter .wf-major,
+.wrap-filter .wf-sub,
+.wrap-filter .wf-left,
+.wrap-filter .wf-panel.is-active,
+.wrap-filter .wf-chips{
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-color) transparent; /* 네가 쓰는 토큰 있으면 */
+}
+
+/* 단순 텍스트 전용 */
+ .text-tbl { width: 100%; padding: 0.35rem 0.5rem; font-size: var(--t-size); font-weight: var(--t-weight2); color: var(--t-color); }
+ .text-comment { color: var(--t-color-2); font-size: var(--t-size-1); font-weight: var(--t-weight1); }
+
+/* 인풋 - 텍스트, 셀렉 공통 */
+  .input1,
+  .select1,
+  .input-tbl,
+  .select-tbl,
+  .inputgroup1 input,
+  .inputgroup1 select,
+  .inputgroup1 textarea,
+  .inputgroup2 input,
+  .inputgroup2 select,
+  .inputgroup2 textarea{ box-sizing: border-box; font-size: var(--t-size); width: 100%; padding: 0.35rem 0.5rem; border-radius: var(--bd-radius); border: var(--bd-size) var(--t-color-1); background-color: transparent; color: var(--t-color-1); outline: none; transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease; font-weight: var(--t-weight2); }
+
+/* 인풋 - 여러줄 */
+  .inputgroup1 textarea,
+  .inputgroup2 textarea{
+    min-height: 56px;      /* rows=2 느낌 */
+    resize: none;      /* 사용자가 늘릴 수 있게(싫으면 none) */
+    overflow: auto;
+  }
+
+/* 인풋 - 셀렉 단독 */
+  .select1,
+  .select-tbl,
+  .inputgroup1 select,
+  .inputgroup2 select { -webkit-appearance: none; -moz-appearance: none; appearance: none; /*padding: 0.35rem 0.35rem 0.35rem 0.4rem;*/ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: var(--i-size-1); cursor: pointer;}
+
+
+/* 인풋 - focus, has-value*/
+  .input1:focus,
+  .select1:focus { border-color: var(--accent-color); box-shadow: 0 0 5px rgba(20, 70, 120, 0.2); color: var(--t-color-on); /*background: #fff;*/ }
+  .input1.has-value:not(:focus),
+  .select1.has-value:not(:focus) { color: var(--t-color); }
+
+  .input-tbl { padding: 0.2rem 0.5rem; border: var(--bd-size) transparent; }
+  .select-tbl { padding: 0.2rem 0.3rem 0.2rem 0.5rem; border: var(--bd-size) transparent; }
+  .input-tbl:focus,
+  .select-tbl:focus { border-color: var(--accent-color); box-shadow: 0 0 5px rgba(20, 70, 120, 0.2); color: var(--t-color-on); /*background: #fff;*/}
+  .input-tbl.has-value:not(:focus),
+  .select-tbl.has-value:not(:focus) { color: var(--t-color); }
+
+/* 인풋+라벨 - 인풋에 라벨이 겹치는 타입 */
+  .inputgroup1 { margin: 0.8rem 0 0.3rem; position: relative; width: 100%; }
+  /* 라벨 기본 위치 */
+  .inputgroup1 label { font-size: var(--t-size);  font-weight: var(--t-weight1); position: absolute; left: 0; margin: 0.35rem 0 0 0.5rem; pointer-events: none; color: var(--t-color-1); transition: transform 0.18s ease, margin 0.18s ease, color 0.18s ease, background-color 0.18s ease; }
+  /* 포커스 시: input이든 select든 같게 */
+  .inputgroup1:focus-within label { transform: translateY(-50%); margin: 0 0 0 0.4rem; padding: 0 0.1rem; background: linear-gradient(to bottom, var(--bg-color-main) 50%, var(--bg-color-accent) 50%); font-weight: var(--t-weight2); color: var(--t-color-on); }
+  .inputgroup1 :is(input, select, textarea):focus { border-color: var(--accent-color); box-shadow: 0 0 5px rgba(20, 70, 120, 0.2); color: var(--t-color-on); }
+  /* 값만 있는 상태 (포커스 X) */
+  .inputgroup1.has-value label { transform: translateY(-50%); margin: 0 0 0 0.4rem; padding: 0 0.1rem; background: linear-gradient(to bottom, var(--bg-color-main) 50%, var(--bg-color-accent) 50%); font-weight: var(--t-weight2); }
+  .inputgroup1.has-value:not(:focus-within) label { color: var(--t-color); font-weight: var(--t-weight2); }
+  .inputgroup1.has-value :is(input, select, textarea):not(:focus) { color: var(--t-color); }
+  .crd .inputgroup1:focus-within label,
+  .crd .inputgroup1.has-value:not(:focus-within) label { background: linear-gradient(to bottom, var(--bg-color-card) 50%, var(--bg-color-accent) 50%); /*margin: 0 0 0 0.2rem;*/ }
+
+/* 인풋 - 인풋 밖 라벨이 있는 타입 */
+  .inputgroup2 { margin: 1.3rem 0 0.3rem; position: relative; width: 100%; }
+  /* 라벨 기본 위치 */
+  .inputgroup2 label { font-size: var(--t-size); font-weight: var(--t-weight1); position: absolute; left: 0; margin: 0.35rem 0 0 0.5rem; pointer-events: none; color: var(--t-color-1); transition: transform 0.18s ease, margin 0.18s ease, color 0.18s ease }
+  /* 포커스 시: input이든 select든 같게 */
+  .inputgroup2:focus-within label { transform: translateY(-90%); margin: 0 0 0 0.5rem; padding: 0; color: var(--t-color-on); font-weight: var(--t-weight2); }
+  .inputgroup2 :is(input, select, textarea):focus { border-color: var(--accent-color); box-shadow: 0 0 5px rgba(20, 70, 120, 0.2); color: var(--t-color-on); }
+  /* 값만 있는 상태 (포커스 X) */
+  .inputgroup2.has-value label { transform: translateY(-90%); margin: 0 0 0 0.5rem; padding: 0; font-weight: var(--t-weight2); }
+  .inputgroup2.has-value:not(:focus-within) label { color: var(--t-color); }
+  .inputgroup2.has-value :is(input, select,textarea):not(:focus) { color: var(--t-color); }
+  /*.crd .inputgroup2:focus-within label,
+  .crd .inputgroup2.has-value:not(:focus-within) label { margin: 0 0 0 0.3rem;}*/
+
+/* 1. inputgroup1, 2 내의 모든 입력 요소의 placeholder를 기본적으로 숨김 */
+.inputgroup1 :is(input, textarea)::placeholder,
+.inputgroup2 :is(input, textarea)::placeholder {
+  color: transparent; /* 또는 opacity: 0; */
+  transition: color 0.18s ease;
+}
+
+/* 2. 포커스 시 placeholder를 보이게 함 */
+.inputgroup1 :is(input, textarea):focus::placeholder,
+.inputgroup2 :is(input, textarea):focus::placeholder {
+  color: var(--t-color-1); /* 원래 원하셨던 placeholder 색상 */
+  opacity: 1; /* 기존 opacity 처리와 충돌 방지 */
+}
+
+/* 인풋 - 날짜, 시간 */
+  .input-date-wrap,
+  .input-time-wrap { position: relative; display: inline-block; width: 100%; }
+  .input-date-wrap { min-width: 120px;}
+  .input-time-wrap { min-width: 70px;}
+  .input-date-wrap > .input1.input-date,
+  .input-date-wrap > .input-tbl.input-date,
+  .inputgroup1 .input-date-wrap > input.input-date,
+  .inputgroup2 .input-date-wrap > input.input-date,
+  .input-time-wrap > .input1.input-time,
+  .input-time-wrap > .input-tbl.input-time,
+  .inputgroup1 .input-time-wrap > input.input-time,
+  .inputgroup2 .input-time-wrap > input.input-time { padding-right: 1.2rem; }
+  .input-date-wrap > .input-icon-btn { position: absolute; top: 50%; right: 0.6rem; transform: translateY(-50%); border: none; background: transparent; width: 0.75rem; height: 0.75rem; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .input-time-wrap > .input-icon-btn { position: absolute; top: 50%; right: 0.6rem; transform: translateY(-50%); border: none; background: transparent; width: 0.75rem; height: 0.75rem; display: flex; align-items: center; justify-content: center; cursor: default; padding: 0; pointer-events: none; }  
+  .input-date-wrap > .input-icon-btn i,
+  .input-time-wrap > .input-icon-btn i { font-size: 0.7rem; }
+
+  .inputgroup1 input.input-date::placeholder,
+  .inputgroup2 input.input-date::placeholder,
+  .inputgroup1 input.input-time::placeholder,
+  .inputgroup2 input.input-time::placeholder { opacity: 0; transition: opacity 0.15s ease-out; }
+  .inputgroup1 input.input-date:focus::placeholder,
+  .inputgroup2 input.input-date:focus::placeholder,
+  .inputgroup1 input.input-time:focus::placeholder,
+  .inputgroup2 input.input-time:focus::placeholder { opacity: 1; }
+
+  body .flatpickr-calendar { width: 280px !important; font-size: 0.75rem; }
+  body .flatpickr-months { padding: 5px 0 5px 0; }
+  body .flatpickr-weekdays { padding: 0 !important; height: 25px; }
+  body .flatpickr-days { padding: 0 !important; width: 100% !important; }
+  body .flatpickr-weekdaycontainer,
+  body .flatpickr-days .dayContainer { display: grid !important; grid-template-columns: repeat(7, 40px) !important; justify-content: center !important; width: 100% !important; min-width: 100% !important; max-width: none !important; row-gap: 2px; }
+  body .flatpickr-weekday { width: 40px !important; height: 25px !important; line-height: 25px !important; margin: 0 !important; display: flex; align-items: center; justify-content: center; }
+  body .flatpickr-day { width: 32px !important; max-width: 32px !important; height: 28px !important; line-height: 28px !important; margin: 0 auto !important; display: flex; align-items: center; justify-content: center; }
+  body .flatpickr-day.today { border-color: var(--color-info); }
+  body .flatpickr-current-month { display: flex !important; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 0.1rem; }
+  body .flatpickr-current-month .numInputWrapper input.cur-year { width: 4.5ch; box-sizing: content-box; }
+  body .flatpickr-current-month .numInputWrapper::after { content: ''; }
+
+/* 인풋 - 검색 */
+  .input-search-wrap{ position: relative; width: 100%; }
+  /* input1을 그대로 쓰되, 왼쪽 아이콘 자리만 확보 */
+  .input-search-wrap > .input1.input-search{ padding-left: 2.0rem; }
+  .input-search-wrap > .input-search-icon{
+    position: absolute;
+    left: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* 아이콘 클릭 방해 X */
+    color: var(--t-color-1);
+    font-size: var(--i-size-1);
+  }
+  /* 포커스일 때 아이콘도 같이 강조(선택) */
+  .input-search-wrap:focus-within > .input-search-icon{ color: var(--accent-color); }
+
+
+/* 인풋 - 체크박스 */
+  .wrap-chk { cursor: pointer; width: fit-content; display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+  .wrap-chk input { display: none; }
+  .wrap-chk svg { overflow: visible; display:block; }
+  .wrap-chk-path{ fill: none; stroke: var(--t-color-1); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; transition: stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease; stroke-dasharray: 241 9999999; stroke-dashoffset: 0; }
+  .wrap-chk input:checked ~ svg .wrap-chk-path { stroke: var(--accent-color-1); stroke-dasharray: 70.5096664428711 9999999; stroke-dashoffset: -262.2723388671875; }
+  input[type="checkbox"].chk-anim { opacity: 0; position: absolute; pointer-events: none; }
+  
+  /* 체크박스 테이블 1열에 있을 시 너비 자동조정 */
+  .tbl th:first-child:has(input.chk-anim),
+  .tbl td:first-child:has(input.chk-anim) { width: 40px; min-width: 40px; max-width: 40px; text-align: center; vertical-align: middle; padding: 0.25rem 0 0 0; }
+
+  .tbl th:has(input.chk-anim),
+  .tbl td:has(input.chk-anim) { width: 40px; min-width: 40px; max-width: 40px; vertical-align: middle; padding: 0.25rem 0.5rem 0 0.5rem; }
+
+
+
+/* 메인 배경(#F7FBFF) 위에서 살짝 튀어나온 구분선 */
+  .hr-out-bar { border: none; height: 0; padding: 0; margin: 0.25rem 0 0.5rem; border-top: 4px solid rgba(255, 255, 255, 0.9); border-bottom: 3px solid rgba(139, 151, 157, 0.35); border-radius: 999px; background: transparent; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.15); }
+  .hr-bar { border: 1px solid var(--color-sub); margin: 1rem; }
+
+/* 메인페이지 옵션바*/
+  .hr-opt { position: relative; margin: 0.5rem 0 1rem; }
+  .hr-opt .hr-out-bar{ margin: 0; }
+  .hr-opt .hr-txt{
+    position:absolute;
+    top:50%;
+    transform: translateY(-50%);
+
+    padding: 0;
+    background: var(--bg-color-main);
+    font-size: var(--t-size2);
+    font-weight: var(--t-weight2);
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    white-space: nowrap;
+  }
+
+  /* 좌/중/우 위치만 다르게 */
+  .hr-opt .hr-left{ left: 0; }
+  .hr-opt .hr-center{ left: 50%; transform: translate(-50%,-50%); }
+  .hr-opt .hr-right{ right: 0; left: auto; }
+
+
+
+
+/* 버튼 - 아이콘버튼 */
+  .btn-icon {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: var(--btn-i-color-off); 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 140ms ease-out, transform 80ms ease-out;
+    position: relative;
+    z-index: 1000;
+  }
+  .btn-icon.bubble {
+    background: var(--bg-color-main);
+    box-shadow: 0 2px 3px 1px rgba(15, 23, 42, 0.15), inset 0 2px 2px 1px rgba(255, 255, 255, 0.9), inset 0 -1px 1px 1px rgba(15, 23, 42, 0.15);
+    border-radius: var(--bd-radius1);
+    width: var(--i-bubble-size);
+    height: var(--i-bubble-size);
+  }
+  .btn-icon.bubble.btn-icon-xs { width: var(--i-bubble-size-2); height: var(--i-bubble-size-2); }
+  .btn-icon.bubble.btn-icon-s { width: var(--i-bubble-size-1); height: var(--i-bubble-size-1); }
+  .btn-icon.bubble.btn-icon-l { width: var(--i-bubble-size1); height: var(--i-bubble-size1); }
+  .btn-icon.bubble.btn-icon-xl { width: var(--i-bubble-size2); height: var(--i-bubble-size2); }
+
+  .btn-icon i,
+  .btn-icon .bi,
+  .btn-icon .fa { font-size: var(--i-size); pointer-events: none; }
+  .btn-icon-l i,
+  .btn-icon-l .bi,
+  .btn-icon-l .fa { font-size: var(--i-size1); pointer-events: none; }
+  .btn-icon-xl i,
+  .btn-icon-xl .bi,
+  .btn-icon-xl .fa { font-size: var(--i-size2); pointer-events: none; }
+  .btn-icon-s i,
+  .btn-icon-s .bi,
+  .btn-icon-s .fa { font-size: var(--i-size-1); pointer-events: none; }
+  .btn-icon-xs i,
+  .btn-icon-xs .bi,
+  .btn-icon-xs .fa { font-size: var(--i-size-2); pointer-events: none; }
+
+  /* 마우스를 올렸을 때: 아이콘 색만 변경 */
+  .btn-icon:hover { color: var(--accent-color-1); }
+  .btn-icon.bubble:hover { background: var(--bg-color-accent); }
+
+  /*.btn-icon:hover { color: var(--btn-i-color-on); }*/
+  .btn-icon:focus-visible { outline: none;}
+  /* 클릭했을 때: hover와 같은 색 + 눌린 애니메이션 */
+  .btn-icon:active { transform: scale(0.9) translateY(1px); }
+  .btn-icon[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: 100%;                           /* 아이콘 위쪽에서 시작 */
+    transform: translate(-50%, 4px);        /* 살짝 아래에서 시작해서 */
+    padding: 0.25rem 0.4rem;
+    font-size: var(--t-size-1);
+    font-weight: var(--t-weight);
+    line-height: 1.2;
+    color: #fff;
+    background: var(--accent-color-1-a);
+    border-radius: 999px;                   /* 알약 모양 */
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 4px 8px rgba(15, 23, 42, 0.25);
+    transition: opacity 0.16s ease-out, transform 0.16s ease-out;
+  }
+  .btn-icon[data-tooltip]:hover::after,
+  .btn-icon[data-tooltip]:focus-visible::after { opacity: 1; transform: translate(-50%, -2px); z-index: 99999; }
+  .btn-icon[data-tooltip]:active::after { transform: translate(-50%, -1px) scale(0.96); z-index: 99999; } 
+
+  .btn-icon:active:not([data-tt-mode="multi"]) {
+    transform: scale(0.9) translateY(1px);
+  }
+
+
+  /* ✅ 내용 많은 툴팁(멀티라인/박스) 모드 */
+  .btn-icon[data-tooltip][data-tt-mode="multi"]::after{
+    border-radius: 10px;
+    white-space: pre-wrap;      /* \n 유지 + 자동 줄바꿈 (pre-line보다 안정적) */
+    text-align: left;
+    line-height: 1.35;
+    padding: 0.5rem 0.6rem;
+    font-size: var(--t-size);
+
+    display: block;
+    width: max-content;         /* ★ 버튼 폭에 안 묶이고 내용만큼 확장 */
+    max-width: 600px;           /* ★ 너무 길면 여기서부터 줄바꿈 */
+    box-sizing: border-box;
+
+    word-break: keep-all;       /* 한글을 글자단위로 쪼개지 않게 */
+    overflow-wrap: anywhere;    /* 아주 긴 토큰이 있으면 예외적으로 끊기 */
+
+    top: 100%;
+    bottom: auto;
+  }
+
+  .btn-icon-red:hover { color: var(--color-red); }
+  .btn-icon-red[data-tooltip]::after { background: var(--color-red-a); }
+  .btn-icon-blue:hover { color: var(--color-blue); }
+  .btn-icon-blue[data-tooltip]::after { background: var(--color-blue-a); }
+  .btn-icon-green:hover { color: var(--color-green); }
+  .btn-icon-green[data-tooltip]::after { background: var(--color-green-a); }
+  .btn-icon-violet:hover { color: var(--color-violet); }
+  .btn-icon-violet[data-tooltip]::after { background: var(--color-violet-a); }
+
+/* =========================================================
+ * Tooltip Portal (overflow/ sticky table 대응)
+ * - 표/스크롤 영역 안의 툴팁은 ::after 대신 포탈로 표시
+ * ========================================================= */
+
+/* 포탈 사용 버튼은 기존 ::after 툴팁 비활성화(중복 방지) */
+.btn-icon[data-tooltip][data-tt-portal="1"]::after{
+  content: none !important;
+}
+
+/* 포탈 툴팁 엘리먼트 */
+#app-tooltip-portal{
+  position: fixed;
+  left: -9999px;
+  top: -9999px;
+  z-index: 999999;          /* sticky 헤더/열보다 위 */
+  pointer-events: none;
+
+  opacity: 0;
+  /* 기본(top 배치): 버튼 위에 붙는 형태 */
+  transform: translate(-50%, -100%) translateY(4px);
+  transition: opacity 0.16s ease-out, transform 0.16s ease-out;
+
+  padding: 0.25rem 0.4rem;
+  font-size: var(--t-size);
+  font-weight: var(--t-weight);
+  line-height: 1.2;
+  color: #fff;
+  background: var(--accent-color-1-a);
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: 0 4px 8px rgba(15, 23, 42, 0.25);
+}
+
+/* 표시 ON */
+#app-tooltip-portal.is-on{
+  opacity: 1;
+  transform: translate(-50%, -100%) translateY(-2px);
+}
+
+/* bottom 배치(멀티라인은 아래로) */
+#app-tooltip-portal[data-place="bottom"]{
+  transform: translate(-50%, 0) translateY(-4px);
+}
+#app-tooltip-portal.is-on[data-place="bottom"]{
+  opacity: 1;
+  transform: translate(-50%, 0) translateY(2px);
+}
+
+/* 멀티라인 모드 (기존 data-tt-mode="multi" 느낌 유지) */
+#app-tooltip-portal.is-multi{
+  border-radius: 10px;
+  white-space: pre-wrap;
+  text-align: left;
+  line-height: 1.35;
+  padding: 0.5rem 0.6rem;
+
+  width: max-content;
+  max-width: 600px;
+  box-sizing: border-box;
+
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* 색상 변형(버튼 클래스 따라감) */
+#app-tooltip-portal.tt-red{ background: var(--color-red-a); }
+#app-tooltip-portal.tt-blue{ background: var(--color-blue-a); }
+#app-tooltip-portal.tt-green{ background: var(--color-green-a); }
+#app-tooltip-portal.tt-violet{ background: var(--color-violet-a); }
+
+
+
+
+  button:disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
+  button.btn-icon:disabled,
+  button.btn-box:disabled,
+  button.btn-box-fill:disabled { background: rgba(155,169,178,.35)}
+
+  /* 아이콘버튼 테이블 1열에 있을 시 너비 자동조정 */
+  .tbl th:first-child:has(button.btn-icon):not(:has(input.chk-anim)),
+  .tbl td:first-child:has(button.btn-icon):not(:has(input.chk-anim)) { width: 40px; min-width: 40px; max-width: 40px; text-align: center; vertical-align: middle; padding-left: 0; padding-right: 0; }
+
+/* 버튼 - 박스버튼 */
+  .btn-box {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 25px;
+
+    padding: 0 1.4rem 0 0.4rem;  /* 오른쪽 패딩 = 아이콘 자리 */
+    border: var(--bd-size) var(--accent-color);
+    border-radius: var(--bd-radius-1);
+    background: transparent;
+    color: var(--accent-color);
+
+    white-space: nowrap;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    
+    user-select: none;
+  }
+  .btn-box .text { font-size: var(--t-size1); font-weight: var(--t-weight2); color: var(--accent-color); transition: color 0.12s ease; }
+  .btn-box .icon { position: absolute; top: 50%; right: 0.4rem; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; color: var(--accent-color); transition: transform 0.18s ease, left 0.18s ease, right 0.18s ease, color 0.18s ease; }
+  .btn-box.bubble {
+    background: var(--bg-color-main);
+    border-radius: var(--bd-radius);
+    box-shadow: 0 2px 3px 1px rgba(15, 23, 42, 0.15), inset 0 2px 2px 1px rgba(255, 255, 255, 0.9), inset 0 -1px 2px 1px rgba(15, 23, 42, 0.15);
+    border: 0;
+   }
+
+  .btn-box-fill {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    height: 25px;
+
+    padding: 0 1.4rem 0 0.4rem;  /* 오른쪽 패딩 = 아이콘 자리 */
+    border: var(--bd-size) var(--color-info);
+    border-radius: var(--bd-radius-1);
+    background: var(--accent-color);
+    color: #fff;
+
+    white-space: nowrap;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    
+    user-select: none;
+  }
+  .btn-box-fill .text { font-size: var(--t-size1); font-weight: var(--t-weight2); color: #fff; transition: color 0.12s ease; }
+  .btn-box-fill .icon { position: absolute; top: 50%; right: 0.4rem; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; color: #fff; transition: transform 0.18s ease, left 0.18s ease, right 0.18s ease, color 0.18s ease; }
+  .btn-box:hover { background: var(--accent-color); border-color: var(--accent-color); }
+  .btn-box-fill:hover { background: var(--accent-color-1); border-color: var(--accent-color-1); }
+  .btn-box.bubble:hover { background: var(--accent-color); border: 0; box-shadow: inset 0 -1px 2px 1px rgba(15, 23, 42, 0.15), inset 0 1px 2px 1px rgba(15, 23, 42, 0.15); }
+  .btn-box:hover .text { color: #fff; }
+  .btn-box:hover .icon { color: #fff; }
+  .btn-box:active .text,
+  .btn-box-fill:active .text { color: transparent; }
+  .btn-box:active .icon,
+  .btn-box-fill:active .icon { left: 50%; right: auto; transform: translate(-50%, -50%); } 
+  .btn-box:focus-visible,
+  .btn-box-fill:focus-visible { outline: 2px solid rgba(255,255,255,0.7); outline-offset: 2px; }
+
+  .btn-box-grey:hover { background: var(--color-sub); border-color: var(--color-sub); }
+  .btn-box-red:hover { background: var(--color-red); border-color: var(--color-red); }
+  .btn-box-blue:hover { background: var(--color-blue); border-color: var(--color-blue); }
+  .btn-box-violet:hover { background: var(--color-violet); border-color: var(--color-violet) }
+
+  .btn-box.bubble.btn-box-grey:hover { background: var(--color-sub); border: 0; }
+  .btn-box.bubble.btn-box-red:hover { background: var(--color-red); border: 0; }
+  .btn-box.bubble.btn-box-blue:hover { background: var(--color-blue); border: 0; }
+  .btn-box.bubble.btn-box-violet:hover { background: var(--color-violet); border: 0; }
+
+/* 버튼 - 원버튼 */
+  .btn-circle{
+    display:inline-flex;
+    align-items:center;
+    height:30px;
+
+    border:none;
+    border-radius:999px;
+    cursor:pointer;
+    overflow:hidden;
+
+    padding:0;           /* 기본은 원형(아이콘만) */
+    background: var(--bg-color-main);
+    box-shadow: 0 2px 3px 1px rgba(15, 23, 42, 0.15), inset 0 2px 2px 1px rgba(255, 255, 255, 0.9), inset 0 -1px 1px 1px rgba(15, 23, 42, 0.15);
+    transition: transform .3s;
+
+    user-select: none;
+  }
+
+  /* 아이콘 영역을 30px로 고정 → 기본 버튼 폭도 30px로 유지됨 */
+  .btn-circle .icon{ flex:0 0 30px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; }
+
+  .btn-circle .icon i{ font-size:1rem; color: var(--btn-i-color-off); }
+
+  /* 텍스트는 “접힌 상태” */
+  .btn-circle .text{
+    max-width:0;
+    opacity:0;
+    overflow:hidden;
+    white-space:nowrap;
+
+    color: var(--t-color);
+    font-size: var(--t-size);
+    font-weight: var(--t-weight2);
+
+    padding-left:0;
+    padding-right:0;
+
+    transition: max-width .3s, opacity .3s, padding .3s;
+  }
+
+  .btn-circle:hover{ box-shadow: 0 2px 3px 1px rgba(15, 23, 42, 0.15), inset 0 2px 2px 1px rgba(255, 255, 255, 0.9), inset 0 -1px 1px 1px rgba(15, 23, 42, 0.15); }
+  .btn-circle:hover .icon i { color: var(--accent-color); }
+  .btn-circle:hover .text{ max-width: 20rem; opacity: 1; padding-left: 1px; padding-right:10px; color: var(--accent-color); }
+  .btn-circle:active{ transform: translate(2px,2px); }
+
+  /* =========================================================
+  * ✅ 공용 로딩 오버레이 (UI_Loading)
+  * - 레이아웃 독립적 (스켈레톤처럼 페이지별 수정 없음)
+  * ========================================================= */
+  .ui-loading-ov{
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-color-main);
+    z-index: 9999;
+  }
+  .ui-loading-ov.is-on{ display:flex; }
+  .ui-loading-ov .ui-loading-box{
+    display:flex;
+    align-items:center;
+    gap: 0;
+    padding: 0;
+    border-radius: 0;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .ui-loading-ov .ui-loading-text{
+    /* ✅ 박스 제거 + 스피너만 쓰려면 텍스트 숨김
+      텍스트를 살리고 싶으면 이 블록 대신 margin-left만 주면 됨 */
+    display: none !important;
+  }
+
+  /* 부트(첫 진입)처럼 화면 전체를 더 꽉 막고 싶을 때 */
+  .ui-loading-ov.is-boot{
+    /* ✅ 부트도 동일한 dim (조금 더 진하게 하고 싶으면 0.55로) */
+    background: var(--bg-color-main);
+  }
+
+  /* ✅ 스피너는 1개만 사용: Bootstrap spinner 숨김 */
+  .ui-loading-ov .spinner-border{ display:none !important; }
+
+  /* 간단 CSS 스피너(파란색) */
+  .ui-loading-fallback-spinner{
+    /* ✅ 스피너 크게 */
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 4px solid rgba(255,255,255,0.20);
+    /* ✅ 파란색(프로젝트 변수 있으면 그걸로 바꿔도 됨) */
+    border-top-color: var(--color-blue, #2f6bff);
+    animation: uiLoadingSpin 0.8s linear infinite !important;
+    will-change: transform;
+  }
+
+  /* ✅ 스피너 회전 애니메이션(이게 없으면 안 돎) */
+  @keyframes uiLoadingSpin{
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+
+
+  /*input select lable 라벨상단 인풋하단 조합, 라벨 좌측 인풋 우측 조합, 시간, 버튼, 테이블
+  버튼: 생성/수정/삭제/취소/조회, 행추가, 행삭제, 다운로드, 아이콘, 
+  모달: 알림, 페이지
+  로딩스피너
+  필터: 랩, 필터칩, 필터칩 검색
+  테이블: 리스트, 데이터행
+  레이아웃: 리스트, 데이터*/
+
+
+
+</style>
+
+
+<script>
+
+/*input, select, label의 3단계 실행 기능*/
+  function refreshFloatingInputs(root) {
+    var scope = root || document;
+
+    var fields = scope.querySelectorAll(
+      '.inputgroup1 input, .inputgroup1 select, .inputgroup1 textarea,' +
+      '.inputgroup2 input, .inputgroup2 select, .inputgroup2 textarea,' +
+      '.input1, .select1, .input-tbl, .select-tbl'
+    );
+
+    fields.forEach(function (field) {
+      var parent = field.closest('.inputgroup1, .inputgroup2') || field;
+
+      function syncHasValue() {
+        var val = field.value;
+        var hasValue = val != null && String(val).trim() !== '';
+
+        if (hasValue) {
+          parent.classList.add('has-value');
+        } else {
+          parent.classList.remove('has-value');
+        }
+      }
+
+      // 처음 한 번 체크
+      syncHasValue();
+
+      // 이미 리스너가 붙어있으면 또 안 붙이도록 플래그 사용
+      if (!field.__floatingInit) {
+        field.addEventListener('input', syncHasValue);
+        field.addEventListener('change', syncHasValue);
+        field.__floatingInit = true;
+      }
+    });
+    if (window.initInputDateFields) {
+      window.initInputDateFields(scope);
+    }
+    if (window.initInputTimeFields) {
+      window.initInputTimeFields(scope);
+    }
+  }
+
+/*아이콘 버튼(.btn-icon)에 data-tooltip 자동 세팅 (CSS ::after 툴팁용)*/
+  function initIconTooltips(root) {
+    var scope = root || document;
+    var buttons = scope.querySelectorAll('.btn-icon');
+
+    buttons.forEach(function (btn) {
+      if (btn.getAttribute('data-tt-disabled') === 'true') {
+        return; 
+      }
+      if (btn.__iconTooltipInited) return;
+
+      var key = btn.getAttribute('data-tt') || '';
+      var fromMap = (key && window.ICON_TOOLTIP_TEXTS && window.ICON_TOOLTIP_TEXTS[key]) || '';
+
+      var text =
+        fromMap ||
+        btn.getAttribute('data-tooltip') ||
+        btn.getAttribute('aria-label') ||
+        btn.getAttribute('title');
+
+      if (!text) return;
+
+      if (!btn.getAttribute('data-tooltip')) {
+        btn.setAttribute('data-tooltip', text);
+      }
+
+      // ✅ 멀티라인 자동 판정
+      var isMulti = (/\n/.test(text) || String(text).length > 24);
+      if (isMulti && !btn.getAttribute('data-tt-mode')) {
+        btn.setAttribute('data-tt-mode', 'multi');
+      }
+
+      if (!btn.getAttribute('aria-label')) {
+        btn.setAttribute('aria-label', String(text).replace(/\s*\n\s*/g, ' ').trim());
+      }
+
+      if (btn.closest('.wrap-tbl, .tbl-sticky, .scroll-x, .scroll-y')) {
+        btn.setAttribute('data-tt-portal', '1');
+      }
+
+      btn.__iconTooltipInited = true;
+    });
+  }
+
+(function(){
+  var portal = null;
+  var activeBtn = null;
+  var rafId = 0;
+
+  function ensurePortal(){
+    if (portal) return portal;
+    portal = document.getElementById('app-tooltip-portal');
+    if (!portal){
+      portal = document.createElement('div');
+      portal.id = 'app-tooltip-portal';
+      portal.setAttribute('role', 'tooltip');
+      document.body.appendChild(portal);
+    }
+    return portal;
+  }
+
+  function resetPortalClass(){
+    portal.className = '';
+    portal.removeAttribute('data-place');
+  }
+
+  function applyVariant(btn){
+    var isMulti = (btn.getAttribute('data-tt-mode') === 'multi');
+    portal.classList.toggle('is-multi', isMulti);
+    portal.setAttribute('data-place', isMulti ? 'bottom' : 'top');
+
+    portal.classList.toggle('tt-red',    btn.classList.contains('btn-icon-red'));
+    portal.classList.toggle('tt-blue',   btn.classList.contains('btn-icon-blue'));
+    portal.classList.toggle('tt-green',  btn.classList.contains('btn-icon-green'));
+    portal.classList.toggle('tt-violet', btn.classList.contains('btn-icon-violet'));
+  }
+
+  function clamp(n, min, max){
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function updatePosition(){
+    if (!portal || !activeBtn) return;
+
+    var r = activeBtn.getBoundingClientRect();
+    var place = portal.getAttribute('data-place') || 'top';
+    var gap = 8;
+
+    // 먼저 측정
+    var pw = portal.offsetWidth;
+    var ph = portal.offsetHeight;
+
+    // top은 transform(-100%)로 위로 올려두는 구조라 top좌표는 r.top-gap
+    var left = r.left + (r.width / 2);
+    var top  = (place === 'bottom') ? (r.bottom + gap) : (r.top - gap);
+
+    // 가로 clamp (센터 기준)
+    var margin = 8;
+    var minLeft = margin + (pw / 2);
+    var maxLeft = window.innerWidth - margin - (pw / 2);
+    left = clamp(left, minLeft, maxLeft);
+
+    // 세로는 간단 clamp (필요시만)
+    top = clamp(top, margin, window.innerHeight - margin);
+
+    portal.style.left = left + 'px';
+    portal.style.top  = top  + 'px';
+  }
+
+  function scheduleUpdate(){
+    if (!activeBtn || !portal) return;
+    if (rafId) return;
+    rafId = requestAnimationFrame(function(){
+      rafId = 0;
+      updatePosition();
+    });
+  }
+
+  function show(btn){
+    var text = btn.getAttribute('data-tooltip') || '';
+    if (!text) return;
+
+    ensurePortal();
+    activeBtn = btn;
+
+    resetPortalClass();
+    applyVariant(btn);
+
+    portal.classList.remove('is-on');
+    portal.style.left = '-9999px';
+    portal.style.top  = '-9999px';
+    portal.textContent = text;
+
+    updatePosition();
+
+    requestAnimationFrame(function(){
+      if (!portal || !activeBtn) return;
+      portal.classList.add('is-on');
+    });
+  }
+
+  function hide(){
+    if (!portal) return;
+    portal.classList.remove('is-on');
+    activeBtn = null;
+  }
+
+  window.addEventListener('scroll', scheduleUpdate, true);
+  window.addEventListener('resize', scheduleUpdate);
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') hide();
+  });
+
+  document.addEventListener('mouseover', function(e){
+    var btn = e.target.closest('.btn-icon[data-tt-portal="1"][data-tooltip]');
+    if (!btn) return;
+    show(btn);
+  });
+
+  document.addEventListener('mouseout', function(e){
+    var from = e.target.closest('.btn-icon[data-tt-portal="1"][data-tooltip]');
+    if (!from || from !== activeBtn) return;
+
+    var toBtn = e.relatedTarget && e.relatedTarget.closest
+      ? e.relatedTarget.closest('.btn-icon[data-tt-portal="1"][data-tooltip]')
+      : null;
+
+    if (toBtn){
+      show(toBtn);
+      return;
+    }
+    hide();
+  });
+
+  document.addEventListener('focusin', function(e){
+    var btn = e.target.closest('.btn-icon[data-tt-portal="1"][data-tooltip]');
+    if (!btn) return;
+    show(btn);
+  });
+
+  document.addEventListener('focusout', function(e){
+    var btn = e.target.closest('.btn-icon[data-tt-portal="1"][data-tooltip]');
+    if (!btn) return;
+    hide();
+  });
+
+  // 외부에서 마킹용
+  window.initTooltipPortal = function(root){
+    var scope = root || document;
+    scope.querySelectorAll('.wrap-tbl .btn-icon[data-tooltip], .tbl-sticky .btn-icon[data-tooltip]')
+      .forEach(function(btn){
+        btn.setAttribute('data-tt-portal', '1');
+      });
+  };
+})();
+
+  /*툴팁내용 수정필요*/
+  window.ICON_TOOLTIP_TEXTS = {
+    'pjt.mgmt': [
+      '프로젝트 성격: 프로젝트 운영내용의 주요 성격',
+      '- [사업화] 시제품 제작, 시장검증, 제품고도화 등 사업화 과정 전반 지원',
+      '- [기술창업] R&D, 기술개발, 기술이전, IP확보 등 기술 중심 창업 지원',
+      '- [글로벌진출] 해외진출, 수출, 글로벌 파트너 연결 등 지원',
+      '- [투자유치연계] 후속 투자유치 및 투자자(VC, AC 등) 연계 지원',
+      '- [교육/역량강화] 창업자 대상 창업기초/실전/특화 교육 과정 운영',
+      '- [멘토링/컨설팅] 각 분야 전문가의 지도 및 전략 컨설팅 제공',
+      '- [창업자발굴] 경진대회, 유망 창업자 선발, 탐색형 육성 프로그램 운영',
+      '- [판로개척] 마케팅, 유통채널, 공공판로 등 매출 기반 확보 지원',
+      '- [창업인프라] 사무실, 공장, 장비, 실험공간, 테스트베드 등 지원',
+      '- [지역기반창업] 지역특화 프로그램, 로컬창업 지원, 청년창업 일자리 연계',
+      '- [학사연계창업] 창업강좌, 학점인정, 창업휴학제 등 대학과 연계된 학사 운영',
+      '- [특화분야창업] 바이오, AI, 콘텐츠, 여성창업 등 특정 산업/대상 중심 지원',
+      '- [사회적경제/ESG] 소셜벤처, 지속가능경영, 사회문제 해결 관련 운영',
+      '',
+      '프로젝트 운영방식',
+      '- [자체운영] 프로젝트 주관 및 실운영 진행',
+      '- [운영대행] 프로젝트 주관은 아니지만, 실운영은 진행',
+      '- [운영위임] 프로젝트 주관만 진행, 실운영은 타기관 진행',
+      '- [운영협력] 프로젝트 협력(컨소시엄)만 진행, 실운영은 무관',
+      '',
+      '프로젝트 수행단계',
+      '- [선정] 선정확정, 협약대기',
+      '- [협약] 운영계획 수정 및 확정, 예산교부, 협약체결',
+      '- [운영] 프로그램 진행, 예산 집행 등 운영 진행',
+      '- [보고/정산] 결과보고서 작성 및 제출, 운영비 정산 진행',
+      '- [완료] 프로젝트 종료 확정, 계좌 해지 등'
+    ].join('\n'),
+
+    'pjt.budget': [
+      '프로젝트 운영과 직접적으로 관련된 기관',
+      '- [보조금] 프로젝트 총괄/전담기관이 프로젝트 운영을 위해 제공하는 자금',
+      '- [대응자금(현금)] 프로젝트 주관기관이 프로젝트 운영을 위해 보조금의 일정비율만큼 실제현금으로 부담하는 자금',
+      '- [대응자금(현물)] 프로젝트 주관기관이 프로젝트 운영을 위해 보조금의 일정비율만큼 보유자원(인력, 장비, 공간 등)으로 부담하는 자금',
+      '- [보조금+대응자금] 프로젝트 공식예산(보조금, 대응자금(현금), 대응자금(현물) 합계)',
+      '- [기업부담금(현금)] 프로그램 선정기업이 지원금의 일정비율만큼 실제현금으로 부담하는 자금',
+      '- [기업부담금(현물)] 프로그램 선정기업이 지원금의 일정비율만큼 보유자원(인력, 장비, 공간 등)으로 부담하는 자금',
+      '- [기타자금] 보조금, 대응자금, 기업부담금을 제외한 전체자금(비공식자금 등)',
+      '- [총예산] 프로젝트 전체예산(보조금, 대응자금(현금), 대응자금(현물), 기업부담금(현금), 기업부담금(현물), 기타자금 합계)'
+    ].join('\n'),
+
+    'pjt.agency': [
+      '프로젝트 운영과 직접적으로 관련된 기관',
+      '- [총괄기관] 프로젝트 관련 정책결정/기획, 예산편성을 담당하는 최상위 기관(중앙행정부처, 지자체 등)',
+      '- [전담기관] 총괄기관으로부터 권한을 위임받아 프로젝트의 실질적인 관리를 전담하는 기관',
+      '- [주관기관] 프로젝트에 선정되어 실질적인 업무를 수행하는 기관',
+      '- [주관기관 전담조직] 주관기관 내 프로젝트를 담당하는 조직'
+    ].join('\n'),
+
+    'pjt.fin.account.status': [
+      '[사용] 계좌개설부터 프로젝트 종료 직전까지 실제 집행중인 상태',
+      '[휴면] 프로젝트는 종료되었으나, 계좌해지 또는 다음프로젝트 전환 여부 등 아직 확정되지 않은 대기 상태',
+      '[전환(동사업)] 해당 프로젝트 종료 후, 다음연도 동일 사업 목적으로 용도를 변경하여 사용하는 상태',
+      '[전환(타사업)] 해당 프로젝트 종료 후, 다른 사업 목적으로 용도를 변경하여 사용하는 상태',
+      '[해지] 프로젝트 보고/정산이 완료되고, 사업비 반납 등을 마치고 계좌를 폐쇄한 상태'
+    ].join('\n'),
+
+    'pjt.prog.category': [
+      '[핵심(주)] 프로젝트 목적 달성을 위한 중심 프로그램으로, 예산/성과 비중이 높은 프로그램',
+      '[일반(보조)] 프로젝트 목적 달성을 위해 중심 프로그램을 보조하거나, 상대적으로 예산/성과 비중이 낮은 프로그램'
+    ].join('\n'),
+
+    'pjt.prog.nature': [
+      '프로그램 운영내용의 주요 성격',
+      '- [자금] 창업사업화자금, 시제품 제작비, 운영비 등',
+      '- [기술] 지식재산권 출원/등록, 기술이전, 인증, 검증 등',
+      '- [판로] 유통망/전시회/박람회 입점, MD품평회, 바이어매칭 등',
+      '- [투자] 자체 엑셀러레이팅, IR데모데이, 투자자 연계(엔젤/AC/VC) 등',
+      '- [교육] 교육주제별 집체교육(창업/기술/사업화/경영/법률 등)',
+      '- [멘토링] 멘토링, 컨설팅, 상담 등',
+      '- [네트워크] 컨퍼런스, 포럼, 초청강연 등',
+      '- [발굴] 예비창업자, 창업기업, 교육생, 투자사 발굴 등',
+      '- [학사] 전공, 강좌, 동아리, 장학금, 캠프, 서포터즈 등',
+      '- [공간/장비] 사무/생산공간/장비 임대 등',
+      '- [기타] 사회적 기업 인증, 기업부설연구소/법인 설립 등'
+    ].join('\n'),
+
+    'pjt.kpi.category': [
+      '[창업성과] 수혜기업의 성장지표로, 수혜기업 매출액/고용인원/투자유치 등',
+      '[운영성과] 프로젝트 수행의 목표 달성지표로, 모집경쟁률, 프로그램 수행/만족도 등',
+      '[기타성과] 창업/운영성과 외 부가 가치 및 정성성과 지표'
+    ].join('\n'),
+
+    'emp.expertise': [
+      '직무전문성: 창업보육전문매니저 자격 또는 석사(전공무관)',
+      '',
+      '직무전문성 상태',
+      '- [미보유] 자격/석사 둘다 미보유',
+      '- [자격보유] 자격만 보유',
+      '- [석사보유] 석사만 보유',
+      '- [전체보유] 자격/석사 둘다 보유',
+      '',
+      '직무전문성 반영일',
+      '- 직무전문성 반영시작일로, 급여반영시작일을 의미(반영급여월의 1일)',
+      '- 내부결재를 통한 급여인상을 진행해야 반영한 것으로 인정'
+    ].join('\n'),
+
+    'emp.position': [
+      '계약직 직위는 매니저~총괄매니저만 해당하며, 직위변경 대상자는 매년 1월·7월 변경 진행',
+      '직위유직기간은 직위정보 테이블의 직위별 적용시작일~적용종료일(또는 금일)',
+      '- [매니저] 총근무연수 0개월 이상 & 창업지원단 직원 기본직위',
+      '- [선임매니저] 총근무연수 36개월(3년) 이상 & 매니저 유지기간 36개월 이상',
+      '- [책임매니저] 총근무연수 60개월(5년) 이상 & 선임매니저 유지기간 24개월 이상',
+      '- [수석매니저] 총근무연수 84개월(7년) 이상 & 책임매니저 유지기간 24개월 이상',
+      '- [총괄매니저] 총근무연수 120개월(10년) 이상 & 수석매니저 유지기간 36개월 이상 '
+    ].join('\n'),
+
+    'emp.working': [
+      '계약정보: 근로계약서 체결을 기준으로 하며, 소속에 존속기간을 의미하지 않음(재임용 등)',
+      '- [계약시작일] 소속과의 근로계약 발생일',
+      '- [계약종료일] 소속과의 근로계약 소멸일',
+      '- [계약기간] 계약시작일~계약종료일(또는 금일)',
+      '',
+      '재직기간: 현재 소속에서의 계약시작일부터 현재까지의 근무기간',
+      '경력기간: 현재 소속에서의 계약기간 외 경력이 해당하며, 경력 중 내부인사(급여, 직위 등)에 적용하는 경력기간을 의미',
+      '',
+      '총근무연수: 재직기간과 경력기간의 합으로, 내부인사에 적용하는 직원의 전체 근무기간',
+      '총근무연차: 총근무연수에 따른 연차로, 시작일을 1일로 반영(1일~12개월=1년차)'
+    ].join('\n'),
+
+    'emp.experience.category': [
+      '[내부경력(미적용)] 전주대학교/전주대학교 산학협력단 근무경력 중 내부인사에 반영하지 않는 경력',
+      '[내부경력(적용)] 전주대학교/전주대학교 산학협력단 근무경력 중 내부인사에 반영하는 경력(창업지원경력)',
+      '[외부경력(미적용)] 내부경력 외 근무경력 중 내부인사에 반영하지 않는 경력',
+      '[외부경력(적용)] 내부경력 외 근무경력 중 내부인사에 반영하는 경력(창업지원경력)'
+    ].join('\n'),
+
+    'emp.experience.period': [
+      '내부인사에 적용하는 경력만 해당하며, 근무기간을 기준으로 숫자입력(표시형식 00개월)',
+      '- 근무기간이 0개월 1일~15일인 경우, 일수는 절사 => 12개월 2일은 12개월로 반영',
+      '- 근무기간이 0개월 16일~말일인 경우, 일수는 절사하고 +1개월 => 12개월 16일은 13개월로 반영'
+    ].join('\n')
+
+  };
+
+/*input type: 날짜 --- input-date*/
+  (function () {
+    // 숫자만 받아서 진행형 YYYY-MM-DD 만들기
+    function formatYmdProgressiveFromDigits(digits) {
+      digits = (digits || '').replace(/\D/g, '').slice(0, 8); // 최대 8자리
+      var y = digits.slice(0, 4);
+      var m = digits.slice(4, 6);
+      var d = digits.slice(6, 8);
+      var out = '';
+
+      if (y) out += y;
+      if (m) out += (out ? '-' : '') + m;
+      if (d) out += (out ? '-' : '') + d;
+
+      return out;
+    }
+
+    // YYYY-MM-DD → "월", "화", ... 한 글자
+    function getWeekdayShort(ymd) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return '';
+
+      var parts = ymd.split('-');
+      var y = Number(parts[0]);
+      var m = Number(parts[1]);
+      var d = Number(parts[2]);
+      if (!y || !m || !d) return '';
+
+      var dt = new Date(y, m - 1, d);
+      // 유효성 체크 (2025-02-31 같은 날짜 걸러내기)
+      if (
+        dt.getFullYear() !== y ||
+        dt.getMonth() + 1 !== m ||
+        dt.getDate() !== d
+      ) {
+        return '';
+      }
+
+      var names = ['일', '월', '화', '수', '목', '금', '토'];
+      return names[dt.getDay()];
+    }
+
+    // 인풋에 "YYYY-MM-DD 요" 형식으로 세팅
+    function applyDateWithWeekday(el, ymd) {
+      var wd = getWeekdayShort(ymd);
+      el.value = wd ? (ymd + ' ' + wd) : ymd;
+    }
+
+    // 인풋 값에서 앞 10글자의 YYYY-MM-DD만 추출
+    function extractYmdFromInput(el) {
+      var v = (el.value || '').trim();
+      var m = v.match(/^(\d{4}-\d{2}-\d{2})/);
+      return m ? m[1] : '';
+    }
+
+    // 입력 중: 숫자만 허용 + 8자리 채우면 요일까지 붙이기
+    function onDateInput(e) {
+      var el = e.target;
+      var raw = el.value || '';
+
+      // 기존 값(요일 포함)에서 숫자만 뽑기
+      var digits = raw.replace(/\D/g, '').slice(0, 8);
+      var ymdProgressive = formatYmdProgressiveFromDigits(digits);
+
+      if (digits.length === 8) {
+        // 8자리 다 채워졌으면 "YYYY-MM-DD 요"
+        applyDateWithWeekday(el, ymdProgressive);
+      } else {
+        // 아직 미완성일 땐 YYYY-MM-DD 진행형만
+        el.value = ymdProgressive;
+      }
+    }
+
+    // 포커스 아웃: 값 정리
+    function onDateBlur(e) {
+      var el = e.target;
+      var v = (el.value || '').trim();
+
+      if (!v) {
+        el.value = '';
+        return;
+      }
+
+      // 우선 인풋에서 YYYY-MM-DD만 뽑기
+      var ymd = extractYmdFromInput(el);
+
+      if (!ymd) {
+        // 포맷이 안 맞으면 숫자만 모아 다시 시도
+        var digits = v.replace(/\D/g, '').slice(0, 8);
+        if (digits.length !== 8) {
+          el.value = '';
+          return;
+        }
+        ymd = formatYmdProgressiveFromDigits(digits);
+      }
+
+      applyDateWithWeekday(el, ymd);
+    }
+
+    // input 하나 확장: wrap + 아이콘 + flatpickr
+    function enhanceInputDate(el) {
+      if (!el || el.dataset.enhancedDate === '1') return;
+      el.dataset.enhancedDate = '1';
+
+      // 래퍼 생성
+      var wrap = document.createElement('div');
+      wrap.className = 'input-date-wrap';
+
+      var parent = el.parentNode;
+      parent.insertBefore(wrap, el);
+      wrap.appendChild(el);
+
+      // 기본 설정
+      el.type = 'text';                  // date → text로 통일
+      el.setAttribute('inputmode', 'numeric');
+      if (!el.placeholder) el.placeholder = '0000-00-00';
+
+      el.addEventListener('input', onDateInput);
+      el.addEventListener('blur', onDateBlur);
+
+      // 아이콘 버튼 생성
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'input-icon-btn';
+      btn.innerHTML = '<i class="fa-regular fa-calendar"></i>';
+      wrap.appendChild(btn);
+
+      // flatpickr 연결
+      if (typeof flatpickr === 'function' && !el._flatpickr) {
+        flatpickr(el, {
+          dateFormat: 'Y-m-d',
+          allowInput: true,
+          clickOpens: false,
+          locale: flatpickr.l10ns.ko,
+          position: 'auto',
+          onChange: function (selectedDates, dateStr) {
+            if (dateStr) {
+              applyDateWithWeekday(el, dateStr);
+            } else {
+              el.value = '';
+            }
+          },
+          onReady: function (selectedDates, dateStr, instance) {
+            attachYearWheel(instance);
+          },
+          onOpen: function (selectedDates, dateStr, instance) {
+            attachYearWheel(instance);
+          }
+        });
+      }
+
+      function toggleCalendar(force) {
+        var fp = el._flatpickr;
+        if (!fp) return;
+
+        if (force === 'open') {
+          if (!fp.isOpen) fp.open();
+          return;
+        }
+        if (force === 'close') {
+          if (fp.isOpen) fp.close();
+          return;
+        }
+
+        // 토글 기본 동작
+        if (fp.isOpen) fp.close();
+        else fp.open();
+      }
+
+      // 🔹 아이콘 클릭 → 열려 있으면 닫고, 닫혀 있으면 열기
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        toggleCalendar(); // 토글
+      });
+
+      // 🔹 인풋 클릭 → 열려 있으면 닫기, 닫혀 있으면 그대로(그냥 포커스만)
+      el.addEventListener('click', function () {
+        var fp = el._flatpickr;
+        if (fp && fp.isOpen) {
+          fp.close();
+          // 닫으면서 포커스는 그대로라 숫자 입력 가능
+        }
+      });
+
+      // 초기 값이 "YYYY-MM-DD" 형태라면 요일 붙여서 정리
+      var initialYmd = extractYmdFromInput(el);
+      if (initialYmd) {
+        applyDateWithWeekday(el, initialYmd);
+      }
+    }
+
+    function attachYearWheel(instance) {
+      if (!instance) return;
+
+      /* 🔹 1) 연도 wheel (이미 있던 부분) */
+      var yearInput = instance.currentYearElement;
+      if (yearInput && !yearInput.__wheelBound) {
+        yearInput.__wheelBound = true;
+
+        yearInput.addEventListener('wheel', function (e) {
+          e.preventDefault();
+
+          var delta = e.deltaY || 0;
+          if (!delta) return;
+
+          var newYear = instance.currentYear + (delta < 0 ? 1 : -1);
+          instance.changeYear(newYear);
+        }, { passive: false });
+      }
+
+      /* 🔹 2) 월 wheel 추가 부분 */
+      // flatpickr가 만드는 월 요소 (dropdown 또는 텍스트 span)
+      var monthElem =
+        instance.monthsDropdownContainer ||                       // dropdown 컨테이너
+        instance.currentMonthElement?.parentNode?.querySelector('.flatpickr-monthDropdown-months') ||
+        instance.currentMonthElement;                             // 마지막 fallback
+
+      if (monthElem && !monthElem.__wheelBound) {
+        monthElem.__wheelBound = true;
+
+        monthElem.addEventListener('wheel', function (e) {
+          e.preventDefault();
+
+          var delta = e.deltaY || 0;
+          if (!delta) return;
+
+          // 위로 스크롤 → 다음 달, 아래로 스크롤 → 이전 달
+          var change = (delta < 0 ? 1 : -1);
+          instance.changeMonth(change);
+        }, { passive: false });
+      }
+    }
+
+    // scope 아래의 input-date 전부 초기화
+    function initInputDateFields(root) {
+      (root || document)
+        .querySelectorAll('input.input-date')
+        .forEach(enhanceInputDate);
+    }
+
+    // 전역에서 재사용할 수 있게 export
+    window.initInputDateFields = initInputDateFields;
+
+    // 2) SPA에서 나중에 생긴 input-date에 포커스 들어오면 보강
+    document.addEventListener('focusin', function (e) {
+      if (e.target.matches('input.input-date')) {
+        enhanceInputDate(e.target);
+      }
+    });
+  })();
+
+/*input type: 시간 --- input-time (flatpickr 없이, 아이콘만)*/
+  (function () {
+    // 숫자만 받아서 진행형 HH:MM 만들기
+    function formatTimeProgressiveFromDigits(digits) {
+      digits = (digits || '').replace(/\D/g, '').slice(0, 4); // 최대 4자리
+      var h = digits.slice(0, 2);
+      var m = digits.slice(2, 4);
+      var out = '';
+
+      if (h) out += h;
+      if (m) out += (out ? ':' : '') + m;
+
+      return out;
+    }
+
+    // HH:MM 값 검증 (24시간제)
+    function normalizeTimeOrEmpty(v) {
+      v = (v || '').trim();
+      if (!v) return '';
+
+      // "12:34", "1234", "1:23" 다 숫자만 모아서 처리
+      var digits = v.replace(/\D/g, '').slice(0, 4);
+      if (digits.length !== 4) return '';
+
+      var h = parseInt(digits.slice(0, 2), 10);
+      var m = parseInt(digits.slice(2, 4), 10);
+      if (isNaN(h) || isNaN(m)) return '';
+      if (h < 0 || h > 24) return '';
+      // ✅ 24:00만 허용 (24:30 같은 건 차단)
+      if (h === 24 && m !== 0) return '';
+      if (m < 0 || m > 59) return '';
+
+      var hh = String(h).padStart(2, '0');
+      var mm = String(m).padStart(2, '0');
+      return hh + ':' + mm;
+    }
+
+    // 입력 중: 숫자만 허용 + HH:MM 진행형 표시
+    function onTimeInput(e) {
+      var el = e.target;
+      var raw = el.value || '';
+      var digits = raw.replace(/\D/g, '').slice(0, 4);
+      var formatted = formatTimeProgressiveFromDigits(digits);
+      el.value = formatted;
+    }
+
+    // 포커스 아웃: 잘못된 값이면 비우고, 올바르면 HH:MM 정규화
+    function onTimeBlur(e) {
+      var el = e.target;
+      var normalized = normalizeTimeOrEmpty(el.value);
+      el.value = normalized;
+    }
+
+    // input 하나 확장: wrap + 아이콘(기능은 포커스만)
+    function enhanceInputTime(el) {
+      if (!el || el.dataset.enhancedTime === '1') return;
+      el.dataset.enhancedTime = '1';
+
+      // 래퍼 생성
+      var wrap = document.createElement('div');
+      wrap.className = 'input-time-wrap';
+
+      var parent = el.parentNode;
+      parent.insertBefore(wrap, el);
+      wrap.appendChild(el);
+
+      // 기본 설정
+      el.type = 'text';
+      el.setAttribute('inputmode', 'numeric');
+      if (!el.placeholder) el.placeholder = '00:00';
+
+      el.addEventListener('input', onTimeInput);
+      el.addEventListener('blur', onTimeBlur);
+
+      // 아이콘 버튼 생성 (단순 장식 + 포커스 이동)
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'input-icon-btn';
+      btn.innerHTML = '<i class="fa-regular fa-clock"></i>';
+      wrap.appendChild(btn);
+
+      // 아이콘 클릭하면 인풋에 포커스
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        el.focus();
+        // 커서를 맨 끝으로
+        var len = el.value.length;
+        try {
+          el.setSelectionRange(len, len);
+        } catch (err) {}
+      });
+
+      // 초기 값이 있으면 한 번 정리
+      el.value = normalizeTimeOrEmpty(el.value);
+    }
+
+    // scope 아래의 input-time 전부 초기화
+    function initInputTimeFields(root) {
+      (root || document)
+        .querySelectorAll('input.input-time')
+        .forEach(enhanceInputTime);
+    }
+
+    // 전역 export
+    window.initInputTimeFields = initInputTimeFields;
+
+    // SPA에서 나중에 생성된 input-time 대비
+    document.addEventListener('focusin', function (e) {
+      if (e.target.matches('input.input-time')) {
+        enhanceInputTime(e.target);
+      }
+    });
+  })();
+
+/*커스텀 체크박스*/
+  function initAnimatedCheckboxes(root) {
+    var scope = root || document;
+
+    // 사용자가 화면에 쓴 한 줄: <input type="checkbox" class="chk chk-anim">
+    var inputs = scope.querySelectorAll('input[type="checkbox"].chk-anim');
+
+    inputs.forEach(function (input) {
+      if (input.closest('label.wrap-chk')) return;
+      if (input.__animInited) return;  // 중복 방지
+
+      // 래퍼 label 생성
+      var label = document.createElement('label');
+      label.className = 'wrap-chk';
+
+      // 기존 input 앞에 label을 넣고, 그 안으로 input을 옮김
+      var parent = input.parentNode;
+      parent.insertBefore(label, input);
+      label.appendChild(input);
+
+      // SVG 생성 (Uiverse 코드 그대로)
+      var svgns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(svgns, 'svg');
+      svg.setAttribute('viewBox', '0 0 64 64');
+      svg.setAttribute('width', '0.8rem');
+      svg.setAttribute('height', '0.8rem');
+
+      var path = document.createElementNS(svgns, 'path');
+      path.setAttribute('d', 'M 0 16 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 16 L 32 48 L 64 16 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 16');
+      path.setAttribute('pathLength', '575.0541381835938');
+      path.setAttribute('class', 'wrap-chk-path');
+
+      svg.appendChild(path);
+      label.appendChild(svg);
+
+      input.__animInited = true;
+    });
+  }
+
+/* 테이블 체크박스(헤더/행) 공통 기능 */
+  function initTableRowCheckboxes(root) {
+    var scope = root || document;
+
+    var tables = [];
+    if (scope && scope.matches && scope.matches('table.tbl')) {
+      tables = [scope];
+    } else {
+      tables = Array.from(scope.querySelectorAll('table.tbl'));
+    }
+
+    tables.forEach(function (table) {
+      var headCb = table.querySelector('thead input[type="checkbox"].chk-anim');
+      var bodyCbs = table.querySelectorAll('tbody input[type="checkbox"].chk-anim');
+
+      if (headCb && !headCb.__tblBound) {
+        headCb.__tblBound = true;
+
+        headCb.addEventListener('change', function () {
+          var checked = !!headCb.checked;
+
+          headCb.__bulkUpdating = true;
+
+          var bodyList = table.querySelectorAll('tbody input[type="checkbox"].chk-anim');
+          bodyList.forEach(function (cb) {
+            cb.checked = checked;
+            cb.dispatchEvent(new Event('change', { bubbles: true }));
+          });
+
+          headCb.__bulkUpdating = false;
+
+          headCb.checked = checked;
+          headCb.indeterminate = false;
+        });
+      }
+
+      bodyCbs.forEach(function (cb) {
+        if (cb.__tblBound) return;
+        cb.__tblBound = true;
+
+        cb.addEventListener('change', function () {
+          var tr = cb.closest('tr');
+          if (tr) tr.classList.toggle('row-selected', !!cb.checked);
+
+          if (!headCb) return;
+
+          if (headCb.__bulkUpdating) return;
+
+          var allBody = table.querySelectorAll('tbody input[type="checkbox"].chk-anim');
+          var total = allBody.length;
+          var checkedCount = 0;
+          allBody.forEach(function (b) { if (b.checked) checkedCount++; });
+
+          if (checkedCount === 0) {
+            headCb.checked = false;
+            headCb.indeterminate = false;
+          } else if (checkedCount === total) {
+            headCb.checked = true;
+            headCb.indeterminate = false;
+          } else {
+            headCb.checked = false;
+            headCb.indeterminate = true;
+          }
+        });
+      });
+    });
+  }
+
+  /* 선택된 행들을 가져오는 헬퍼 (선택삭제용 등) */
+  function tblGetCheckedRows(tableOrSelector) {
+    var table = tableOrSelector;
+    if (typeof tableOrSelector === 'string') {
+      table = document.querySelector(tableOrSelector);
+    }
+    if (!table) return [];
+
+    var cbs = table.querySelectorAll('tbody input[type="checkbox"].chk-anim:checked');
+    var rows = [];
+    cbs.forEach(function (cb) {
+      var tr = cb.closest('tr');
+      if (tr) rows.push(tr);
+    });
+    return rows;
+  }
+
+  // 선택된 행의 data-id만 뽑고 싶을 때 같은 용도
+  function tblGetCheckedRowIds(tableOrSelector, dataAttr) {
+    var attr = dataAttr || 'id'; // 기본: data-id
+    return tblGetCheckedRows(tableOrSelector).map(function (tr) {
+      return tr.dataset[attr];
+    });
+  }
+
+  // 전역으로도 쓰게 export
+  window.initTableRowCheckboxes = initTableRowCheckboxes;
+  window.tblGetCheckedRows = tblGetCheckedRows;
+  window.tblGetCheckedRowIds = tblGetCheckedRowIds;
+
+/* Button 테이블 행추가/삭제 자동 타겟 및 기능 실행 */
+  function findActiveTableFromButton(btn){
+    // 1) 가장 가까운 sec 찾기
+    var sec = btn.closest('[data-sec-tabs]') || btn.closest('.sec') || document;
+
+    // 2) 탭 구조면 활성 panel 우선, 아니면 sec 내부
+    var panel = sec.querySelector('.sec-panel.is-active') || sec;
+
+    // 3) panel 안의 첫 table.tbl 대상
+    return panel.querySelector('table.tbl');
+  }
+
+  // clone된 행에서 "이미 enhance된 wrapper"를 제거해서 재초기화 가능하게 만들기
+  function normalizeRowForReinit(tr){
+    if(!tr) return;
+
+    // (A) 날짜 wrap 제거
+    tr.querySelectorAll('.input-date-wrap').forEach(function(wrap){
+      var input = wrap.querySelector('input.input-date');
+      if(!input) return;
+      try {
+        if (input._flatpickr && typeof input._flatpickr.destroy === 'function') {
+          input._flatpickr.destroy();
+        }
+      } catch(e){}
+      // wrap 밖으로 input을 꺼내고 wrap 제거
+      wrap.parentNode.insertBefore(input, wrap);
+      wrap.remove();
+      input.removeAttribute('data-enhanced-date');
+
+      try { delete input._flatpickr; } catch(e) { input._flatpickr = undefined; }
+    });
+
+    // (B) 시간 wrap 제거
+    tr.querySelectorAll('.input-time-wrap').forEach(function(wrap){
+      var input = wrap.querySelector('input.input-time');
+      if(!input) return;
+      wrap.parentNode.insertBefore(input, wrap);
+      wrap.remove();
+      input.removeAttribute('data-enhanced-time');
+      try { delete input._flatpickr; } catch(e) {}
+    });
+
+    // (C) 커스텀 체크박스 wrap(label.wrap-chk) 제거
+    tr.querySelectorAll('label.wrap-chk').forEach(function(label){
+      var input = label.querySelector('input[type="checkbox"].chk-anim');
+      if(!input) return;
+      label.parentNode.insertBefore(input, label);
+      label.remove();
+    });
+  }
+
+  function clearRowValues(tr, mode){
+    // mode: "clear" | "keep"
+    if(mode === 'keep') return;
+
+    // 체크박스 해제 + row-selected 제거
+    tr.classList.remove('row-selected');
+
+    tr.querySelectorAll('input, select, textarea').forEach(function(el){
+      if(el.matches('input[type="checkbox"]')){
+        el.checked = false;
+        el.indeterminate = false;
+        return;
+      }
+
+      // 기본은 값 비우기(세팅/옵션/disabled 등은 유지)
+      if(el.tagName === 'SELECT'){
+        // SELECT는 “세팅 그대로”를 원할 때가 많아서 기본은 유지
+        // 완전 초기화 원하면 아래 줄을 켜고 사용:
+        el.selectedIndex = 0;
+        return;
+      }
+      el.value = '';
+    });
+  }
+
+  // 헤더 체크박스(indeterminate) 상태 갱신
+  function syncHeadCheckboxState(table){
+    var headCb = table.querySelector('thead input[type="checkbox"].chk-anim');
+    if(!headCb) return;
+
+    var allBody = table.querySelectorAll('tbody input[type="checkbox"].chk-anim');
+    var total = allBody.length;
+    var checkedCount = 0;
+    allBody.forEach(function(cb){ if(cb.checked) checkedCount++; });
+
+    if(checkedCount === 0){
+      headCb.checked = false;
+      headCb.indeterminate = false;
+    } else if(checkedCount === total){
+      headCb.checked = true;
+      headCb.indeterminate = false;
+    } else {
+      headCb.checked = false;
+      headCb.indeterminate = true;
+    }
+  }
+
+  function tblAddRowAuto(table, opt){
+    if(!table) return;
+    var tbody = table.tBodies && table.tBodies[0];
+    if(!tbody) return;
+
+    var src = tbody.querySelector('tr:last-child');
+    if(!src){
+      // 행이 하나도 없으면 추가할 기준이 없어서 종료 (원하면 template 방식으로 확장 가능)
+      return;
+    }
+
+    var mode = (opt && opt.cloneMode) || 'clear';
+
+    var tr = src.cloneNode(true);
+
+    // ✅ clone 시 복제되는 "enhance wrapper" 제거 후, 새로 초기화 가능하게 만들기
+    normalizeRowForReinit(tr);
+
+    // 값 비우기/유지
+    clearRowValues(tr, mode);
+
+    // 추가
+    tbody.appendChild(tr);
+
+    // ✅ 새 행만 재초기화
+    if (typeof initAnimatedCheckboxes === 'function') initAnimatedCheckboxes(tr);
+    if (window.initInputDateFields) window.initInputDateFields(tr);
+    if (window.initInputTimeFields) window.initInputTimeFields(tr);
+    if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(tr);
+    if (window.initTableRowCheckboxes) window.initTableRowCheckboxes(table);
+    if (window.initUnitInputs) window.initUnitInputs(tr);
+    if (window.initUnitTextTbl) window.initUnitTextTbl(tr);
+
+    syncHeadCheckboxState(table);
+  }
+
+  function resetAllCheckboxState(table){
+    // 바디 체크 해제 + row-selected 제거
+    table.querySelectorAll('tbody input[type="checkbox"].chk-anim').forEach(function(cb){
+      cb.checked = false;
+      var tr = cb.closest('tr');
+      if(tr) tr.classList.remove('row-selected');
+    });
+
+    // 헤더 체크 해제 + indeterminate 해제
+    var headCb = table.querySelector('thead input[type="checkbox"].chk-anim');
+    if(headCb){
+      headCb.checked = false;
+      headCb.indeterminate = false;
+      headCb.__bulkUpdating = false;
+    }
+  }
+
+  function tblDeleteCheckedRowsAuto(table, opt){
+    if(!table) return;
+
+    var tbody = table.tBodies && table.tBodies[0];
+    if(!tbody) return;
+
+    var allRows = Array.from(tbody.querySelectorAll('tr'));
+    if(allRows.length === 0) return;
+
+    var checkedRows = (typeof tblGetCheckedRows === 'function')
+      ? tblGetCheckedRows(table)
+      : [];
+
+    if(checkedRows.length === 0) return;
+
+    // ✅ 전체가 선택된 경우: 1행 보전
+    if(checkedRows.length >= allRows.length){
+      var keepRow = allRows[0];
+      allRows.slice(1).forEach(function(tr){ tr.remove(); });
+
+      var keepMode = (opt && opt.keepMode) || 'blank';
+      if(keepMode === 'blank'){
+        clearRowValues(keepRow, 'clear');
+      }
+
+      keepRow.classList.remove('row-selected');
+      keepRow.querySelectorAll('input[type="checkbox"].chk-anim').forEach(function(cb){
+        cb.checked = false;
+        cb.indeterminate = false;
+      });
+    } else {
+      checkedRows.forEach(function(tr){ tr.remove(); });
+    }
+
+    // ✅ 삭제 후: 체크 상태 완전 리셋(+ bulk 플래그 포함)
+    resetAllCheckboxState(table);
+
+    // ✅ (중요) 삭제 후 남은 행들에 대해 바인딩 보정
+    if (window.initTableRowCheckboxes) window.initTableRowCheckboxes(table);
+
+    // ✅ 최종 헤더 상태 확정 (보통은 0개 선택 상태로 귀결)
+    syncHeadCheckboxState(table);
+  }
+
+  // ✅ 클릭 위임: 버튼만 달면 자동 동작
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-tbl-action]');
+    if(!btn) return;
+
+    var action = btn.getAttribute('data-tbl-action');
+    var table = findActiveTableFromButton(btn);
+    if(!table) return;
+
+    if(action === 'add'){
+      var cloneMode = btn.getAttribute('data-clone') || 'clear'; // clear|keep
+      tblAddRowAuto(table, { cloneMode: cloneMode });
+    }
+
+    if(action === 'delete'){
+      // 전체선택 후 삭제해도 1행은 남기고 값만 비움
+      tblDeleteCheckedRowsAuto(table, { keepMode: 'blank' });
+    }
+  });
+
+/* sec-tab 실행 코드 */
+  function renderSecActions(sec, key){
+    if(!sec || !key) return;
+
+    var host = sec.querySelector('.sec-action');
+    var bank = sec.querySelector('.sec-action-bank');
+    if(!host || !bank) return;
+
+    host.replaceChildren();
+
+    var src = bank.querySelector('[data-actions="' + key + '"]');
+    if(!src) return;
+
+    // ✅ wrapper가 아니라 “버튼들만” 복사해서 붙이기
+    var frag = document.createDocumentFragment();
+    Array.from(src.children).forEach(function(child){
+      frag.appendChild(child.cloneNode(true));
+    });
+    host.appendChild(frag);
+
+    if (typeof initIconTooltips === 'function') initIconTooltips(host);
+    if (typeof initAnimatedCheckboxes === 'function') initAnimatedCheckboxes(host);
+    if (window.initTableRowCheckboxes) window.initTableRowCheckboxes(host);
+  }
+
+  function initSecTabs(root){
+    (root || document).querySelectorAll('[data-sec-tabs]').forEach(function(sec){
+      var activeBtn = sec.querySelector('.sec-tab.is-active[data-tab]');
+      if(!activeBtn){
+        // is-active가 없으면 첫 탭을 기본 활성으로(안정성)
+        activeBtn = sec.querySelector('.sec-tab[data-tab]');
+        if(activeBtn) activeBtn.classList.add('is-active');
+      }
+
+      var key = activeBtn ? activeBtn.getAttribute('data-tab') : null;
+
+      sec.querySelectorAll('.sec-tab[data-tab]').forEach(function(b){
+        var on = (b.getAttribute('data-tab') === key);
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+
+      sec.querySelectorAll('.sec-panel[data-panel]').forEach(function(p){
+        var on = (p.getAttribute('data-panel') === key);
+        p.classList.toggle('is-active', on);
+        p.hidden = !on;
+      });
+
+      renderSecActions(sec, key);
+    });
+  }
+
+  // (2) 클릭 위임
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest('.sec-tab[data-tab]');
+    if(!btn) return;
+
+    var sec = btn.closest('[data-sec-tabs]');
+    if(!sec) return;
+
+    var key = btn.getAttribute('data-tab');
+
+    sec.querySelectorAll('.sec-tab[data-tab]').forEach(function(b){
+      var on = (b.getAttribute('data-tab') === key);
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+
+    sec.querySelectorAll('.sec-panel[data-panel]').forEach(function(p){
+      var on = (p.getAttribute('data-panel') === key);
+      p.classList.toggle('is-active', on);
+      p.hidden = !on;
+    });
+
+    renderSecActions(sec, key);
+
+    // 탭 전환 후: 활성 패널만 초기화해도 되고, sec 전체 해도 됨
+    if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(sec);
+    if (typeof initIconTooltips === 'function') initIconTooltips(sec);
+    if (typeof initAnimatedCheckboxes === 'function') initAnimatedCheckboxes(sec);
+    if (window.initTableRowCheckboxes) window.initTableRowCheckboxes(sec);
+  });
+
+  window.initSecTabs = initSecTabs;
+
+/* wrap-list 활성화/비활성화 기능 */
+  (function () {
+    function syncLeaveApplyBtn(list){
+      // ✅ leave 페이지의 직원명단 sec-header 버튼만 대상
+      var sec = list && list.closest ? list.closest('.sec') : null;
+      if(!sec) return;
+
+      var btn = sec.querySelector('[data-leave-apply-btn]');
+      if(!btn) return; // leave 페이지가 아니면 무시
+
+      btn.disabled = !list.querySelector('.wrap-list-item.is-active');
+    }
+
+    function onWrapListClick(e) {
+      var item = e.target.closest('.wrap-list .wrap-list-item');
+      if (!item) return;
+
+      // (선택) 아이템 내부 컨트롤 클릭은 토글 제외하고 싶으면 사용
+      // if (e.target.closest('a, input, select, textarea, [data-ignore-select]')) return;
+
+      var list = item.closest('.wrap-list');
+      if (!list) return;
+
+      var isActive = item.classList.contains('is-active');
+
+      // 이미 활성인 항목을 다시 클릭 → 비활성화
+      if (isActive) {
+        item.classList.remove('is-active');
+        syncLeaveApplyBtn(list); // ✅ 추가: 버튼도 다시 disabled
+        return;
+      }
+
+      // 다른 항목 클릭 → 기존 활성 제거 후 현재만 활성
+      list.querySelectorAll('.wrap-list-item.is-active').forEach(function (el) {
+        el.classList.remove('is-active');
+      });
+      item.classList.add('is-active');
+      syncLeaveApplyBtn(list); // ✅ 추가: 버튼 enable
+    }
+
+    document.addEventListener('click', onWrapListClick);
+
+    // (선택) 초기 상태 동기화 함수(페이지 로드시 한번 호출용)
+    window.leaveSyncApplyBtn = function(scope){
+      var host = scope || document;
+      var leaveRoot =
+        (host.matches && host.matches('#leave-root')) ? host :
+        (host.querySelector ? host.querySelector('#leave-root') : document.getElementById('leave-root'));
+      if(!leaveRoot) return;
+
+      var btn = leaveRoot.querySelector('[data-leave-apply-btn]');
+      if(!btn) return;
+
+      var sec = btn.closest('.sec');
+      var list = sec && sec.querySelector('.wrap-list');
+      if(!list) return;
+
+      btn.disabled = !list.querySelector('.wrap-list-item.is-active');
+    };
+
+  })();
+
+
+/* 인풋 - 숫자 타입
+ * Unit number input (input-unit)
+ * - 편집 가능: input 중 콤마, blur 단위 붙임, focus 단위 제거
+ * - readonly/disabled: 항상 "표시용" (단위 제거/입력처리 안 함, 포맷만 유지)
+ * ========================= */
+  function _useGroupingFromDataset(el){
+    var g = (el && el.dataset) ? el.dataset.group : undefined;
+    if (g == null || g === '') return true;           // 기본: ON
+    g = String(g).toLowerCase();
+    return !(g === '0' || g === 'false' || g === 'off' || g === 'no');
+  }
+
+  function _addComma(digits){
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function formatUnitText(value, unit, useGrouping){
+    var digits = String(value ?? '').replace(/[^\d]/g, '');
+    if(!digits) return '';
+    digits = digits.replace(/^0+(?=\d)/, '');
+
+    var formatted = useGrouping ? _addComma(digits) : digits;
+    return formatted + (unit || '');
+  }
+
+  function _unitStripToDigits(v, unit){
+    v = String(v || '').trim();
+    if(unit && v.endsWith(unit)) v = v.slice(0, -unit.length);
+    return v.replace(/[^\d]/g, '');
+  }
+
+  function _caretPosFromDigitCount(str, digitCount){
+    if(digitCount <= 0) return 0;
+    var count = 0;
+    for(var i=0; i<str.length; i++){
+      if(/\d/.test(str[i])) count++;
+      if(count >= digitCount) return i+1;
+    }
+    return str.length;
+  }
+
+  function _isLocked(el){
+    return !!(el.disabled || el.readOnly);
+  }
+
+  // 현재 el.value를 "표시용"으로 강제(콤마+단위)
+  function applyUnitDisplay(el){
+    if(!el) return;
+    var unit = el.dataset.unit || '';
+    var useGrouping = _useGroupingFromDataset(el);
+
+    var digits = _unitStripToDigits(el.value, unit);
+    el.value = digits ? formatUnitText(digits, unit, useGrouping) : '';
+  }
+
+  function applyUnitEditView(el){
+    if(!el) return;
+    var unit = el.dataset.unit || '';
+    var useGrouping = _useGroupingFromDataset(el);
+
+    var digits = _unitStripToDigits(el.value, unit);
+    if(!digits){ el.value = ''; return; }
+
+    digits = digits.replace(/^0+(?=\d)/, '');
+    el.value = useGrouping ? _addComma(digits) : digits;
+  }
+
+  function _bindUnitInput(el){
+    if (!el) return;
+
+    // ✅ 이미 바인딩된 input이라도, 데이터 로드 후 programmatic value 세팅이 일어나면
+    //    단위/표시형(콤마 등) 렌더링이 다시 필요함.
+    //    initUnitInputs() / initUiScope() 재호출 시 표시형을 즉시 갱신하도록 처리.
+    if (el.__unitBound){
+      applyUnitDisplay(el);
+      return;
+    }
+
+    el.__unitBound = true;
+
+    var unit = el.dataset.unit || '';
+
+    function onInput(){
+      if(_isLocked(el)) return;
+
+      var raw = el.value || '';
+      var sel = el.selectionStart || 0;
+      var digitsBefore = (raw.slice(0, sel).match(/\d/g) || []).length;
+
+      var digits = _unitStripToDigits(raw, unit);
+      if(!digits){
+        el.value = '';
+        return;
+      }
+
+      digits = digits.replace(/^0+(?=\d)/, '');
+      var useGrouping = _useGroupingFromDataset(el);
+      var formatted = useGrouping ? _addComma(digits) : digits;
+      el.value = formatted;
+
+      var newPos = _caretPosFromDigitCount(formatted, digitsBefore);
+      try { el.setSelectionRange(newPos, newPos); } catch(e) {}
+    }
+
+    function onBlur(){
+      // locked여도 blur 때 표시 포맷 유지해주면 "출력용 input" 안정적
+      applyUnitDisplay(el);
+
+      // 라벨(has-value) 동기화가 필요하면
+      if (typeof refreshFloatingInputs === 'function') {
+        refreshFloatingInputs(el.closest('.inputgroup1, .inputgroup2') || el);
+      }
+    }
+
+    function onFocus(){
+      if(_isLocked(el)) {
+        // readonly/disabled는 출력 유지(단위 제거 X)
+        return;
+      }
+      // 편집 가능하면 단위 제거 + 콤마만
+      applyUnitEditView(el);
+      var len = el.value.length;
+      try { el.setSelectionRange(len, len); } catch(e) {}
+    }
+
+    el.addEventListener('input', onInput);
+    el.addEventListener('blur', onBlur);
+    el.addEventListener('focus', onFocus);
+
+    // 초기값은 항상 표시용 포맷으로 정리
+    applyUnitDisplay(el);
+  }
+
+  // scope 아래 input-unit 전부 바인딩 + 표시 포맷 정리
+  function initUnitInputs(root){
+    (root || document).querySelectorAll('input.input-unit').forEach(function(el){
+      // NOTE:
+      // - 데이터 로딩 후(el.value를 JS로 세팅) initUnitInputs를 다시 호출하는 패턴이 많다.
+      // - 기존 구현은 이미 바인딩된(__unitBound) input에 대해 _bindUnitInput()이 return 하며
+      //   applyUnitDisplay()가 다시 실행되지 않아, \"클릭/포커스\" 후에야 표시가 맞는 문제가 생김.
+      // - 따라서: 미바인딩이면 바인딩, 이미 바인딩이면 표시만 재적용한다.
+      if (!el) return;
+      if (!el.__unitBound) _bindUnitInput(el);
+      applyUnitDisplay(el);
+    });
+  }
+  window.initUnitInputs = initUnitInputs;
+  window.formatUnitText = formatUnitText;
+  window.applyUnitDisplay = applyUnitDisplay;
+
+  // SPA/모달처럼 나중에 생긴 input-unit도 자동 바인딩
+  document.addEventListener('focusin', function(e){
+    if(e.target && e.target.matches('input.input-unit')){
+      _bindUnitInput(e.target);
+    }
+  });
+
+/* 단순 텍스트 출력 숫자 서식 */
+  function initUnitTextTbl(root){
+    (root || document).querySelectorAll('.text-tbl.text-unit').forEach(function(el){
+
+      var unit = el.dataset.unit || '';
+      var useGrouping = _useGroupingFromDataset(el);
+
+      var raw = (el.textContent || '').trim();
+      var digits = raw.replace(/[^\d]/g, '');
+      el.textContent = digits ? formatUnitText(digits, unit, useGrouping) : '';
+    });
+  }
+  window.initUnitTextTbl = initUnitTextTbl;
+
+/* sec 펼치기/접기 
+  * sec 전체 숨김(on/off) 토글
+  * - data-sec-toggle="#selector"  : is-hidden 토글
+  * - data-sec-hide="self|#sel"    : 숨김(강제)
+  * - data-sec-show="self|#sel"    : 표시(강제)
+  * ========================= */
+  (function(){
+    if (window.__secHiddenToggleBound) return;
+    window.__secHiddenToggleBound = true;
+
+    function resolveTarget(btn, raw){
+      var v = (raw || '').trim();
+      if (!v || v === 'self') return btn.closest('.sec');
+
+      // SPA라서 page-container 우선에서 찾고, 없으면 document에서 찾기
+      var scope = btn.closest('#page-container') || document;
+      return scope.querySelector(v) || document.querySelector(v);
+    }
+
+    function setHidden(sec, hidden){
+      if(!sec) return;
+      sec.classList.toggle('is-hidden', !!hidden);
+    }
+
+    // 전역으로도 필요하면 쓰라고 export
+    window.secSetHidden = setHidden;
+    window.secToggleHidden = function(sec){
+      if(!sec) return;
+      setHidden(sec, !sec.classList.contains('is-hidden'));
+    };
+
+    document.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-sec-toggle],[data-sec-hide],[data-sec-show]');
+      if(!btn) return;
+
+      if (btn.hasAttribute('data-sec-toggle')){
+        var sec1 = resolveTarget(btn, btn.getAttribute('data-sec-toggle'));
+        if(!sec1) return;
+        setHidden(sec1, !sec1.classList.contains('is-hidden'));
+        return;
+      }
+
+      if (btn.hasAttribute('data-sec-hide')){
+        var sec2 = resolveTarget(btn, btn.getAttribute('data-sec-hide'));
+        setHidden(sec2, true);
+        return;
+      }
+
+      if (btn.hasAttribute('data-sec-show')){
+        var sec3 = resolveTarget(btn, btn.getAttribute('data-sec-show'));
+        setHidden(sec3, false);
+        return;
+      }
+    });
+  })();
+
+/* =========================================================
+ * wrap-filter 공용 스크립트 (V5)
+ * - data-nav="2" : 대분류(data-major) + 소분류(data-sub) 2단 네비 지원
+ * - 기본(1단)도 호환: data-major 없이 data-sub만 있어도 동작
+ * - 검색창: 활성 패널 내부 input[data-wf-q]만 사용
+ * - 변경 시: filterwrap:change 이벤트 발생
+ *   detail: { major, sub, query, selected, selectedByPanel, inputs }
+ * - 필터 적용 개수 뱃지(wf-ind) 자동 갱신(대분류/소분류)
+ *
+ * + 추가:
+ *   - 전체해제:   [data-wf-reset="all"]
+ *   - 선택해제:   [data-wf-reset="active"]  (현재 활성 패널만)
+ *   - 둘 다 wrap 밖(헤더 등)에서 data-wf-target로 타겟 지정 가능
+ * ========================================================= */
+(function(){
+  if (window.__wrapFilterBoundV5) return;
+  window.__wrapFilterBoundV5 = true;
+
+  function qsa(root, sel){ return Array.from((root||document).querySelectorAll(sel)); }
+  function qs(root, sel){ return (root||document).querySelector(sel); }
+  function norm(s){ return String(s||'').trim().toLowerCase(); }
+
+  function isNav2(wrap){
+    return String(wrap.getAttribute('data-nav')||'') === '2' || !!qs(wrap, '.wf-major [data-major]');
+  }
+
+  function getMajorList(wrap){ return qs(wrap, '.wf-major'); }
+  function getSubList(wrap){ return qs(wrap, '.wf-sub'); }
+  function getPanels(wrap){ return qsa(wrap, '.wf-panel[data-sub]'); }
+  function getActivePanel(wrap){ return qs(wrap, '.wf-panel.is-active[data-sub]'); }
+
+  function ensureInd(el){
+    if(!el) return null;
+    var ind = qs(el, '.wf-ind');
+    if(!ind){
+      ind = document.createElement('span');
+      ind.className = 'wf-ind';
+      ind.setAttribute('aria-hidden','true');
+      var main = qs(el, '.wrap-list-main') || el;
+      main.appendChild(ind);
+    }
+    return ind;
+  }
+
+  function setInd(el, n){
+    var ind = ensureInd(el);
+    if(!ind) return;
+    var num = Number(n||0);
+    if(num > 0){
+      ind.textContent = String(num);
+      ind.classList.add('is-on');
+    }else{
+      ind.textContent = '';
+      ind.classList.remove('is-on');
+    }
+  }
+
+  function getInitialMajor(wrap){
+    var majorList = getMajorList(wrap);
+    if(!majorList) return 'default';
+    var a = qs(majorList, '.wrap-list-item.is-active[data-major], [data-major].is-active');
+    if(a) return a.getAttribute('data-major') || 'default';
+    var f = qs(majorList, '.wrap-list-item[data-major], [data-major]');
+    return (f && f.getAttribute('data-major')) || 'default';
+  }
+
+  function getInitialSub(wrap, major){
+    if(isNav2(wrap)){
+      var subList = getSubList(wrap);
+      if(subList){
+        var act = qs(subList, '.wrap-list-item.is-active[data-sub][data-major="'+major+'"]');
+        if(act) return act.getAttribute('data-sub') || '';
+        var first = qs(subList, '.wrap-list-item[data-sub][data-major="'+major+'"]');
+        if(first) return first.getAttribute('data-sub') || '';
+      }
+      var ap = qs(wrap, '.wf-panel.is-active[data-sub][data-major="'+major+'"]');
+      if(ap) return ap.getAttribute('data-sub') || '';
+      var p = qs(wrap, '.wf-panel[data-sub][data-major="'+major+'"]');
+      if(p) return p.getAttribute('data-sub') || '';
+      return 'all';
+    }
+
+    var left = qs(wrap, '.wf-left');
+    if(left){
+      var activeLeft = qs(left, '.wrap-list-item.is-active[data-sub], [data-sub].is-active');
+      if(activeLeft) return activeLeft.getAttribute('data-sub') || '';
+      var firstLeft = qs(left, '.wrap-list-item[data-sub], [data-sub]');
+      if(firstLeft) return firstLeft.getAttribute('data-sub') || '';
+    }
+    var activePanel = getActivePanel(wrap);
+    if(activePanel) return activePanel.getAttribute('data-sub') || '';
+    var panels = getPanels(wrap);
+    if(panels[0]) return panels[0].getAttribute('data-sub') || '';
+    return 'all';
+  }
+
+  function showSubsForMajor(wrap, major){
+    var subList = getSubList(wrap);
+    if(!subList) return;
+
+    qsa(subList, '.wrap-list-item[data-sub][data-major], [data-sub][data-major]').forEach(function(el){
+      var m = el.getAttribute('data-major');
+      el.hidden = (String(m) !== String(major));
+    });
+
+    var active = qs(subList, '.wrap-list-item.is-active[data-sub]:not([hidden])');
+    if(!active){
+      var first = qs(subList, '.wrap-list-item[data-sub]:not([hidden])');
+      if(first) first.classList.add('is-active');
+    }
+  }
+
+  function setActiveMajorUI(wrap, major){
+    var majorList = getMajorList(wrap);
+    if(!majorList) return;
+    qsa(majorList, '.wrap-list-item[data-major], [data-major]').forEach(function(el){
+      el.classList.toggle('is-active', String(el.getAttribute('data-major')) === String(major));
+    });
+  }
+
+  function setActiveSubUI(wrap, major, sub){
+    if(isNav2(wrap)){
+      var subList = getSubList(wrap);
+      if(!subList) return;
+      qsa(subList, '.wrap-list-item[data-sub][data-major], [data-sub][data-major]').forEach(function(el){
+        var m = el.getAttribute('data-major');
+        var s = el.getAttribute('data-sub');
+        if(String(m) !== String(major)) { el.classList.remove('is-active'); return; }
+        el.classList.toggle('is-active', String(s) === String(sub));
+      });
+      return;
+    }
+
+    var left = qs(wrap, '.wf-left');
+    if(!left) return;
+    qsa(left, '.wrap-list-item[data-sub], [data-sub]').forEach(function(el){
+      el.classList.toggle('is-active', String(el.getAttribute('data-sub')) === String(sub));
+    });
+  }
+
+  function switchPanel(wrap, major, sub){
+    var panels = getPanels(wrap);
+    if(!panels.length) return;
+
+    panels.forEach(function(p){
+      var pSub = p.getAttribute('data-sub');
+      var pMajor = p.getAttribute('data-major');
+
+      var on = false;
+      if(isNav2(wrap)){
+        on = (String(pMajor) === String(major)) && (String(pSub) === String(sub));
+      }else{
+        on = (String(pSub) === String(sub));
+      }
+
+      p.classList.toggle('is-active', on);
+      p.hidden = !on;
+    });
+  }
+
+  function applyPanelChipSearch(wrap){
+    var panel = getActivePanel(wrap) || wrap;
+    var input = qs(panel, 'input[data-wf-q]');
+    if(!input) return;
+
+    var q = norm(input.value);
+    qsa(panel, '.wf-chip').forEach(function(chip){
+      if(!q){ chip.style.display = ''; return; }
+      var hay = norm(chip.textContent) + ' ' + norm(chip.dataset.key) + ' ' + norm(chip.dataset.value);
+      chip.style.display = (hay.indexOf(q) >= 0) ? '' : 'none';
+    });
+  }
+
+  function collectInputs(scope){
+    var out = {};
+    qsa(scope, '[data-wf-field]').forEach(function(el){
+      var key = el.getAttribute('data-wf-field');
+      if(!key) return;
+
+      var tag = (el.tagName||'').toLowerCase();
+      if(tag === 'input'){
+        var t = (el.type||'').toLowerCase();
+        if(t === 'checkbox') out[key] = !!el.checked;
+        else out[key] = el.value;
+        return;
+      }
+      if(tag === 'select' || tag === 'textarea'){
+        out[key] = el.value; return;
+      }
+      out[key] = (el.textContent||'').trim();
+    });
+    return out;
+  }
+
+  function pushMap(map, k, v){
+    if(!map[k]) map[k] = [];
+    if(map[k].indexOf(v) < 0) map[k].push(v);
+  }
+
+  function collectSelectedByPanel(wrap){
+    var byPanel = {};
+    getPanels(wrap).forEach(function(panel){
+      var major = panel.getAttribute('data-major') || 'default';
+      var sub = panel.getAttribute('data-sub') || 'all';
+      var key = isNav2(wrap) ? (major + '|' + sub) : sub;
+
+      var picked = {};
+      qsa(panel, '.wf-chip.is-active').forEach(function(chip){
+        var k = chip.dataset.key || 'chip';
+        var v = chip.dataset.value || chip.textContent.trim();
+        if(!v) return;
+        pushMap(picked, k, v);
+      });
+
+      byPanel[key] = { major: major, sub: sub, selected: picked, inputs: collectInputs(panel) };
+    });
+    return byPanel;
+  }
+
+  function countActiveInPanelInfo(info){
+    var n = 0;
+    Object.keys(info.selected||{}).forEach(function(k){
+      n += (info.selected[k]||[]).length;
+    });
+    Object.keys(info.inputs||{}).forEach(function(k){
+      var v = info.inputs[k];
+      if(v === true) n += 1;
+      else if(v === false) {}
+      else if(String(v||'').trim() !== '') n += 1;
+    });
+    return n;
+  }
+
+  function updateIndicators(wrap){
+    var byPanel = collectSelectedByPanel(wrap);
+
+    if(isNav2(wrap)){
+      var subList = getSubList(wrap);
+      if(subList){
+        qsa(subList, '.wrap-list-item[data-major][data-sub]').forEach(function(btn){
+          var m = btn.getAttribute('data-major') || 'default';
+          var s = btn.getAttribute('data-sub') || 'all';
+          var key = m + '|' + s;
+          var info = byPanel[key] || { selected:{}, inputs:{} };
+          setInd(btn, countActiveInPanelInfo(info));
+        });
+      }
+
+      var majorList = getMajorList(wrap);
+      if(majorList){
+        qsa(majorList, '.wrap-list-item[data-major]').forEach(function(btn){
+          var m = btn.getAttribute('data-major') || 'default';
+          var sum = 0;
+          Object.keys(byPanel).forEach(function(k){
+            var info = byPanel[k];
+            if(String(info.major) === String(m)) sum += countActiveInPanelInfo(info);
+          });
+          setInd(btn, sum);
+        });
+      }
+    }else{
+      var left = qs(wrap, '.wf-left');
+      if(left){
+        qsa(left, '.wrap-list-item[data-sub], [data-sub]').forEach(function(btn){
+          var s = btn.getAttribute('data-sub') || 'all';
+          var info = byPanel[s] || { selected:{}, inputs:{} };
+          setInd(btn, countActiveInPanelInfo(info));
+        });
+      }
+    }
+  }
+
+  function collectState(wrap){
+    var st = wrap.__wfState || {};
+    var major = st.major || (isNav2(wrap) ? getInitialMajor(wrap) : 'default');
+    var sub = st.sub || getInitialSub(wrap, major);
+
+    var panel = getActivePanel(wrap) || wrap;
+    var input = qs(panel, 'input[data-wf-q]');
+    var query = input ? input.value : '';
+
+    var selected = {};
+    qsa(panel, '.wf-chip.is-active').forEach(function(chip){
+      var k = chip.dataset.key || 'chip';
+      var v = chip.dataset.value || chip.textContent.trim();
+      if(!v) return;
+      pushMap(selected, k, v);
+    });
+
+    return {
+      major: major,
+      sub: sub,
+      query: query,
+      selected: selected,
+      selectedByPanel: collectSelectedByPanel(wrap),
+      inputs: collectInputs(panel)
+    };
+  }
+
+  function emitChange(wrap){
+    updateIndicators(wrap);
+
+    var s = collectState(wrap);
+    try{
+      wrap.dispatchEvent(new CustomEvent('filterwrap:change', { detail: s }));
+    }catch(e){}
+
+    var opt = wrap.__wfOpt;
+    if(opt && typeof opt.onChange === 'function'){
+      try{ opt.onChange(s, wrap); }catch(e){}
+    }
+  }
+
+  function setMajor(wrap, major){
+    major = major || getInitialMajor(wrap) || 'default';
+    wrap.__wfState = wrap.__wfState || {};
+    wrap.__wfState.major = major;
+
+    setActiveMajorUI(wrap, major);
+    showSubsForMajor(wrap, major);
+
+    wrap.__wfState.lastSubByMajor = wrap.__wfState.lastSubByMajor || {};
+    var remembered = wrap.__wfState.lastSubByMajor[major];
+
+    var sub = remembered || getInitialSub(wrap, major) || 'all';
+    setSub(wrap, sub, /*skipRemember=*/true);
+  }
+
+  function setSub(wrap, sub, skipRemember){
+    wrap.__wfState = wrap.__wfState || {};
+    var major = wrap.__wfState.major || (isNav2(wrap) ? getInitialMajor(wrap) : 'default');
+    sub = sub || getInitialSub(wrap, major) || 'all';
+
+    wrap.__wfState.sub = sub;
+    if(isNav2(wrap) && !skipRemember){
+      wrap.__wfState.lastSubByMajor = wrap.__wfState.lastSubByMajor || {};
+      wrap.__wfState.lastSubByMajor[major] = sub;
+    }
+
+    setActiveSubUI(wrap, major, sub);
+    switchPanel(wrap, major, sub);
+    applyPanelChipSearch(wrap);
+
+    if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(wrap);
+    if (typeof initIconTooltips === 'function') initIconTooltips(wrap);
+    if (window.initUnitInputs) window.initUnitInputs(wrap);
+
+    emitChange(wrap);
+  }
+
+  /* =========================
+   * Reset helpers
+   * ========================= */
+  function clearWfFields(scope){
+    qsa(scope, '[data-wf-field]').forEach(function(el){
+      var tag = (el.tagName||'').toLowerCase();
+      if(tag === 'input'){
+        var t = (el.type||'').toLowerCase();
+        if(t === 'checkbox' || t === 'radio') el.checked = false;
+        else el.value = '';
+        return;
+      }
+      if(tag === 'select' || tag === 'textarea'){
+        el.value = '';
+        return;
+      }
+      // 텍스트 노드까지 비우는건 위험해서 제거(필요하면 사용자쪽에서 별도 처리)
+    });
+  }
+
+  function clearScope(scope){
+    qsa(scope, '.wf-chip.is-active').forEach(function(chip){ chip.classList.remove('is-active'); });
+    qsa(scope, 'input[data-wf-q]').forEach(function(inp){ inp.value = ''; });
+    qsa(scope, '.wf-chip').forEach(function(chip){ chip.style.display = ''; });
+    clearWfFields(scope);
+  }
+
+  function resetAllWrap(wrap){
+    if(!wrap) return;
+    clearScope(wrap);
+
+    if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(wrap);
+    if (typeof initIconTooltips === 'function') initIconTooltips(wrap);
+    if (window.initUnitInputs) window.initUnitInputs(wrap);
+
+    emitChange(wrap);
+  }
+
+  function resetActivePanel(wrap){
+    if(!wrap) return;
+
+    var panel = getActivePanel(wrap);
+
+    // 안전망: state로 패널 찾기
+    if(!panel){
+      var st = wrap.__wfState || {};
+      var major = st.major || (isNav2(wrap) ? getInitialMajor(wrap) : 'default');
+      var sub   = st.sub   || getInitialSub(wrap, major);
+
+      panel = isNav2(wrap)
+        ? qs(wrap, '.wf-panel[data-major="'+major+'"][data-sub="'+sub+'"]')
+        : qs(wrap, '.wf-panel[data-sub="'+sub+'"]');
+    }
+
+    if(!panel) return;
+
+    clearScope(panel);
+
+    if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(wrap);
+    if (typeof initIconTooltips === 'function') initIconTooltips(wrap);
+    if (window.initUnitInputs) window.initUnitInputs(wrap);
+
+    emitChange(wrap);
+  }
+
+  function resolveWrapFromResetBtn(btn){
+    if(!btn) return null;
+
+    var sel = (btn.getAttribute('data-wf-target') || '').trim();
+    if(sel){
+      var t = document.querySelector(sel);
+      if(t){
+        if(t.classList && t.classList.contains('wrap-filter')) return t;
+        var w = qs(t, '.wrap-filter');
+        if(w) return w;
+      }
+    }
+
+    var w1 = btn.closest && btn.closest('.wrap-filter');
+    if(w1) return w1;
+
+    var sec = btn.closest && btn.closest('.sec');
+    if(sec){
+      var w2 = qs(sec, '.wrap-filter');
+      if(w2) return w2;
+    }
+
+    return null;
+  }
+
+  function reset(wrap){
+    resetAllWrap(wrap);
+  }
+
+  function bindOne(wrap, opt){
+    if(!wrap || wrap.__wfBoundV5) return;
+    wrap.__wfBoundV5 = true;
+    wrap.__wfOpt = opt || {};
+    wrap.__wfState = wrap.__wfState || {};
+
+    // ✅ 초기: 무조건 하나 선택되게
+    if(isNav2(wrap)){
+      setMajor(wrap, getInitialMajor(wrap));
+    }else{
+      wrap.__wfState.major = 'default';
+      setSub(wrap, getInitialSub(wrap, 'default'));
+    }
+
+    // 대분류 클릭
+    var majorList = getMajorList(wrap);
+    if(majorList && !majorList.__wfMajorBoundV5){
+      majorList.__wfMajorBoundV5 = true;
+      majorList.addEventListener('click', function(e){
+        var el = e.target.closest('.wrap-list-item[data-major], [data-major]');
+        if(!el) return;
+        e.preventDefault();
+        e.stopPropagation();
+        setMajor(wrap, el.getAttribute('data-major'));
+      });
+    }
+
+    // 소분류 클릭
+    var subList = getSubList(wrap) || qs(wrap, '.wf-left');
+    if(subList && !subList.__wfSubBoundV5){
+      subList.__wfSubBoundV5 = true;
+      subList.addEventListener('click', function(e){
+        var el = e.target.closest('.wrap-list-item[data-sub], [data-sub]');
+        if(!el) return;
+        if(isNav2(wrap) && el.hidden) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+        setSub(wrap, el.getAttribute('data-sub'));
+      });
+    }
+
+    // 패널 내부 검색 / data-wf-field 반영
+    wrap.addEventListener('input', function(e){
+      if(e.target && e.target.matches && e.target.matches('input[data-wf-q]')){
+        applyPanelChipSearch(wrap);
+        emitChange(wrap);
+        return;
+      }
+      if(e.target && (e.target.matches('[data-wf-field]') || (e.target.closest && e.target.closest('[data-wf-field]')))){
+        emitChange(wrap);
+        return;
+      }
+    });
+
+
+    // ✅ datepicker 등 'change'로만 바뀌는 입력 지원
+    wrap.addEventListener('change', function(e){
+      if(e.target && (e.target.matches('[data-wf-field]') || (e.target.closest && e.target.closest('[data-wf-field]')))){
+        emitChange(wrap);
+      }
+    }, true);
+
+    // ✅ blur에서 값이 확정되는 경우(마스크/달력)까지 커버
+    wrap.addEventListener('blur', function(e){
+      if(e.target && (e.target.matches('[data-wf-field]') || (e.target.closest && e.target.closest('[data-wf-field]')))){
+        emitChange(wrap);
+      }
+    }, true);
+
+    // 칩 클릭(활성 패널 내만)
+    wrap.addEventListener('click', function(e){
+      var chip = e.target.closest('.wf-chip');
+      if(!chip) return;
+
+      var panel = getActivePanel(wrap);
+      if(panel && !panel.contains(chip)) return;
+
+      chip.classList.toggle('is-active');
+      emitChange(wrap);
+    });
+  }
+
+  function initFilterWraps(root, opt){
+    qsa(root || document, '.wrap-filter').forEach(function(wrap){
+      bindOne(wrap, opt);
+    });
+  }
+
+  window.initFilterWraps = initFilterWraps;
+
+  // =========================================================
+  // 전역: 전체해제
+  // =========================================================
+  if(!window.__wrapFilterResetAllBoundV5){
+    window.__wrapFilterResetAllBoundV5 = true;
+    document.addEventListener('click', function(e){
+      var btn = e.target.closest && e.target.closest('[data-wf-reset="all"]');
+      if(!btn) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      var wrap = resolveWrapFromResetBtn(btn);
+      if(!wrap) return;
+
+      resetAllWrap(wrap);
+    });
+  }
+
+  // =========================================================
+  // 전역: 선택해제(현재 활성 패널만)
+  // =========================================================
+  if(!window.__wrapFilterResetActiveBoundV5){
+    window.__wrapFilterResetActiveBoundV5 = true;
+    document.addEventListener('click', function(e){
+      var btn = e.target.closest && e.target.closest('[data-wf-reset="active"]');
+      if(!btn) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      var wrap = resolveWrapFromResetBtn(btn);
+      if(!wrap) return;
+
+      resetActivePanel(wrap);
+    });
+  }
+
+  window.FilterWrap = {
+    init: initFilterWraps,
+    getState: function(wrap){ return collectState(wrap); },
+    reset: function(wrap){ reset(wrap); },
+    setMajor: function(wrap, major){ setMajor(wrap, major); },
+    setSub: function(wrap, sub){ setSub(wrap, sub); },
+    setGroup: function(wrap, sub){ setSub(wrap, sub); }
+  };
+})();
+
+// =========================================================
+// ✅ 공용 로딩 오버레이 (UI_Loading)
+// - show/hide/wrap
+// - refCount(중복 로딩) 안전
+// - scopeEl(페이지 root / 모달 body 등) 어디든 사용 가능
+// =========================================================
+(function(){
+  function _ensureRel_(el){
+    if (!el) return;
+    try{
+      var cs = getComputedStyle(el);
+      if (cs && cs.position === 'static'){
+        el.style.position = 'relative';
+      }
+    }catch(e){}
+  }
+
+  function _key_(opts){
+    opts = opts || {};
+    return String(opts.key || 'default');
+  }
+
+  function _getState_(el){
+    if (!el) return null;
+    if (!el.__uiLoadingState) el.__uiLoadingState = { map: {} };
+    return el.__uiLoadingState;
+  }
+
+  function _makeOverlay_(el, opts){
+    opts = opts || {};
+    _ensureRel_(el);
+    var ov = document.createElement('div');
+    ov.className = 'ui-loading-ov' + (opts.boot ? ' is-boot' : '');
+    ov.setAttribute('aria-busy', 'true');
+    ov.setAttribute('aria-live', 'polite');
+
+    // ✅ 스피너는 1개만: CSS fallback 스피너만 사용
+    var spinnerHtml = '<div class="ui-loading-fallback-spinner" aria-hidden="true"></div>';
+
+    var text = (opts.text != null) ? String(opts.text) : '';
+    ov.innerHTML =
+      '<div class="ui-loading-box">' +
+        spinnerHtml +
+        (text ? ('<div class="ui-loading-text">' + _escapeHtml_(text) + '</div>') : '') +
+      '</div>';
+
+    // bootstrap spinner가 보이면 fallback은 숨겨도 되는데,
+    // CSS로 제어하기 어렵다면 둘 다 떠도 문제없게 최소 크기로 둠.
+    // (원하면 여기서 런타임으로 하나 숨길 수도 있음)
+
+    el.appendChild(ov);
+    return ov;
+  }
+
+  function _escapeHtml_(s){
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function show(scopeEl, opts){
+    if (!scopeEl) return;
+    opts = opts || {};
+    var st = _getState_(scopeEl);
+    var k = _key_(opts);
+    if (!st.map[k]){
+      st.map[k] = { count: 0, ov: null };
+    }
+    var slot = st.map[k];
+    slot.count++;
+    if (!slot.ov){
+      slot.ov = _makeOverlay_(scopeEl, opts);
+    }else{
+      // text 갱신(옵션)
+      if (opts.text != null){
+        var t = slot.ov.querySelector('.ui-loading-text');
+        if (t) t.textContent = String(opts.text);
+      }
+    }
+    slot.ov.classList.add('is-on');
+  }
+
+  function hide(scopeEl, opts){
+    if (!scopeEl) return;
+    opts = opts || {};
+    var st = _getState_(scopeEl);
+    var k = _key_(opts);
+    var slot = st.map[k];
+    if (!slot) return;
+    slot.count = Math.max(0, (slot.count || 0) - 1);
+    if (slot.count === 0){
+      try{
+        if (slot.ov && slot.ov.parentNode) slot.ov.parentNode.removeChild(slot.ov);
+      }catch(e){}
+      st.map[k] = null;
+      delete st.map[k];
+    }else{
+      // 남은 작업이 있으면 유지
+    }
+  }
+
+  function wrap(scopeEl, promiseFactory, opts){
+    show(scopeEl, opts);
+    var p;
+    try{
+      p = promiseFactory();
+    }catch(e){
+      hide(scopeEl, opts);
+      return Promise.reject(e);
+    }
+    return Promise.resolve(p)
+      .finally(function(){ hide(scopeEl, opts); });
+  }
+
+  window.UI_Loading = { show: show, hide: hide, wrap: wrap };
+})();
+
+/* 최초 페이지 로드 공통*/
+function initUiScope(scope){
+  var root = scope || document;
+
+  // 1) DOM 구조 변경(래핑) 먼저
+  if (typeof initAnimatedCheckboxes === 'function') initAnimatedCheckboxes(root);
+
+  // 2) 탭 상태/액션 렌더링
+  if (typeof initSecTabs === 'function') initSecTabs(root);
+
+  // 3) input/date/time + has-value
+  if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(root);
+  if (window.initUnitInputs) window.initUnitInputs(root);       // ✅ input-unit 바인딩/표시
+  if (window.initUnitTextTbl) window.initUnitTextTbl(root);     // ✅ text-unit(표시형) 있으면 같이
+
+  // 4) 테이블 체크박스 로직(헤더-행 연동)
+  if (window.initTableRowCheckboxes) window.initTableRowCheckboxes(root);
+
+  // 5) 아이콘 툴팁 데이터 세팅
+  if (typeof initIconTooltips === 'function') initIconTooltips(root);
+
+  // 6) 보기버튼 등(있다면)
+  if (typeof initViewIconButtons === 'function') initViewIconButtons(root);
+  if (root.querySelector && root.querySelector('#leave-root')) {
+    if (window.leaveSyncApplyBtn) window.leaveSyncApplyBtn(root);
+    if (typeof leaveInitApprovalUI === 'function') leaveInitApprovalUI();
+  }
+  // 7) 숫자콤마
+  if (window.initUnitInputs) window.initUnitInputs(root);
+  if (window.initUnitTextTbl) window.initUnitTextTbl(root);
+  // 8)) 필터
+  if (window.initFilterWraps) window.initFilterWraps(root);
+}
+
+window.initUiScope = initUiScope;
+
+
+
+/* 최초 페이지 로드 때 한 번 */
+document.addEventListener('DOMContentLoaded', function () {
+  initUiScope(document);
+});
+  
+</script>

@@ -1,0 +1,209 @@
+<!--aclUi.html-->
+<script>
+(function(){
+  if (window.__ACL_UI_BOUND) return;
+  window.__ACL_UI_BOUND = true;
+
+  window.ACL = window.ACL || { loaded:false, ok:false, user:null, allowPages:{}, permMap:{} };
+
+  function isTrue_(v){ return v === true || String(v||'').trim().toUpperCase() === 'TRUE'; }
+  function normDeny_(v){
+    var s = String(v||'').trim().toLowerCase();
+    if (s === 'disable' || s === 'disabled') return 'disable';
+    if (s === 'hide' || s === 'hidden') return 'hide';
+    return 'hide';
+  }
+
+  // --- node deny/allow 공통 ---
+  function showEl_(el){
+    // ✅ 특정 UI는 ACL 적용 시에도 의도적으로 숨김 상태를 유지해야 함
+    // 예: footer 버튼과 연동되는 hidden 트리거 버튼 등
+    if (el && el.hasAttribute && el.hasAttribute('data-acl-keep-hidden')) {
+      return;
+    }
+    el.hidden = false;
+    el.removeAttribute('hidden');
+    el.style.removeProperty('display'); // display:none 강제 해제
+  }
+
+  function applyDeny_(node, mode){
+    if (!node) return;
+
+    if (mode === 'hide'){
+      node.hidden = true;
+      return;
+    }
+
+    // disable
+    showEl_(node);
+    if ('disabled' in node) node.disabled = true;
+    node.setAttribute('aria-disabled','true');
+    node.style.pointerEvents = 'none';
+  }
+
+  function applyAllow_(node){
+    if (!node) return;
+
+    showEl_(node);
+    if ('disabled' in node) node.disabled = false;
+    node.removeAttribute('aria-disabled');
+    node.style.pointerEvents = '';
+  }
+
+  // --- 버튼/페이지 내부 UI 적용: data-acl="permission_key" ---
+  function guessDenyByNode_(node){
+    var tag = (node && node.tagName) ? node.tagName.toLowerCase() : '';
+    if (tag === 'button' || tag === 'input' || tag === 'select' || tag === 'textarea') return 'disable';
+    return 'hide';
+  }
+
+  function applyToScope_(scope){
+    if (!scope) return;
+    var map = window.ACL.permMap || {};
+
+    scope.querySelectorAll('[data-acl]').forEach(function(node){
+      var key = String(node.getAttribute('data-acl')||'').trim();
+      if (!key) return;
+
+      var p = map[key];
+
+      if (p && p.allow === true) {
+        applyAllow_(node);
+      } else {
+        var mode = p ? normDeny_(p.ui_deny) : guessDenyByNode_(node);
+        applyDeny_(node, mode);
+      }
+    });
+  }
+
+
+  // --- 사이드바 적용: a[data-page] -> page:xxx:view 로 매핑 ---
+  function applySidebar_(){
+    var sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+
+    var allowPages = window.ACL.allowPages || {};
+    var nameEl  = sidebar.querySelector('[data-user-name]');
+    var emailEl = sidebar.querySelector('[data-user-email]');
+
+    // 유저카드
+    if (window.ACL.user){
+      var u = window.ACL.user;
+      if (nameEl){
+        var line1 = (u.emp_id ? u.emp_id + ' ' : '') + (u.emp_name || '');
+        nameEl.textContent = line1 || '(이름 없음)';
+      }
+      if (emailEl) emailEl.textContent = u.email || '';
+    }
+
+    // 메뉴
+    sidebar.querySelectorAll('a[data-page]').forEach(function(a){
+      var page = a.getAttribute('data-page');
+      var ok = !!allowPages[page];
+      a.hidden = !ok;
+      a.classList.toggle('is-allowed', ok);
+    });
+
+    // 섹션 라벨/HR 정리(네 기존 로직 유지)
+    var labels = sidebar.querySelectorAll('.sidebar-section-label');
+    labels.forEach(function(label){
+      var anyVisible = false;
+      var el = label.nextElementSibling;
+
+      while (el) {
+        if (el.classList && el.classList.contains('sidebar-section-label')) break;
+        if (el.matches && el.matches('a[data-page]') && !el.hidden) { anyVisible = true; break; }
+        el = el.nextElementSibling;
+      }
+
+      label.hidden = !anyVisible;
+      var prev = label.previousElementSibling;
+      if (prev && prev.matches && prev.matches('hr.hr-in-bar')) {
+        prev.hidden = !anyVisible;
+      }
+    });
+  }
+
+  // --- 사이드바 클릭(라우팅) ---
+  function bindSidebarNav_(){
+    var sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+
+    // 중복 바인딩 방지
+    if (sidebar.__acl_nav_bound) return;
+    sidebar.__acl_nav_bound = true;
+
+    sidebar.addEventListener('click', function(e){
+      var link = e.target.closest('a[data-page]');
+      if (!link) return;
+      e.preventDefault();
+
+      var page = link.getAttribute('data-page');
+
+      // ACL 로드 전이면 막기
+      if (!window.ACL.loaded){
+        if (typeof showAlertInfo === 'function') showAlertInfo('권한 정보를 불러오는 중입니다.');
+        return;
+      }
+
+      // 페이지 권한 확인
+      if (!window.ACL.allowPages || !window.ACL.allowPages[page]){
+        if (typeof showAlertWarn === 'function') showAlertWarn('접근 권한이 없습니다.');
+        return;
+      }
+
+      // active 표시
+      sidebar.querySelectorAll('a[data-page]').forEach(function(a){ a.classList.remove('is-active'); });
+      link.classList.add('is-active');
+
+      if (window.App && typeof window.App.loadPage === 'function'){
+        window.App.loadPage(page);
+      }
+    });
+  }
+
+  // --- ACL 1회 로드 ---
+  function bootstrap_(cb){
+    if (window.ACL.loaded){
+      if (typeof cb === 'function') cb(!!window.ACL.ok, window.ACL);
+      return;
+    }
+
+    // sidebar FOUC 방지: 기본 숨김(이미 CSS로 되어있지만 안전)
+    var sidebar = document.getElementById('sidebar');
+    if (sidebar){
+      sidebar.querySelectorAll('a[data-page]').forEach(function(a){ a.hidden = true; a.classList.remove('is-allowed'); });
+    }
+
+    google.script.run
+      .withSuccessHandler(function(res){
+        if (res && res.ok){
+          window.ACL.user = res.user || null;
+          window.ACL.allowPages = res.allowPages || {};
+          window.ACL.permMap = res.permMap || {};
+          window.ACL.ok = true;
+          window.ACL.loaded = true;
+          applySidebar_();
+          if (typeof cb === 'function') cb(true, res);
+        } else {
+          window.ACL.ok = false;
+          window.ACL.loaded = true;
+          if (typeof cb === 'function') cb(false, res);
+        }
+      })
+      .withFailureHandler(function(err){
+        window.ACL.ok = false;
+        window.ACL.loaded = true;
+        if (typeof cb === 'function') cb(false, { ok:false, message: err && err.message ? err.message : String(err) });
+      })
+      .UI_getAcl();
+  }
+
+  // 전역 export
+  window.ACL_bootstrap   = bootstrap_;
+  window.ACL_applyToScope= applyToScope_;
+  window.ACL_applySidebar= applySidebar_;
+  window.ACL_bindSidebar = bindSidebarNav_;
+
+})();
+</script>
