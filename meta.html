@@ -1104,23 +1104,27 @@
   * - 레이아웃 독립적 (스켈레톤처럼 페이지별 수정 없음)
   * ========================================================= */
   .ui-loading-ov{
-    position: absolute;
+    position: fixed;
     inset: 0;
     display: none;
     align-items: center;
     justify-content: center;
-    background: var(--bg-color-main);
-    z-index: 9999;
+    background: rgba(0, 0, 0, 0.46);
+    z-index: 2000;
+    pointer-events: auto;
+    backdrop-filter: blur(1px);
   }
   .ui-loading-ov.is-on{ display:flex; }
   .ui-loading-ov .ui-loading-box{
-    display:flex;
-    align-items:center;
-    gap: 0;
-    padding: 0;
-    border-radius: 0;
-    background: transparent !important;
-    box-shadow: none !important;
+    width: 4.2rem;
+    height: 4.2rem;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
   }
   .ui-loading-ov .ui-loading-text{
     /* ✅ 박스 제거 + 스피너만 쓰려면 텍스트 숨김
@@ -1131,11 +1135,15 @@
   /* 부트(첫 진입)처럼 화면 전체를 더 꽉 막고 싶을 때 */
   .ui-loading-ov.is-boot{
     /* ✅ 부트도 동일한 dim (조금 더 진하게 하고 싶으면 0.55로) */
-    background: var(--bg-color-main);
+    background: rgba(0, 0, 0, 0.5);
   }
 
   /* ✅ 스피너는 1개만 사용: Bootstrap spinner 숨김 */
-  .ui-loading-ov .spinner-border{ display:none !important; }
+  .ui-loading-spinner-icon{
+    font-size: 1.9rem;
+    color: #ffffff;
+    animation: uiLoadingSpin 0.9s linear infinite;
+  }
 
   /* 간단 CSS 스피너(파란색) */
   .ui-loading-fallback-spinner{
@@ -3231,16 +3239,6 @@
 // - scopeEl(페이지 root / 모달 body 등) 어디든 사용 가능
 // =========================================================
 (function(){
-  function _ensureRel_(el){
-    if (!el) return;
-    try{
-      var cs = getComputedStyle(el);
-      if (cs && cs.position === 'static'){
-        el.style.position = 'relative';
-      }
-    }catch(e){}
-  }
-
   function _key_(opts){
     opts = opts || {};
     return String(opts.key || 'default');
@@ -3252,16 +3250,22 @@
     return el.__uiLoadingState;
   }
 
-  function _makeOverlay_(el, opts){
+  function _getOverlayHost_(scopeEl, opts){
     opts = opts || {};
-    _ensureRel_(el);
+    if (opts.global === false && scopeEl) return scopeEl;
+    return document.body || document.documentElement || scopeEl;
+  }
+
+  function _makeOverlay_(hostEl, opts){
+    opts = opts || {};
     var ov = document.createElement('div');
     ov.className = 'ui-loading-ov' + (opts.boot ? ' is-boot' : '');
     ov.setAttribute('aria-busy', 'true');
     ov.setAttribute('aria-live', 'polite');
+    ov.setAttribute('role', 'status');
 
     // ✅ 스피너는 1개만: CSS fallback 스피너만 사용
-    var spinnerHtml = '<div class="ui-loading-fallback-spinner" aria-hidden="true"></div>';
+    var spinnerHtml = '<i class="fa-solid fa-spinner ui-loading-spinner-icon" aria-hidden="true"></i>';
 
     var text = (opts.text != null) ? String(opts.text) : '';
     ov.innerHTML =
@@ -3274,7 +3278,7 @@
     // CSS로 제어하기 어렵다면 둘 다 떠도 문제없게 최소 크기로 둠.
     // (원하면 여기서 런타임으로 하나 숨길 수도 있음)
 
-    el.appendChild(ov);
+    hostEl.appendChild(ov);
     return ov;
   }
 
@@ -3288,9 +3292,10 @@
   }
 
   function show(scopeEl, opts){
-    if (!scopeEl) return;
+    var hostEl = _getOverlayHost_(scopeEl, opts);
+    if (!hostEl) return;
     opts = opts || {};
-    var st = _getState_(scopeEl);
+    var st = _getState_(hostEl);
     var k = _key_(opts);
     if (!st.map[k]){
       st.map[k] = { count: 0, ov: null };
@@ -3298,7 +3303,7 @@
     var slot = st.map[k];
     slot.count++;
     if (!slot.ov){
-      slot.ov = _makeOverlay_(scopeEl, opts);
+      slot.ov = _makeOverlay_(hostEl, opts);
     }else{
       // text 갱신(옵션)
       if (opts.text != null){
@@ -3310,9 +3315,10 @@
   }
 
   function hide(scopeEl, opts){
-    if (!scopeEl) return;
+    var hostEl = _getOverlayHost_(scopeEl, opts);
+    if (!hostEl) return;
     opts = opts || {};
-    var st = _getState_(scopeEl);
+    var st = _getState_(hostEl);
     var k = _key_(opts);
     var slot = st.map[k];
     if (!slot) return;
