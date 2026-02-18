@@ -164,6 +164,7 @@ function PROJECT_saveBundle(payload){
                                : DB_replaceByProjectIdUnlocked_(t.sheet, t.idField, projectId, rows, me));
       });
 
+      if (typeof DB_bumpDataVersion_ === 'function') DB_bumpDataVersion_('Project');
       return { ok:true, project_id: projectId, mode: (isUpdate ? 'update' : 'create'), detail: detail };
 
     } finally {
@@ -713,81 +714,3 @@ function _pjtHasMeaningfulInput_(obj, ignoreKeys){
     return s !== '';
   });
 }
-
-/**
- * Employee 번들 삭제
- * - Employee(마스터) + 하위 6개 시트 employee_id 기준 삭제
- * - Employee 시트에 is_deleted 컬럼이 있으면 "소프트삭제", 없으면 "하드삭제"
- */
-function EMPLOYEE_deleteBundle(employeeId){
-  try{
-    var id = String(employeeId || '').trim();
-    if (!id) return { ok:false, message:'employee_id가 필요합니다.' };
-
-    // 권한(없으면 admin만 통과하는 구조일 가능성 큼)
-    var me = DB_assertPerm_('btn:employee:delete');
-
-    var lock = LockService.getDocumentLock();
-    lock.waitLock(20000);
-    try{
-      // ===== 1) 마스터 Employee 삭제 =====
-      var sh = DB_sheet_(EMPLOYEE_SHEET_NAME);
-      var header = DB_header_(sh);
-      var map = DB_headerMap_(header);
-
-      var rowIndex = DB_findRowIndexByIdUnlocked_(sh, EMPLOYEE_ID_FIELD, id);
-      if (!rowIndex) return { ok:false, message:'삭제 대상(Employee)을 찾을 수 없습니다: ' + id };
-
-      // (A) 소프트 삭제: is_deleted 컬럼이 있으면 true로 마킹
-      if (map['is_deleted'] != null){
-        var now = new Date();
-
-        // 한 줄 읽고/수정 후 다시 씀(간단/안전)
-        var rowVals = sh.getRange(rowIndex, 1, 1, header.length).getValues()[0];
-        var obj = {};
-        header.forEach(function(k, i){
-          k = String(k || '').trim();
-          if (k) obj[k] = rowVals[i];
-        });
-
-        obj.is_deleted = true;
-
-        if (map['deleted_at'] != null) obj.deleted_at = now;
-        if (map['deleted_by'] != null) obj.deleted_by = DB_actorLabel_(me);
-
-        if (map['updated_at'] != null) obj.updated_at = now;
-        if (map['updated_by'] != null) obj.updated_by = DB_actorLabel_(me);
-
-        sh.getRange(rowIndex, 1, 1, header.length).setValues([DB_objToRow_(header, obj)]);
-      } else {
-        // (B) 하드 삭제: 행 자체 삭제
-        sh.deleteRow(rowIndex);
-      }
-
-      // ===== 2) 하위 테이블 employee_id 기준 삭제 =====
-      var deletedDetail = {};
-      EMPLOYEE_BUNDLE.forEach(function(t){
-        var childSh = DB_sheet_(t.sheet);
-        var childHeader = DB_header_(childSh);
-        var childMap = DB_headerMap_(childHeader);
-
-        if (childMap['employee_id'] == null) {
-          deletedDetail[t.key] = { deleted:0, note:'employee_id 컬럼 없음' };
-          return;
-        }
-
-        var cnt = _empDeleteWhereUnlocked_(childSh, childMap['employee_id'] + 1, id);
-        deletedDetail[t.key] = { deleted: cnt };
-      });
-
-      return { ok:true, employee_id:id, detail: deletedDetail };
-
-    } finally {
-      lock.releaseLock();
-    }
-
-  } catch(err){
-    return { ok:false, message: (err && err.message) ? err.message : String(err) };
-  }
-}
-

@@ -252,6 +252,16 @@
     showConfirm(message, title || '오류', 'danger', onOk, onCancel);
   }
 
+  // ============================
+  // 3) 재시도 확인 헬퍼
+  // ============================
+  function showRetryConfirm(message, title, onRetry, onCancel){
+    var msg = String(message || '요청 처리에 실패했습니다.').trim();
+    if (msg) msg += '\n\n재시도하시겠습니까?';
+    else msg = '요청 처리에 실패했습니다.\n\n재시도하시겠습니까?';
+    showConfirmWarn(msg, title || '재시도', onRetry, onCancel);
+  }
+
 
   // 전역에 export
   window.showAlert         = showAlert;
@@ -265,4 +275,5 @@
   window.showConfirmSuccess= showConfirmSuccess;
   window.showConfirmWarn   = showConfirmWarn;
   window.showConfirmError  = showConfirmError;
+  window.showRetryConfirm  = showRetryConfirm;
 </script>

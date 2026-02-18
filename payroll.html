@@ -582,19 +582,19 @@
 
 <!--페이지모달: 급여지급내역-->
 <template id="tpl-payment-page-modal">
-  <div class="d-flex fill gap-3">
-    <div style="flex: 1; min-width: 0;" class="col-fill">
-      <div style="flex: 5" class="col-fill">
-        <div class="sec fill">
+  <div class="d-flex fill gap-3" style="min-height:0;">
+    <div style="flex: 1; min-width: 0; min-height:0;" class="col-fill">
+      <div style="flex: 5; min-height:0;" class="col-fill">
+        <div class="sec fill" style="min-height:0;">
           <div class="sec-header"><div class="text">급여기간</div></div>
-          <div class="sec-body fill">
+          <div class="sec-body fill" style="min-height:0;">
             <div class="wrap wrap-list fill" data-payment-years></div>
           </div>
         </div>
       </div>
-      <div style="flex: 5" class="col-fill">
-        <div class="sec fill">
-          <div class="sec-body fill">
+      <div style="flex: 5; min-height:0;" class="col-fill">
+        <div class="sec fill" style="min-height:0;">
+          <div class="sec-body fill" style="min-height:0;">
             <div class="wrap wrap-list fill" data-payment-months>
               <button type="button" class="wrap-list-item" data-payment-month="1"><div class="wrap-list-main"><div class="wrap-list-name">1월</div></div></button>
               <button type="button" class="wrap-list-item" data-payment-month="2"><div class="wrap-list-main"><div class="wrap-list-name">2월</div></div></button>
@@ -613,8 +613,8 @@
         </div>
       </div>
     </div>  
-    <div style="flex: 9; min-width: 0;" class="col-fill">
-      <div class="sec fill">
+    <div style="flex: 9; min-width: 0; min-height:0;" class="col-fill">
+      <div class="sec fill" style="min-height:0;">
         <div class="sec-header">
           <div class="text">지급내역</div>
           <div class="d-flex gap-1">
@@ -622,8 +622,8 @@
             <button type="button" class="btn-icon bubble btn-icon-s btn-icon-red" data-tbl-action="delete" data-delete-keep="blank" aria-label="선택삭제"><i class="fa-solid fa-minus"></i></button>
           </div>
         </div>
-        <div class="sec-body fill">
-          <div class="wrap wrap-tbl fill">
+        <div class="sec-body fill" style="min-height:0;">
+          <div class="wrap wrap-tbl fill scroll-xy tbl-sticky" style="min-height:0;">
             <table class="tbl">
               <thead>
                 <tr>
@@ -697,6 +697,28 @@
   }
   function yyyymm_(y,m){ return y + '-' + (m<10?('0'+m):m); }
 
+  function PAYROLL_showLoading_(scopeEl, key){
+    try{
+      if (window.UI_Loading){
+        UI_Loading.show(scopeEl || document.body, {
+          key: String(key || 'payroll-load'),
+          global: false,
+          text: ''
+        });
+      }
+    }catch(e){}
+  }
+  function PAYROLL_hideLoading_(scopeEl, key){
+    try{
+      if (window.UI_Loading){
+        UI_Loading.hide(scopeEl || document.body, {
+          key: String(key || 'payroll-load'),
+          global: false
+        });
+      }
+    }catch(e){}
+  }
+
   // ===== 금액셀 렌더(프로젝트 기존 포맷 사용) =====
   // - 숫자는 "가공 없이" 넣는다. (예: 10000)
   // - 기존 text-unit 포맷 로직이 10,000원으로 표시해줌.
@@ -708,7 +730,7 @@
 
   // 페이지 진입 시 호출되는 entry (index loadPage에서 Payroll_init 호출 전제)
   window.Payroll_init = function(scopeEl){
-    if (!scopeEl) return;
+    if (!scopeEl) return Promise.resolve();
 
     // ✅ wrap-filter/커스텀 체크박스 초기화
     if (typeof initFilterWraps === 'function') initFilterWraps(scopeEl);
@@ -727,11 +749,14 @@
     var curY = now.getFullYear();
     var curM = now.getMonth() + 1;
     // ✅ 연도 옵션: BaseSalary_Std.year 유니크 목록 기반
-    fillYearsFromServer_(scopeEl, fyEl, tyEl, curY, function(){
-      // ✅ (연도) 옵션/기본값 세팅 완료 후 has-value 동기화
-      if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(scopeEl);
-      // 연도 셀렉트가 채워지고 기본값까지 세팅된 뒤에 1회 자동조회
-      loadPayrollRange_(scopeEl, readRange_());
+    var _initReady = new Promise(function(resolve){
+      fillYearsFromServer_(scopeEl, fyEl, tyEl, curY, function(){
+        // ✅ (연도) 옵션/기본값 세팅 완료 후 has-value 동기화
+        if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(scopeEl);
+        // 연도 셀렉트가 채워지고 기본값까지 세팅된 뒤에 1회 자동조회
+        Promise.resolve(loadPayrollRange_(scopeEl, readRange_(), { spinner:false, loadingKey:'payroll-main' }))
+          .finally(function(){ resolve(); });
+      });
     });
     fillMonths_(fmEl, curM);
     fillMonths_(tmEl, curM);
@@ -750,9 +775,14 @@
       btn.addEventListener('click', function(){
         var keep = !!(keepCb && keepCb.checked);
         if (!keep) resetPayrollFiltersAll_(scopeEl);
-        loadPayrollRange_(scopeEl, readRange_());
+        loadPayrollRange_(scopeEl, readRange_(), { spinner:true, loadingKey:'payroll-main' });
       });
     });
+
+    // 외부에서 강제 재조회 가능(설정 저장 후 반영)
+    window.Payroll_reloadList = function(opts){
+      return loadPayrollRange_(scopeEl, readRange_(), opts || {});
+    };
 
     // ✅ 급여기준 설정 / 급여지급내역 관리 : 모달 오픈만 연결
     qsa_(scopeEl, '[data-action="btn:payroll:stdset"]').forEach(function(btn){
@@ -790,6 +820,8 @@
       var tm = Number(tmEl && tmEl.value ? tmEl.value : curM);
       return { from_year: fy, from_month: fm, to_year: ty, to_month: tm };
     }
+
+    return _initReady;
   };
 
   // =========================================================
@@ -797,7 +829,8 @@
   // =========================================================
   function openPayrollSalaryStdModal_(){
     if (!window.openPageModal){
-      alert('openPageModal 함수가 없습니다. pagemodal.html 로딩을 확인하세요.');
+      if (window.showAlertError) window.showAlertError('openPageModal 함수가 없습니다. pagemodal.html 로딩을 확인하세요.', '급여기준');
+      else console.error('openPageModal 함수가 없습니다. pagemodal.html 로딩을 확인하세요.');
       return;
     }
 
@@ -830,8 +863,11 @@
           // openPageModal이 (e, modalEl, bodyHost, done)으로 넘겨주므로 그대로 쓰면 됨
           PAYROLL_STD_copyPrevYearAsync_(modalEl)
             .then(function(ret){
-              // pagemodal은 성공 시 message를 안 쓰므로, ok만 넘기고 성공문구는 cfg.successMessage로 띄움
-              done({ ok:true });
+              if (ret && ret.ok){
+                done({ ok:true });
+              } else {
+                done({ ok:false, error: (ret && (ret.error || ret.message)) ? (ret.error || ret.message) : '복사 실패' });
+              }
             })
             .catch(function(err){
               done({ ok:false, error: (err && err.message) ? err.message : String(err) });
@@ -864,7 +900,7 @@
       var year = String(modalEl.dataset.salarystdYear || '').trim();
       if (!/^\d{4}$/.test(year)){
         if (window.showAlertError) window.showAlertError('적용연도를 먼저 선택해주세요.', '급여기준');
-        else alert('적용연도를 먼저 선택해주세요.');
+        else console.warn('적용연도를 먼저 선택해주세요.');
         return;
       }
 
@@ -889,7 +925,7 @@
         // 공통 알림을 쓰고 싶으면 ok:false로 돌려도 되고,
         // 여기선 즉시 에러 알림 한번만 띄움
         if (window.showAlertError) window.showAlertError('적용연도를 먼저 선택해주세요.', '급여기준');
-        else alert('적용연도를 먼저 선택해주세요.');
+        else console.warn('적용연도를 먼저 선택해주세요.');
         return { ok:false };
       }
 
@@ -899,14 +935,26 @@
       return new Promise(function(resolve){
         google.script.run
           .withSuccessHandler(function(res){
-            PAYROLL_STD_setBusy_(modalEl, false);
             if (!res || !res.ok){
+              PAYROLL_STD_setBusy_(modalEl, false);
               resolve({ ok:false, error: (res && res.message) ? res.message : '저장 실패' });
               return;
             }
-            // ✅ 저장 성공 후 재로드(모달은 close:false라 안 닫힘)
-            PAYROLL_STD_loadYear_(modalEl, year);
-            resolve({ ok:true });
+            // ✅ 저장 성공 후 모달 재조회 + 메인 재조회
+            Promise.resolve(PAYROLL_STD_loadYear_(modalEl, year, { spinner:false }))
+              .then(function(){
+                try{
+                  if (typeof window.Payroll_reloadList === 'function') {
+                    return Promise.resolve(window.Payroll_reloadList({ spinner:false, loadingKey:'payroll-main' }));
+                  }
+                }catch(e){}
+                return Promise.resolve();
+              })
+              .catch(function(){})
+              .finally(function(){
+                PAYROLL_STD_setBusy_(modalEl, false);
+                resolve({ ok:true });
+              });
           })
           .withFailureHandler(function(err){
             PAYROLL_STD_setBusy_(modalEl, false);
@@ -1003,8 +1051,10 @@ function PAYROLL_STD_selectYear_(modalEl, listEl, year){
   });
 }
 function PAYROLL_STD_setBusy_(modalEl, busy, msg){
-  // ✅ UI 로딩표시는 나중에 스피너로 교체 예정 → 현재는 완전 제외(no-op)
-  modalEl.__stdBusy = !!busy; // 내부 플래그만 유지
+  modalEl.__stdBusy = !!busy;
+  var root = PAYROLL_STD_normModalRoot_(modalEl) || modalEl;
+  if (busy) PAYROLL_showLoading_(root, 'payroll-std-busy');
+  else PAYROLL_hideLoading_(root, 'payroll-std-busy');
 }
 
 // =========================================================
@@ -1126,9 +1176,12 @@ function PAYROLL_STD_applyUnitFormat_(modalEl){
   try { if (window.refreshFloatingInputs) window.refreshFloatingInputs(modalEl); } catch(e){}
 }
 
-function PAYROLL_STD_loadYear_(modalEl, year){
+function PAYROLL_STD_loadYear_(modalEl, year, opts){
+  opts = opts || {};
+  var useSpinner = (opts.spinner !== false);
+
   var yy = String(year||'').trim();
-  if (!/^\d{4}$/.test(yy)) return;
+  if (!/^\d{4}$/.test(yy)) return Promise.resolve({ ok:false, error:'invalid year' });
 
   // ✅ 최신 요청만 유효하게 만드는 토큰
   modalEl.__stdReqSeq = (modalEl.__stdReqSeq || 0) + 1;
@@ -1151,44 +1204,59 @@ function PAYROLL_STD_loadYear_(modalEl, year){
     }
   }catch(e){}
 
-  if (modalEl.__stdBusy) return;
-  PAYROLL_STD_setBusy_(modalEl, true, '불러오는 중...');
+  if (useSpinner){
+    if (modalEl.__stdBusy) return Promise.resolve({ ok:false, busy:true });
+    PAYROLL_STD_setBusy_(modalEl, true, '불러오는 중...');
+  }
 
-  google.script.run
-    .withSuccessHandler(function(res){
-      PAYROLL_STD_setBusy_(modalEl, false);
+  return new Promise(function(resolve){
+    google.script.run
+      .withSuccessHandler(function(res){
+        if (useSpinner) PAYROLL_STD_setBusy_(modalEl, false);
 
-      // ✅ (1) 최신 요청이 아니면 폐기
-      if (reqSeq !== modalEl.__stdReqSeq) return;
+        // ✅ (1) 최신 요청이 아니면 폐기
+        if (reqSeq !== modalEl.__stdReqSeq){
+          resolve({ ok:false, stale:true });
+          return;
+        }
 
-      // ✅ (2) 현재 선택된 연도와 요청 연도가 다르면 폐기
-      // (사용자가 이미 다른 연도를 클릭했을 수 있음)
-      if (String(modalEl.dataset.salarystdYear||'').trim() !== yy) return;
+        // ✅ (2) 현재 선택된 연도와 요청 연도가 다르면 폐기
+        // (사용자가 이미 다른 연도를 클릭했을 수 있음)
+        if (String(modalEl.dataset.salarystdYear||'').trim() !== yy){
+          resolve({ ok:false, stale:true });
+          return;
+        }
 
-      if (!res || !res.ok){
-        var msg = (res && res.message) ? res.message : '불러오기 실패';
+        if (!res || !res.ok){
+          var msg = (res && res.message) ? res.message : '불러오기 실패';
+          if (window.showAlertError) window.showAlertError(msg, '급여기준');
+          else console.error(msg);
+          resolve({ ok:false, error: msg });
+          return;
+        }
+        // ✅ 최근 로드 결과 캐시(직전년도 복사 가능 여부(prefill.available/from) 판단에 사용)
+        modalEl.__stdLastRes = res;
+
+        PAYROLL_STD_renderAll_(modalEl, res);
+        PAYROLL_STD_applyUnitFormat_(modalEl);
+        resolve({ ok:true, res:res });
+      })
+      .withFailureHandler(function(err){
+        if (useSpinner) PAYROLL_STD_setBusy_(modalEl, false);
+
+        // ✅ 실패도 최신 요청만 처리
+        if (reqSeq !== modalEl.__stdReqSeq || String(modalEl.dataset.salarystdYear||'').trim() !== yy){
+          resolve({ ok:false, stale:true });
+          return;
+        }
+
+        var msg = (err && err.message) ? err.message : String(err || 'Unknown error');
         if (window.showAlertError) window.showAlertError(msg, '급여기준');
-        else alert(msg);
-        return;
-      }
-      // ✅ 최근 로드 결과 캐시(직전년도 복사 가능 여부(prefill.available/from) 판단에 사용)
-      modalEl.__stdLastRes = res;
-
-      PAYROLL_STD_renderAll_(modalEl, res);
-      PAYROLL_STD_applyUnitFormat_(modalEl);
-    })
-    .withFailureHandler(function(err){
-      PAYROLL_STD_setBusy_(modalEl, false);
-
-      // ✅ 실패도 최신 요청만 처리
-      if (reqSeq !== modalEl.__stdReqSeq) return;
-      if (String(modalEl.dataset.salarystdYear||'').trim() !== yy) return;
-
-      var msg = (err && err.message) ? err.message : String(err || 'Unknown error');
-      if (window.showAlertError) window.showAlertError(msg, '급여기준');
-      else alert(msg);
-    })
-    .PAYROLL_getSalaryStd({ year: yy });
+        else console.error(msg);
+        resolve({ ok:false, error:msg });
+      })
+      .PAYROLL_getSalaryStd({ year: yy });
+  });
 }
 
 function PAYROLL_STD_normModalRoot_(el){
@@ -1651,7 +1719,8 @@ function PAYROLL_STD_collectPayload_(modalEl, year){
 /*급여지급내역 페이지모달 기능*/
 function openPayrollPaymentModal_(){
   if (!window.openPageModal){
-    alert('openPageModal 함수가 없습니다. pagemodal.html 로딩을 확인하세요.');
+    if (window.showAlertError) window.showAlertError('openPageModal 함수가 없습니다. pagemodal.html 로딩을 확인하세요.', '급여지급내역');
+    else console.error('openPageModal 함수가 없습니다. pagemodal.html 로딩을 확인하세요.');
     return;
   }
 
@@ -1679,23 +1748,38 @@ function openPayrollPaymentModal_(){
       var m = String(root.dataset.paymentMonth||'').trim();
       if (!/^\d{4}$/.test(y) || !(Number(m)>=1 && Number(m)<=12)){
         if (window.showAlertError) window.showAlertError('연도/월을 먼저 선택해주세요.', '급여지급내역');
-        else alert('연도/월을 먼저 선택해주세요.');
+        else console.warn('연도/월을 먼저 선택해주세요.');
         return { ok:false };
       }
 
       var payload = PAYMENT_collectPayload_(root, y, Number(m));
+      PAYROLL_showLoading_(root, 'payroll-payment-save');
       return new Promise(function(resolve){
         google.script.run
           .withSuccessHandler(function(res){
             if (!res || !res.ok){
+              PAYROLL_hideLoading_(root, 'payroll-payment-save');
               resolve({ ok:false, error:(res && res.message) ? res.message : '저장 실패' });
               return;
             }
-            // ✅ 저장 후 재로드
-            PAYMENT_loadMonth_(root, y, Number(m));
-            resolve({ ok:true });
+            // ✅ 저장 후 모달 재조회 + 메인 재조회
+            Promise.resolve(PAYMENT_loadMonth_(root, y, Number(m), { spinner:false }))
+              .then(function(){
+                try{
+                  if (typeof window.Payroll_reloadList === 'function') {
+                    return Promise.resolve(window.Payroll_reloadList({ spinner:false, loadingKey:'payroll-main' }));
+                  }
+                }catch(e){}
+                return Promise.resolve();
+              })
+              .catch(function(){})
+              .finally(function(){
+                PAYROLL_hideLoading_(root, 'payroll-payment-save');
+                resolve({ ok:true });
+              });
           })
           .withFailureHandler(function(err){
+            PAYROLL_hideLoading_(root, 'payroll-payment-save');
             resolve({ ok:false, error:(err && err.message) ? err.message : String(err) });
           })
           .PAYMENT_saveMonth(payload);   // ✅ 서버에 이 함수만 만들어두면 됨
@@ -1843,45 +1927,74 @@ function PAYMENT_selectMonth_(root, monthsBox, m){
   });
 }
 
-function PAYMENT_loadMonth_(root, year, month){
-  if (!root) return;
+function PAYMENT_loadMonth_(root, year, month, opts){
+  opts = opts || {};
+  var useSpinner = (opts.spinner !== false);
+  var loadingKey = String(opts.loadingKey || 'payroll-payment-load');
+  var loadingDone = false;
+  function _doneLoading_(){
+    if (loadingDone) return;
+    loadingDone = true;
+    if (!useSpinner) return;
+    PAYROLL_hideLoading_(root, loadingKey);
+  }
+
+  if (!root) return Promise.resolve({ ok:false, error:'root missing' });
   var y = String(year||'').trim();
   var m = Number(month||0) || 0;
-  if (!/^\d{4}$/.test(y) || !(m>=1 && m<=12)) return;
+  if (!/^\d{4}$/.test(y) || !(m>=1 && m<=12)) return Promise.resolve({ ok:false, error:'invalid ym' });
 
   var tbody = root.querySelector('tbody[data-payment-tbody]');
-  if (!tbody) return;
+  if (!tbody) return Promise.resolve({ ok:false, error:'tbody missing' });
   var tpl = root.__paymentRowTpl;
-  if (!tpl) return;
+  if (!tpl) return Promise.resolve({ ok:false, error:'row tpl missing' });
 
   // ✅ 최신요청만 반영
   root.__paymentReqSeq = (root.__paymentReqSeq||0) + 1;
   var reqSeq = root.__paymentReqSeq;
 
-  // (옵션) 로딩 중 표시
-  tbody.innerHTML = '<tr><td colspan="99"><div class="text-tbl">불러오는 중…</div></td></tr>';
+  if (useSpinner) PAYROLL_showLoading_(root, loadingKey);
 
-  google.script.run
-    .withSuccessHandler(function(res){
-      if (reqSeq !== root.__paymentReqSeq) return;
-      if (String(root.dataset.paymentYear||'') !== y) return;
-      if (Number(root.dataset.paymentMonth||0) !== m) return;
+  return new Promise(function(resolve){
+    google.script.run
+      .withSuccessHandler(function(res){
+        if (reqSeq !== root.__paymentReqSeq){
+          _doneLoading_();
+          resolve({ ok:false, stale:true });
+          return;
+        }
+        if (String(root.dataset.paymentYear||'') !== y || Number(root.dataset.paymentMonth||0) !== m){
+          _doneLoading_();
+          resolve({ ok:false, stale:true });
+          return;
+        }
 
-      if (!res || !res.ok){
-        tbody.innerHTML = '<tr><td colspan="99"><div class="text-tbl">데이터를 불러오지 못했습니다.</div></td></tr>';
-        return;
-      }
+        if (!res || !res.ok){
+          tbody.innerHTML = '<tr><td colspan="99"><div class="text-tbl">데이터를 불러오지 못했습니다.</div></td></tr>';
+          _doneLoading_();
+          resolve({ ok:false, error:(res && res.message) ? res.message : 'load failed' });
+          return;
+        }
 
-      // res: {ok:true, rows:[...]} 만 사용
-      PAYMENT_renderRows_(root, res.rows || []);
-      try { if (window.initUiScope) window.initUiScope(root); } catch(e){}
-      try { if (window.initUnitInputs) window.initUnitInputs(root); } catch(e){}
-    })
-    .withFailureHandler(function(err){
-      if (reqSeq !== root.__paymentReqSeq) return;
-      tbody.innerHTML = '<tr><td colspan="99"><div class="text-tbl">오류: '+(err && err.message ? err.message : err)+'</div></td></tr>';
-    })
-    .PAYMENT_getMonth({ year: y, month: m }); // ✅ 서버에 이 함수만 만들어두면 됨
+        // res: {ok:true, rows:[...]} 만 사용
+        PAYMENT_renderRows_(root, res.rows || []);
+        try { if (window.initUiScope) window.initUiScope(root); } catch(e){}
+        try { if (window.initUnitInputs) window.initUnitInputs(root); } catch(e){}
+        _doneLoading_();
+        resolve({ ok:true });
+      })
+      .withFailureHandler(function(err){
+        if (reqSeq !== root.__paymentReqSeq){
+          _doneLoading_();
+          resolve({ ok:false, stale:true });
+          return;
+        }
+        tbody.innerHTML = '<tr><td colspan="99"><div class="text-tbl">오류: '+(err && err.message ? err.message : err)+'</div></td></tr>';
+        _doneLoading_();
+        resolve({ ok:false, error:(err && err.message) ? err.message : String(err) });
+      })
+      .PAYMENT_getMonth({ year: y, month: m }); // ✅ 서버에 이 함수만 만들어두면 됨
+  });
 }
 
 function PAYMENT_renderRows_(root, rows){
@@ -2132,38 +2245,69 @@ function PAYMENT_collectPayload_(root, year, month){
       .PAYROLL_listBaseSalaryYears();
   }
 
-  function loadPayrollRange_(scopeEl, range){
+  function loadPayrollRange_(scopeEl, range, opts){
+    opts = opts || {};
+    var useSpinner = (opts.spinner !== false);
+    var loadingKey = String(opts.loadingKey || 'payroll-main');
+    var loadingDone = false;
+    function _doneLoading_(){
+      if (loadingDone) return;
+      loadingDone = true;
+      if (!useSpinner) return;
+      PAYROLL_hideLoading_(scopeEl, loadingKey);
+    }
+
     range = range || {};
     var fy = Number(range.from_year||0), fm = Number(range.from_month||0);
     var ty = Number(range.to_year||0), tm = Number(range.to_month||0);
 
-    // 로딩 표시(있으면): data-payroll-status
+    if (useSpinner) PAYROLL_showLoading_(scopeEl, loadingKey);
+
+    // 상태 표시 영역(data-payroll-status): 로딩 문구는 표시하지 않음
     var st = qs_(scopeEl, '[data-payroll-status]');
-    if (st) st.textContent = '불러오는 중…';
+    if (st) st.textContent = '';
 
     // from <= to 검증
     if ((fy*100+fm) > (ty*100+tm)) {
       if (st) st.textContent = '오류: 기간이 올바르지 않습니다(FROM > TO)';
-      return;
+      _doneLoading_();
+      return Promise.resolve({ ok:false, error:'invalid-range' });
     }
 
-    google.script.run
-      .withSuccessHandler(function(res){
-        console.log('[PAYROLL] response sample attendance[0]=', res && res.attendance && res.attendance[0]);
-        try{
-          if (st) st.textContent = '';
-          if (!res || res.ok !== true) throw new Error('Invalid response');
-          renderPayroll_(scopeEl, res);
-        } catch(err){
+    return new Promise(function(resolve){
+      google.script.run
+        .withSuccessHandler(function(res){
+          console.log('[PAYROLL] response sample attendance[0]=', res && res.attendance && res.attendance[0]);
+          try{
+            if (st) st.textContent = '';
+            if (!res || res.ok !== true) throw new Error('Invalid response');
+            renderPayroll_(scopeEl, res);
+            _doneLoading_();
+            resolve({ ok:true });
+          } catch(err){
+            console.error(err);
+            if (st) st.textContent = '오류: ' + (err && err.message ? err.message : err);
+            _doneLoading_();
+            resolve({ ok:false, error:(err && err.message) ? err.message : String(err) });
+          }
+        })
+        .withFailureHandler(function(err){
           console.error(err);
-          if (st) st.textContent = '오류: ' + (err && err.message ? err.message : err);
-        }
-      })
-      .withFailureHandler(function(err){
-        console.error(err);
-        if (st) st.textContent = '오류: ' + (err && err.message ? err.message : err);
-      })
-      .PAYROLL_computeRange({ from_year: fy, from_month: fm, to_year: ty, to_month: tm });
+          var em = (err && err.message) ? err.message : String(err);
+          if (st) st.textContent = '오류: ' + em;
+          _doneLoading_();
+          if (window.showRetryConfirm){
+            window.showRetryConfirm(em, '근태/급여 조회', function(){
+              Promise.resolve(loadPayrollRange_(scopeEl, range, opts || {})).then(resolve);
+            }, function(){
+              resolve({ ok:false, error:em });
+            });
+            return;
+          }
+          resolve({ ok:false, error:em });
+        })
+        .PAYROLL_computeRange({ from_year: fy, from_month: fm, to_year: ty, to_month: tm });
+    });
   }
 
   function renderPayroll_(scopeEl, res){

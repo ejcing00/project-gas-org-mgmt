@@ -74,13 +74,32 @@
 
   // ✅ 공용: 서버에 요청 → base64 받음 → 즉시 다운로드
   function start(req){
-    var close = showOverlay('엑셀 파일을 생성 중입니다...');
+    var close;
+    if (window.UI_Loading){
+      try{
+        UI_Loading.show(document.body, {
+          key: 'excel-download',
+          text: '엑셀을 다운로드 중입니다.',
+          textVisible: true
+        });
+        close = function(){
+          try{ UI_Loading.hide(document.body, { key:'excel-download' }); }catch(e){}
+        };
+      }catch(e){}
+    }
+    if (!close) close = showOverlay('엑셀 파일을 생성 중입니다...');
     google.script.run
       .withSuccessHandler(function(res){
         close();
         if (!res || !res.ok){
-          if (window.showAlertError) window.showAlertError((res && res.message) ? res.message : '다운로드 실패', 'Excel');
-          else alert((res && res.message) ? res.message : '다운로드 실패');
+          var em = (res && res.message) ? res.message : '다운로드 실패';
+          if (window.showRetryConfirm){
+            window.showRetryConfirm(em, 'Excel', function(){ start(req); });
+          } else if (window.showAlertError) {
+            window.showAlertError(em, 'Excel');
+          } else {
+            console.error(em);
+          }
           return;
         }
         var blob = base64ToBlob(res.base64, res.mimeType);
@@ -89,8 +108,13 @@
       .withFailureHandler(function(err){
         close();
         var msg = (err && err.message) ? err.message : String(err || 'Unknown error');
-        if (window.showAlertError) window.showAlertError(msg, 'Excel');
-        else alert(msg);
+        if (window.showRetryConfirm){
+          window.showRetryConfirm(msg, 'Excel', function(){ start(req); });
+        } else if (window.showAlertError) {
+          window.showAlertError(msg, 'Excel');
+        } else {
+          console.error(msg);
+        }
       })
       .EXPORT_downloadExcel(req);
   }
@@ -107,8 +131,44 @@
     try { return FilterWrap.getState(wrap); } catch(e){ return null; }
   }
 
-  // 현재 화면(목록)에 표시된 project_id 수집
-  function EXPORT_collectVisibleProjectIds_(){
+  function EXPORT_isVisibleRow_(el){
+    if (!el) return false;
+    if (el.hidden) return false;
+    if (el.offsetParent === null) return false;
+    return true;
+  }
+
+  function EXPORT_collectModalSheetOrders_(modal){
+    var out = {};
+    if (!modal) return out;
+    modal.querySelectorAll('table[data-entity]').forEach(function(tbl){
+      var entity = String(tbl.getAttribute('data-entity') || '').trim();
+      if (!entity) return;
+      var rows = [];
+      var seen = {};
+      tbl.querySelectorAll('tbody tr').forEach(function(tr){
+        var pk = tr.querySelector('input[data-pk="1"][data-field]');
+        var id = pk ? String(pk.value || '').trim() : '';
+        if (!id || seen[id]) return;
+        seen[id] = true;
+        rows.push(id);
+      });
+      if (rows.length) out[entity] = rows;
+    });
+    return out;
+  }
+
+  function EXPORT_findActiveProjectPanel_(btn){
+    if (btn){
+      var p0 = btn.closest('.sec-panel[data-panel]');
+      if (p0) return p0;
+    }
+    var scope = document.querySelector('#page-container') || document;
+    return scope.querySelector('.sec-panel.is-active[data-panel^="project-"]');
+  }
+
+  // 현재 화면(목록)에 표시된 project_id 수집 (활성 패널 행 순서 기준)
+  function EXPORT_collectVisibleProjectIds_(btn){
     var scope = document.querySelector('#page-container') || document;
     var out = [];
     var seen = {};
@@ -123,14 +183,19 @@
       out.push(v);
     }
 
-    // 1) data-project-id / data-project_id 가 달려있는 경우(가장 정확)
-    scope.querySelectorAll('[data-project-id],[data-project_id],tr[data-project-id],tr[data-project_id]').forEach(function(el){
-      add(el.getAttribute('data-project-id'));
-      add(el.getAttribute('data-project_id'));
-    });
+    var activePanel = EXPORT_findActiveProjectPanel_(btn);
+    if (activePanel){
+      activePanel.querySelectorAll('table.tbl tbody tr[data-project-id], table.tbl tbody tr[data-project_id]').forEach(function(tr){
+        if (!EXPORT_isVisibleRow_(tr)) return;
+        add(tr.getAttribute('data-project-id'));
+        add(tr.getAttribute('data-project_id'));
+      });
+      if (out.length) return out;
+    }
 
     // 2) dataset.projectId가 달린 tr (렌더에서 tr.dataset.projectId = pid 형태)
     scope.querySelectorAll('tr').forEach(function(tr){
+      if (!EXPORT_isVisibleRow_(tr)) return;
       if (tr.dataset && tr.dataset.projectId) add(tr.dataset.projectId);
     });
 
@@ -153,7 +218,7 @@
 
 
   // ✅ 기존 함수 수정
-  function EXPORT_UI_projectListDownload(){
+  function EXPORT_UI_projectListDownload(btn){
     var req = {
       domain: 'PROJECT',
       mode: 'LIST',
@@ -161,7 +226,7 @@
       options: { includeOPI: true, includeMembers: true },
       fileName: '프로젝트_' + formatNowForFile() + '.xls',
       filters: EXPORT_collectProjectFilters_(),   // 기존 유지
-      pids: EXPORT_collectVisibleProjectIds_()    // ✅ 추가: 화면에 보이는 목록
+      pids: EXPORT_collectVisibleProjectIds_(btn)    // ✅ 추가: 화면에 보이는 목록
     };
     start(req);
   }
@@ -208,7 +273,8 @@
 
     pid = String(pid || '').trim();
     if (!pid){
-      alert('project_id를 찾지 못했습니다.');
+      if (window.showAlertWarn) window.showAlertWarn('project_id를 찾지 못했습니다.', 'Excel');
+      else console.warn('project_id를 찾지 못했습니다.');
       return;
     }
 
@@ -227,6 +293,10 @@
       options: { includeOPI: true, includeMembers: true },
       fileName: '프로젝트_' + prettyYear + '_' + prettyBiz + '_' + formatNowForFile() + '.xls'
     };
+    try{
+      var modal = document.querySelector('.modal.show');
+      req.uiSheetOrders = EXPORT_collectModalSheetOrders_(modal);
+    }catch(e){}
     start(req);
   }
 
@@ -246,8 +316,17 @@
     try { return FilterWrap.getState(wrap); } catch(e){ return null; }
   }
 
-  // 현재 화면(목록)에 표시된 employee_id 수집
-  function EXPORT_collectVisibleEmployeeIds_(){
+  function EXPORT_findActiveEmployeePanel_(btn){
+    if (btn){
+      var p0 = btn.closest('.sec-panel[data-panel]');
+      if (p0) return p0;
+    }
+    var scope = document.querySelector('#page-container') || document;
+    return scope.querySelector('.sec-panel.is-active[data-panel^="employee-"]');
+  }
+
+  // 현재 화면(목록)에 표시된 employee_id 수집 (활성 패널 행 순서 기준)
+  function EXPORT_collectVisibleEmployeeIds_(btn){
     var scope = document.querySelector('#page-container') || document;
     var out = [];
     var seen = {};
@@ -260,8 +339,19 @@
       out.push(v);
     }
 
+    var activePanel = EXPORT_findActiveEmployeePanel_(btn);
+    if (activePanel){
+      activePanel.querySelectorAll('table.tbl tbody tr').forEach(function(tr){
+        if (!EXPORT_isVisibleRow_(tr)) return;
+        var btnView = tr.querySelector('button[data-employee-id]');
+        if (btnView) add(btnView.getAttribute('data-employee-id'));
+      });
+      if (out.length) return out;
+    }
+
     // 1) view 버튼에 data-employee-id가 달려있는 경우(가장 정확)
     scope.querySelectorAll('[data-employee-id]').forEach(function(el){
+      if (!EXPORT_isVisibleRow_(el)) return;
       add(el.getAttribute('data-employee-id'));
     });
 
@@ -288,7 +378,7 @@
   }
 
   // ✅ 소속인력 목록 다운로드
-  function EXPORT_UI_employeeListDownload(){
+  function EXPORT_UI_employeeListDownload(btn){
     var req = {
       domain: 'EMPLOYEE',
       mode: 'LIST',
@@ -296,7 +386,7 @@
       options: { includeChildren: true },
       fileName: '소속인력_' + formatNowForFile() + '.xls',
       filters: EXPORT_collectEmployeeFilters_(),
-      eids: EXPORT_collectVisibleEmployeeIds_()
+      eids: EXPORT_collectVisibleEmployeeIds_(btn)
     };
     start(req);
   }
@@ -329,7 +419,8 @@
 
     eid = String(eid || '').trim();
     if (!eid){
-      alert('employee_id를 찾지 못했습니다.');
+      if (window.showAlertWarn) window.showAlertWarn('employee_id를 찾지 못했습니다.', 'Excel');
+      else console.warn('employee_id를 찾지 못했습니다.');
       return;
     }
 
@@ -345,6 +436,10 @@
       options: { includeChildren: true },
       fileName: '소속인력_' + eid + '_' + prettyName + '_' + formatNowForFile() + '.xls'
     };
+    try{
+      var modal = document.querySelector('.modal.show');
+      req.uiSheetOrders = EXPORT_collectModalSheetOrders_(modal);
+    }catch(e){}
     start(req);
   }
 
@@ -558,7 +653,7 @@ function EXPORT_UI_payrollListDownload(btn){
   var range = EXPORT_collectPayrollRange_();
   if (!range.from_year || !range.from_month) {
     if (window.showAlertError) window.showAlertError('근태/급여기간을 먼저 선택해주세요.', 'Excel');
-    else alert('근태/급여기간을 먼저 선택해주세요.');
+    else console.warn('근태/급여기간을 먼저 선택해주세요.');
     return;
   }
 
@@ -566,7 +661,7 @@ function EXPORT_UI_payrollListDownload(btn){
   var wb = EXPORT_collectPayrollUIWorkbook_(keys);
   if (!wb){
     if (window.showAlertError) window.showAlertError('다운로드할 데이터가 없습니다.', 'Excel');
-    else alert('다운로드할 데이터가 없습니다.');
+    else console.warn('다운로드할 데이터가 없습니다.');
     return;
   }
 
@@ -604,7 +699,7 @@ function EXPORT_UI_payrollListDownload(btn){
 
     if (action === 'export:project:list'){
       e.preventDefault();
-      window.EXPORT_UI_projectListDownload();
+      window.EXPORT_UI_projectListDownload(btn);
       return;
     }
 
@@ -618,7 +713,7 @@ function EXPORT_UI_payrollListDownload(btn){
 
     if (action === 'export:employee:list'){
       e.preventDefault();
-      window.EXPORT_UI_employeeListDownload();
+      window.EXPORT_UI_employeeListDownload(btn);
       return;
     }
 

@@ -325,7 +325,7 @@
     var userTbody = root.querySelector('[data-ac-user-tbody]');
     var checkAll  = root.querySelector('[data-ac-check-all]');
 
-    if (!saveBtn || !roleTbody || !permTbody || !userTbody) return;
+    if (!saveBtn || !roleTbody || !permTbody || !userTbody) return Promise.resolve();
 
     // ---- 템플릿(서식행) 확보: tbody의 "첫 tr"을 템플릿으로 사용 ----
     var ROLE_TR_TPL = roleTbody.querySelector('tr') ? roleTbody.querySelector('tr').cloneNode(true) : null;
@@ -340,8 +340,9 @@
     };
 
     function showMsg(msg){
-      if (typeof showAlert === 'function') showAlert(msg);
-      else alert(msg);
+      if (typeof showAlertInfo === 'function') showAlertInfo(msg, '안내');
+      else if (typeof showAlert === 'function') showAlert(msg);
+      else console.warn(msg);
     }
 
     // ---- Role option 만들기 (User의 role select에 사용) ----
@@ -663,35 +664,40 @@
 
     // ---- 로드 ----
     function load(){
-      google.script.run
-        .withSuccessHandler(function(res){
-          if (!res || !res.ok){
-            console.warn(res);
-            showMsg(res && res.message ? res.message : '접근제어 데이터를 불러오지 못했습니다.');
-            return;
-          }
+      return new Promise(function(resolve){
+        google.script.run
+          .withSuccessHandler(function(res){
+            if (!res || !res.ok){
+              console.warn(res);
+              showMsg(res && res.message ? res.message : '접근제어 데이터를 불러오지 못했습니다.');
+              resolve(res || { ok:false });
+              return;
+            }
 
-          state.roles = (res.roles || []).slice();
-          state.permissions = (res.permissions || []).slice();
+            state.roles = (res.roles || []).slice();
+            state.permissions = (res.permissions || []).slice();
 
-          renderRoles(res.roles || []);
-          buildPermRoleHeader_();
-          renderPermsWithRoles_(res.permissions||[]);
-          applyPermFilter_();
-          renderUsers(res.users || []);
+            renderRoles(res.roles || []);
+            buildPermRoleHeader_();
+            renderPermsWithRoles_(res.permissions||[]);
+            applyPermFilter_();
+            renderUsers(res.users || []);
 
-          // snapshot (삭제 감지)
-          state.snapshotUsers = (res.users || [])
-            .map(function(u){ return String(u.email||'').trim().toLowerCase(); })
-            .filter(Boolean);
+            // snapshot (삭제 감지)
+            state.snapshotUsers = (res.users || [])
+              .map(function(u){ return String(u.email||'').trim().toLowerCase(); })
+              .filter(Boolean);
 
-          refreshUi_(root);
-        })
-        .withFailureHandler(function(err){
-          console.error(err);
-          showMsg('접근제어 로드 실패: ' + (err && err.message ? err.message : err));
-        })
-        .AC_getInit();
+            refreshUi_(root);
+            resolve(res);
+          })
+          .withFailureHandler(function(err){
+            console.error(err);
+            showMsg('접근제어 로드 실패: ' + (err && err.message ? err.message : err));
+            resolve({ ok:false, error:(err && err.message) ? err.message : String(err) });
+          })
+          .AC_getInit();
+      });
     }
 
     // ---- 저장 ----
@@ -826,13 +832,11 @@
       });
     }
 
-    load();
+    return load();
   }
 
   window.AccessControl_init = AccessControl_init;
 
 })();
 </script>
-
-
 

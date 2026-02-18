@@ -5,8 +5,9 @@ function EXPORT_downloadExcel(req){
   try{
     req = req || {};
 
-    // ✅ 권한 체크(키가 있으면 체크)
-    if (req.permKey) DB_assertPerm_(req.permKey);
+    var permKey = String(req.permKey || '').trim();
+    if (!permKey) throw new Error('permKey가 필요합니다.');
+    if (typeof DB_assertPerm_ === 'function') DB_assertPerm_(permKey);
 
     // ✅ workbook 만들기(1단계는 테스트용)
     var wb = ExcelExportService_buildWorkbook_(req);

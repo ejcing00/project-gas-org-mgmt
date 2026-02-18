@@ -3,7 +3,7 @@
  * - EMPLOYEE_list(payload)           // is_deleted 제외
  * - EMPLOYEE_getBundle(employeeId)   // is_deleted 제외 + bundle 최신 updated 계산(삭제 포함)
  * - EMPLOYEE_saveBundle(payload)     // 자식 diff-upsert (자식 변경으로 Employee.updated 터치 X)
- * - EMPLOYEE_deleteBundle(employeeId)// 마스터+자식 소프트삭제
+ * - EMPLOYEE_deleteBundle(employeeId)// 마스터 소프트삭제(자식 유지)
  *
  * 전제:
  * - DB_SPREADSHEET_ID 전역 상수 존재
@@ -162,6 +162,10 @@ function EMP_touchEmployeeUpdated_(employeeId, meta){
 // Public APIs
 // =========================
 function EMPLOYEE_list(payload){
+  var __perf = (typeof DB_perfStart_ === 'function')
+    ? DB_perfStart_('EMPLOYEE_list')
+    : null;
+  var __perfMeta = { ok:false, total:0, rows:0 };
   try{
     payload = payload || {};
     var page = parseInt(payload.page || 1, 10) || 1;
@@ -200,11 +204,16 @@ function EMPLOYEE_list(payload){
     var total = rows.length;
     var start = (page - 1) * pageSize;
     var out = rows.slice(start, start + pageSize);
+    __perfMeta.ok = true;
+    __perfMeta.total = total;
+    __perfMeta.rows = out.length;
 
     return { ok:true, page:page, pageSize:pageSize, total:total, rows:out };
 
   }catch(err){
     return { ok:false, message: err && err.message ? err.message : String(err) };
+  }finally{
+    if (__perf && typeof DB_perfEnd_ === 'function') DB_perfEnd_(__perf, __perfMeta);
   }
 }
 
@@ -215,6 +224,10 @@ function EMPLOYEE_list(payload){
  * - bundle_updated_at/by/source: Employee + 자식(삭제 포함)에서 max(updated_at) / 그 행의 updated_by
  */
 function EMPLOYEE_getBundle(employeeId){
+  var __perf = (typeof DB_perfStart_ === 'function')
+    ? DB_perfStart_('EMPLOYEE_getBundle')
+    : null;
+  var __perfMeta = { ok:false, tableRows:0 };
   try{
     // ✅ 권한: 소속인력 조회
     if (typeof DB_assertPerm_ === 'function') DB_assertPerm_('btn:employee:view');
@@ -240,7 +253,7 @@ function EMPLOYEE_getBundle(employeeId){
     // ✅ UI 표기용 최신 updated: Employee + 자식(삭제 포함)
     var bundleMeta = EMP_computeBundleUpdatedMeta_(employeeId);
 
-    return {
+    var out = {
       ok:true,
       employee: employee,
       tables: tables,
@@ -250,9 +263,17 @@ function EMPLOYEE_getBundle(employeeId){
       bundle_updated_by: bundleMeta.updated_by || '',
       bundle_updated_source: bundleMeta.source || null
     };
+    __perfMeta.ok = true;
+    __perfMeta.tableRows = Object.keys(tables || {}).reduce(function(acc, k){
+      var arr = tables[k];
+      return acc + (Array.isArray(arr) ? arr.length : 0);
+    }, 0);
+    return out;
 
   }catch(err){
     return { ok:false, message: err && err.message ? err.message : String(err) };
+  }finally{
+    if (__perf && typeof DB_perfEnd_ === 'function') DB_perfEnd_(__perf, __perfMeta);
   }
 }
 
@@ -327,56 +348,19 @@ function EMPLOYEE_adminSaveVisibility(payload){
     var lock = LockService.getDocumentLock();
     lock.waitLock(20000);
     try{
-      // employee_id → rowNo(1-based) 검색
-      function _findRowNoById_(id){
-        id = String(id || '').trim();
-        if (!id) return 0;
+      function _buildRowMapById_(){
+        var out = {};
         var last = sh.getLastRow();
-        if (last < 2) return 0;
+        if (last < 2) return out;
         var eidCol = map[EMPLOYEE_ID_FIELD] + 1;
         var vals = sh.getRange(2, eidCol, last - 1, 1).getValues();
         for (var i=0; i<vals.length; i++){
-          if (String(vals[i][0] || '').trim() === id) return i + 2;
+          var eid = String(vals[i][0] || '').trim();
+          if (eid) out[eid] = i + 2;
         }
-        return 0;
+        return out;
       }
 
-      // 1) is_visible 저장 (삭제되지 않은 행만)
-      visibles.forEach(function(it){
-        var eid = String(it && it.employee_id || '').trim();
-        if (!eid) return;
-        var rowNo = _findRowNoById_(eid);
-        if (!rowNo) return;
-        var curDel = sh.getRange(rowNo, map['is_deleted'] + 1).getValue();
-        if (String(curDel || '').trim() === '1') return;
-        var v = (it && (it.is_visible === 1 || it.is_visible === '1')) ? 1 : 0;
-        sh.getRange(rowNo, map['is_visible'] + 1).setValue(v);
-        if (map['updated_at'] != null) sh.getRange(rowNo, map['updated_at'] + 1).setValue(new Date());
-        if (map['updated_by'] != null) sh.getRange(rowNo, map['updated_by'] + 1).setValue(DB_actorLabel_(me));
-      });
-
-      // 2) 복구: master + children(is_deleted 컬럼 있는 시트만)
-      function _restoreChildSheet_(sheetName, parentField, employeeId){
-        var csh = EMP_sh_(sheetName);
-        var cheader = EMP_header_(csh);
-        var cmap = EMP_hmap_(cheader);
-        if (cmap[parentField] == null) return;
-        if (cmap['is_deleted'] == null) return;
-
-        var last = csh.getLastRow();
-        if (last < 2) return;
-        var values = csh.getRange(2, 1, last - 1, cheader.length).getValues();
-
-        for (var r=0; r<values.length; r++){
-          var row = values[r];
-          var pfv = String(row[cmap[parentField]] || '').trim();
-          if (pfv !== employeeId) continue;
-          row[cmap['is_deleted']] = 0;
-          if (cmap['updated_at'] != null) row[cmap['updated_at']] = new Date();
-          if (cmap['updated_by'] != null) row[cmap['updated_by']] = DB_actorLabel_(me);
-          csh.getRange(r + 2, 1, 1, cheader.length).setValues([row]);
-        }
-      }
       // 2-1) ✅ (완전삭제 전) Employee_File에 연결된 Drive 파일 삭제
       // - 기본은 휴지통 이동(setTrashed)
       // - Advanced Drive API(Drive.Files.remove)가 켜져 있으면 영구삭제 시도
@@ -458,21 +442,51 @@ function EMPLOYEE_adminSaveVisibility(payload){
         _hardDeleteBundle_(eid);
       });
 
+      var rowMap = _buildRowMapById_();
+      var last = sh.getLastRow();
+      var values = (last >= 2) ? sh.getRange(2, 1, last - 1, header.length).getValues() : [];
+      var now = new Date();
+      var actor = DB_actorLabel_(me);
+      var changedMaster = false;
+
+      // 1) is_visible 저장 (삭제되지 않은 행만)
+      visibles.forEach(function(it){
+        var eid = String(it && it.employee_id || '').trim();
+        if (!eid) return;
+        var rowNo = rowMap[eid] || 0;
+        if (!rowNo) return;
+        var idx = rowNo - 2;
+        if (idx < 0 || idx >= values.length) return;
+        var row = values[idx];
+        if (String(row[map['is_deleted']] || '').trim() === '1') return;
+
+        var v = (it && (it.is_visible === 1 || it.is_visible === '1')) ? 1 : 0;
+        if (String(row[map['is_visible']] || '') !== String(v)) {
+          row[map['is_visible']] = v;
+          changedMaster = true;
+        }
+        if (map['updated_at'] != null) { row[map['updated_at']] = now; changedMaster = true; }
+        if (map['updated_by'] != null) { row[map['updated_by']] = actor; changedMaster = true; }
+      });
+
       restoreIds.forEach(function(eid){
         eid = String(eid || '').trim();
         if (!eid) return;
-        var rowNo = _findRowNoById_(eid);
+        var rowNo = rowMap[eid] || 0;
         if (!rowNo) return;
-        sh.getRange(rowNo, map['is_deleted'] + 1).setValue(0);
-        if (map['updated_at'] != null) sh.getRange(rowNo, map['updated_at'] + 1).setValue(new Date());
-        if (map['updated_by'] != null) sh.getRange(rowNo, map['updated_by'] + 1).setValue(DB_actorLabel_(me));
-
-        // children 복구
-        EMP_CHILDREN.forEach(function(ch){
-          _restoreChildSheet_(ch.sheet, ch.parentField, eid);
-        });
+        var idx = rowNo - 2;
+        if (idx < 0 || idx >= values.length) return;
+        var row = values[idx];
+        if (String(row[map['is_deleted']] || '').trim() !== '0') {
+          row[map['is_deleted']] = 0;
+          changedMaster = true;
+        }
+        if (map['updated_at'] != null) { row[map['updated_at']] = now; changedMaster = true; }
+        if (map['updated_by'] != null) { row[map['updated_by']] = actor; changedMaster = true; }
       });
+      if (changedMaster && values.length) sh.getRange(2, 1, values.length, header.length).setValues(values);
 
+      if (typeof DB_bumpDataVersion_ === 'function') DB_bumpDataVersion_('Employee');
       return _jsonSafeKst_({ ok:true });
     } finally {
       lock.releaseLock();
@@ -677,6 +691,7 @@ function EMPLOYEE_saveBundle(payload){
     // - 자식 변경이 있어도 Employee.updated_*는 갱신하지 않는다.
     // - UI는 EMPLOYEE_getBundle()에서 bundle_updated_*로 계산해 보여준다.
 
+    if (typeof DB_bumpDataVersion_ === 'function') DB_bumpDataVersion_('Employee');
     return { ok:true, mode: actualMode, employee_id: employeeId };
 
   }catch(err){
@@ -694,14 +709,12 @@ function EMPLOYEE_deleteBundle(employeeId){
 
     var meta = EMP_employeeMeta_();
 
-    // ✅ 자식 먼저 소프트삭제
-    EMP_CHILDREN.forEach(function(c){
-      EMP_DB_softDeleteWhere_(c.sheet, c.parentField, employeeId, meta);
-    });
-
-    // ✅ 마스터 소프트삭제
+    // ✅ 마스터만 소프트삭제
+    // - 자식은 유지한다.
+    // - 자식의 is_deleted는 "자식 자체 삭제"에서만 변경되도록 분리
     EMP_DB_softDeleteById_(EMPLOYEE_SHEET, EMPLOYEE_ID_FIELD, employeeId, meta);
 
+    if (typeof DB_bumpDataVersion_ === 'function') DB_bumpDataVersion_('Employee');
     return { ok:true };
 
   }catch(err){

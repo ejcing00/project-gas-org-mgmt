@@ -1447,8 +1447,8 @@
                 <option value="1">비활성</option>
               </select>
           </div>
-          <div class="sec-body fill" style="min-height:0; overflow:auto;">
-            <div class="wrap wrap-tbl fill scroll-x tbl-sticky" style="min-height:0;">
+          <div class="sec-body fill" style="min-height:0;">
+            <div class="wrap wrap-tbl fill scroll-xy tbl-sticky" style="min-height:0;">
               <table class="tbl">
                 <thead>
                   <tr>
@@ -1478,8 +1478,8 @@
               <option value="2">완전삭제</option>
             </select>
           </div>
-          <div class="sec-body fill" style="min-height:0; overflow:auto;">
-            <div class="wrap wrap-tbl fill scroll-x tbl-sticky" style="min-height:0;">
+          <div class="sec-body fill" style="min-height:0;">
+            <div class="wrap wrap-tbl fill scroll-xy tbl-sticky" style="min-height:0;">
               <table class="tbl">
                 <thead>
                   <tr>
@@ -2648,32 +2648,89 @@
     }
   }
 
-  function loadEmployeeTabs_(pageRoot){
+  function _empShowLoading_(scopeEl, key){
+    try{
+      if (window.UI_Loading){
+        UI_Loading.show(scopeEl || document.body, { key:String(key||'employee-load'), global:false, text:'' });
+      }
+    }catch(e){}
+  }
+  function _empHideLoading_(scopeEl, key){
+    try{
+      if (window.UI_Loading){
+        UI_Loading.hide(scopeEl || document.body, { key:String(key||'employee-load'), global:false });
+      }
+    }catch(e){}
+  }
+
+  function loadEmployeeTabs_(pageRoot, opts){
+    opts = opts || {};
+    var useSpinner = (opts.spinner !== false);
+    var loadingKey = String(opts.loadingKey || 'employee-main');
+    var loadingDone = false;
+    function _doneLoading_(){
+      if (loadingDone) return;
+      loadingDone = true;
+      if (!useSpinner) return;
+      _empHideLoading_(pageRoot, loadingKey);
+    }
+
+    if (useSpinner) _empShowLoading_(pageRoot, loadingKey);
+
     var hasGAS = (typeof google !== 'undefined' && google.script && google.script.run);
     if (!hasGAS) {
       console.warn('google.script.run 없음(웹앱에서 실행 필요)');
-      return;
+      _doneLoading_();
+      return Promise.resolve({ ok:false, message:'google.script.run 없음(웹앱에서 실행 필요)' });
     }
 
-    google.script.run
-      .withSuccessHandler(function(res){
-        res = res || { ok:false, message:'EMPLOYEE_listTabs 응답이 없습니다.' };
-        if (!res.ok){
-          if (typeof showAlertError === 'function') showAlertError(res.message || '목록 조회 실패', '오류');
-          return;
-        }
-        // ✅ 파생필드 계산
-        try { decorateEmployeeDerivedFields_(res); } catch(e){}
-        pageRoot.__employeeDataBase = res;
-        populateFilterOptionsFromData_(pageRoot, res);
-        applyFiltersAndRender_(pageRoot);
-      })
-      .withFailureHandler(function(err){
-        if (typeof showAlertError === 'function') {
-          showAlertError((err && err.message) ? err.message : String(err), '목록 조회 실패');
-        }
-      })
-      .EMPLOYEE_listTabs({ page:1, pageSize:200 });
+    return new Promise(function(resolve){
+      google.script.run
+        .withSuccessHandler(function(res){
+          res = res || { ok:false, message:'EMPLOYEE_listTabs 응답이 없습니다.' };
+          if (!res.ok){
+            var em = res.message || '목록 조회 실패';
+            _doneLoading_();
+            if (window.showRetryConfirm){
+              window.showRetryConfirm(em, '오류', function(){
+                Promise.resolve(loadEmployeeTabs_(pageRoot, opts || {})).then(resolve);
+              }, function(){
+                if (typeof showAlertError === 'function') showAlertError(em, '오류');
+                resolve(res);
+              });
+              return;
+            }
+            if (typeof showAlertError === 'function') showAlertError(em, '오류');
+            resolve(res);
+            return;
+          }
+          // ✅ 파생필드 계산
+          try { decorateEmployeeDerivedFields_(res); } catch(e){}
+          pageRoot.__employeeDataBase = res;
+          populateFilterOptionsFromData_(pageRoot, res);
+          applyFiltersAndRender_(pageRoot);
+          _doneLoading_();
+          resolve(res);
+        })
+        .withFailureHandler(function(err){
+          var em = (err && err.message) ? err.message : String(err);
+          _doneLoading_();
+          if (window.showRetryConfirm){
+            window.showRetryConfirm(em, '목록 조회 실패', function(){
+              Promise.resolve(loadEmployeeTabs_(pageRoot, opts || {})).then(resolve);
+            }, function(){
+              if (typeof showAlertError === 'function') showAlertError(em, '목록 조회 실패');
+              resolve({ ok:false, error:em });
+            });
+            return;
+          }
+          if (typeof showAlertError === 'function') {
+            showAlertError(em, '목록 조회 실패');
+          }
+          resolve({ ok:false, error:em });
+        })
+        .EMPLOYEE_listTabs({ page:1, pageSize:200 });
+    });
   }
 
   function _empSetElValue_(el, val){
@@ -4392,7 +4449,7 @@ function _empBindEmployeeFileSection_(rootEl){
         if (!tr) return;
         var fileId = _readField_(tr, 'file_id');
         if (!fileId) throw new Error('아직 저장되지 않은 파일입니다. 저장 후 미리보기/다운로드가 가능합니다.');
-        if (typeof showLoading === 'function') showLoading(true);
+        _empShowLoading_(rootEl || document.body, 'employee-file-action');
         window.DriveFileUtil.previewUrl({ file_id: fileId })
           .then(function(res){
             if (!res || !res.ok || !res.url) throw new Error('미리보기 URL 생성 실패');
@@ -4403,7 +4460,7 @@ function _empBindEmployeeFileSection_(rootEl){
             if (typeof showAlertError === 'function') showAlertError(msg, '미리보기 실패');
           })
           .finally(function(){
-            if (typeof showLoading === 'function') showLoading(false);
+            _empHideLoading_(rootEl || document.body, 'employee-file-action');
           });
       }catch(err){
         var msg = (err && err.message) ? err.message : String(err);
@@ -4438,7 +4495,7 @@ function _empBindEmployeeFileSection_(rootEl){
           // Windows 금지문자 최소 치환
           return s.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, ' ').trim();
         }
-        if (typeof showLoading === 'function') showLoading(true);
+        _empShowLoading_(rootEl || document.body, 'employee-file-action');
 
         // ✅ 1개면 기존 다운로드 유지
         if (items.length === 1){
@@ -4453,7 +4510,7 @@ function _empBindEmployeeFileSection_(rootEl){
               if (typeof showAlertError === 'function') showAlertError(msg, '다운로드 실패');
             })
             .finally(function(){
-              if (typeof showLoading === 'function') showLoading(false);
+              _empHideLoading_(rootEl || document.body, 'employee-file-action');
             });
           return;
         }
@@ -4474,7 +4531,7 @@ function _empBindEmployeeFileSection_(rootEl){
             if (typeof showAlertError === 'function') showAlertError(msg, '다운로드 실패');
           })
           .finally(function(){
-            if (typeof showLoading === 'function') showLoading(false);
+            _empHideLoading_(rootEl || document.body, 'employee-file-action');
           });
       }catch(err){
         var msg = (err && err.message) ? err.message : String(err);
@@ -4485,7 +4542,9 @@ function _empBindEmployeeFileSection_(rootEl){
 }
 
 /** Employee_File: 저장 직전 pending 파일을 Drive에 업로드하고 row에 file_id/drive_url 등을 채운다 */
-function _empUploadPendingEmployeeFiles_(rootEl){
+function _empUploadPendingEmployeeFiles_(rootEl, opts){
+  opts = opts || {};
+  var useSpinner = (opts.spinner !== false);
   return new Promise(function(resolve, reject){
     try{
       var table = rootEl.querySelector('table.tbl[data-entity="Employee_File"]');
@@ -4524,7 +4583,7 @@ function _empUploadPendingEmployeeFiles_(rootEl){
         var file = tr.__empPendingFile;
         if (!file) return next();
 
-        if (typeof showLoading === 'function') showLoading(true);
+        if (useSpinner) _empShowLoading_(rootEl, 'employee-file-upload');
 
         window.DriveFileUtil.upload({ folderKey: folderKey, file: file })
           .then(function(res){
@@ -4562,7 +4621,7 @@ function _empUploadPendingEmployeeFiles_(rootEl){
           .then(function(){ next(); })
           .catch(function(err){ reject(err); })
           .finally(function(){
-            if (typeof showLoading === 'function') showLoading(false);
+            if (useSpinner) _empHideLoading_(rootEl, 'employee-file-upload');
           });
       }
       next();
@@ -4587,6 +4646,15 @@ function _empUploadPendingEmployeeFiles_(rootEl){
       // ✅ 모드 전환 + 저장/삭제 처리
       onAction: function(action, e, modalEl, bodyHost, done){
         var root = _empResolveRoot_(modalEl, bodyHost);
+        function _hideLoading_(key){ _empHideLoading_(bodyHost, key); }
+        function _reloadMainList_(){
+          try{
+            if (typeof window.Employee_reloadList === 'function') {
+              return Promise.resolve(window.Employee_reloadList({ spinner:false }));
+            }
+          }catch(e){}
+          return Promise.resolve();
+        }
 
         // (안전) 현재 모드가 없으면 initMode로
         if (!root.dataset.mode) root.dataset.mode = initMode;
@@ -4631,49 +4699,45 @@ function _empUploadPendingEmployeeFiles_(rootEl){
 
         // --- 저장(create/edit 공용) ---
         if (action === 'save'){
+          _empShowLoading_(bodyHost, 'employee-detail-save');
           // ✅ 저장 전: pending 파일 업로드(Drive) → row에 file_id/drive_url 반영
           // - 등록/수정 모두 동일
-          _empUploadPendingEmployeeFiles_(root).then(function(){
+          _empUploadPendingEmployeeFiles_(root, { spinner:false }).then(function(){
             var payload = _empBuildSavePayload_(root);
           var mode = (payload._mode || initMode);
 
           // 간단 필수 체크(서버도 체크하지만 UX용)
           if (!payload.employee.employee_id){
+            _hideLoading_('employee-detail-save');
             done({ ok:false, error:'사번(employee_id)은 필수입니다.' });
             return false;
           }
           if (!payload.employee.name){
+            _hideLoading_('employee-detail-save');
             done({ ok:false, error:'성명(name)은 필수입니다.' });
             return false;
           }
 
-          if (typeof showLoading === 'function') showLoading(true);
-
           google.script.run
             .withSuccessHandler(function(res){
-              if (typeof showLoading === 'function') showLoading(false);
               res = res || {};
 
               if (!res.ok){
+                _hideLoading_('employee-detail-save');
                 done({ ok:false, error: res.message || '저장 실패' });
                 return;
               }
 
-              // 목록 갱신
-              if (typeof window.Employee_reloadList === 'function') window.Employee_reloadList();
-
               // ✅ create면 기본동작(닫힘)
               if (mode === 'create'){
-                done({ ok:true });
+                _reloadMainList_().catch(function(){}).finally(function(){
+                  _hideLoading_('employee-detail-save');
+                  done({ ok:true });
+                });
                 return;
               }
 
-              // ✅ edit면 "조회모드로 전환 + 푸터 교체" 후 닫지 않기
-              _empSetMode_(root, 'view');
-              _empRenderFooter_(modalEl, 'view');
-              done({ ok:true, close:false });
-
-              // 최신 데이터 재조회(선택이지만 권장)
+              // ✅ edit면 최신 데이터 재조회 + 메인 목록 재조회 후 조회모드 전환(모달 유지)
               var id = String(payload.employee.employee_id || '').trim();
               _empFetchBundle_(id, function(b){
                 root.__empBundle = b;
@@ -4682,16 +4746,29 @@ function _empUploadPendingEmployeeFiles_(rootEl){
                 _empApplyDerivedToModal_(root, b);
                 _empRecalcAll_(root);
                 _empSetMode_(root, 'view');
-              }, function(){});
+                _empRenderFooter_(modalEl, 'view');
+
+                _reloadMainList_().catch(function(){}).finally(function(){
+                  _hideLoading_('employee-detail-save');
+                  done({ ok:true, close:false });
+                });
+              }, function(){
+                _empSetMode_(root, 'view');
+                _empRenderFooter_(modalEl, 'view');
+                _reloadMainList_().catch(function(){}).finally(function(){
+                  _hideLoading_('employee-detail-save');
+                  done({ ok:true, close:false });
+                });
+              });
             })
             .withFailureHandler(function(err){
-              if (typeof showLoading === 'function') showLoading(false);
+              _hideLoading_('employee-detail-save');
               done({ ok:false, error: (err && err.message) ? err.message : String(err) });
             })
             .EMPLOYEE_saveBundle(payload);
           })
           .catch(function(err){
-            if (typeof showLoading === 'function') showLoading(false);
+            _hideLoading_('employee-detail-save');
             var msg = (err && err.message) ? err.message : String(err);
             done({ ok:false, error: msg });
           });
@@ -4707,27 +4784,27 @@ function _empUploadPendingEmployeeFiles_(rootEl){
             return false;
           }
 
-          if (typeof showLoading === 'function') showLoading(true);
+          _empShowLoading_(bodyHost, 'employee-detail-delete');
 
           google.script.run
             .withSuccessHandler(function(res){
-              if (typeof showLoading === 'function') showLoading(false);
               res = res || {};
 
               if (!res.ok){
+                _hideLoading_('employee-detail-delete');
                 var msg = res.message || '삭제 실패';
                 if (typeof showAlertError === 'function') showAlertError(msg, '삭제 실패');
                 done({ ok:false, message: msg, close:false });
                 return;
               }
 
-              if (typeof window.Employee_reloadList === 'function') window.Employee_reloadList();
-
-              // 성공은 조용히 닫아도 되고(기존 의도 유지)
-              done({ ok:true, message:'삭제되었습니다.' }); // message는 있어도 되고 없어도 됨
+              _reloadMainList_().catch(function(){}).finally(function(){
+                _hideLoading_('employee-detail-delete');
+                done({ ok:true, message:'삭제되었습니다.' });
+              });
             })
             .withFailureHandler(function(err){
-              if (typeof showLoading === 'function') showLoading(false);
+              _hideLoading_('employee-detail-delete');
               var msg = (err && err.message) ? err.message : String(err);
               if (typeof showAlertError === 'function') showAlertError(msg, '삭제 실패');
               done({ ok:false, message: msg, close:false });
@@ -4761,10 +4838,10 @@ function _empUploadPendingEmployeeFiles_(rootEl){
           return;
         }
 
-        if (typeof showLoading === 'function') showLoading(true);
+        _empShowLoading_(bodyHost, 'employee-detail-load');
 
         _empFetchBundle_(employeeId, function(res){
-          if (typeof showLoading === 'function') showLoading(false);
+          _empHideLoading_(bodyHost, 'employee-detail-load');
 
           root.__empBundle = res;
 
@@ -4781,7 +4858,7 @@ function _empUploadPendingEmployeeFiles_(rootEl){
           setTimeout(function(){ _empSetMode_(root, 'view'); }, 0);
 
         }, function(err){
-          if (typeof showLoading === 'function') showLoading(false);
+          _empHideLoading_(bodyHost, 'employee-detail-load');
           if (typeof showAlertError === 'function') {
             showAlertError((err && err.message) ? err.message : String(err), '상세 조회 실패');
           }
@@ -4795,8 +4872,38 @@ function _empUploadPendingEmployeeFiles_(rootEl){
   function Employee_init(scope){
     var container = scope || document;
     var pageRoot = container.querySelector('.page-root');
-    if (!pageRoot || pageRoot.__employeeInited) return;
+    if (!pageRoot || pageRoot.__employeeInited) return Promise.resolve();
     pageRoot.__employeeInited = true;
+
+    // ✅ 초기 진입 시 템플릿 샘플값(필터칩/요약카드/테이블 예시행) 숨김
+    (function _clearEmployeeMainPlaceholders_(root){
+      if (!root) return;
+      try{
+        root.querySelectorAll('.sum-item-value').forEach(function(el){
+          el.textContent = '-';
+        });
+      }catch(e){}
+      try{
+        root.querySelectorAll('.wf-chip').forEach(function(chip){
+          var v = String(chip.getAttribute('data-value') || '').trim();
+          var t = String(chip.textContent || '').trim();
+          if (!v || t === 'DB 중복제거 리스트업'){
+            chip.remove();
+          }
+        });
+      }catch(e){}
+      try{
+        root.querySelectorAll('table.tbl tbody').forEach(function(tb){
+          Array.from(tb.querySelectorAll('tr')).forEach(function(tr){
+            var txt = String(tr.textContent || '').trim();
+            if (!txt) return;
+            if (/00000|0000-00-00|000000-0000000|000-0000-0000|OO은행|OO카드/.test(txt)){
+              tr.remove();
+            }
+          });
+        });
+      }catch(e){}
+    })(pageRoot);
 
     // 보기 버튼(돋보기) → 상세 모달
     pageRoot.addEventListener('click', function(e){
@@ -4821,12 +4928,12 @@ function _empUploadPendingEmployeeFiles_(rootEl){
     }
 
     // 외부에서 강제 재조회 가능(저장/삭제 후)
-    window.Employee_reloadList = function(){
-      loadEmployeeTabs_(pageRoot);
+    window.Employee_reloadList = function(opts){
+      return loadEmployeeTabs_(pageRoot, opts || {});
     };
 
-    // 최초 로딩
-    loadEmployeeTabs_(pageRoot);
+    // 최초 로딩: index(app-page-enter) 스피너와 중복 방지
+    return loadEmployeeTabs_(pageRoot, { spinner:false, loadingKey:'employee-main' });
   }
 
   // =========================================================
@@ -4920,6 +5027,60 @@ function _empUploadPendingEmployeeFiles_(rootEl){
         + '  </td>'
         + '</tr>';
     }
+    function _htmlToRow_(html){
+      var t = document.createElement('template');
+      t.innerHTML = String(html || '').trim();
+      return t.content.firstElementChild;
+    }
+    function _patchTbodyByKey_(tbody, keyAttr, rows, rowHtmlFn, emptyHtml){
+      if (!tbody) return;
+      rows = Array.isArray(rows) ? rows : [];
+      keyAttr = String(keyAttr || 'data-row-id');
+
+      var oldMap = {};
+      Array.from(tbody.querySelectorAll('tr[' + keyAttr + ']')).forEach(function(tr){
+        var k = _trim_(tr.getAttribute(keyAttr));
+        if (k) oldMap[k] = tr;
+      });
+
+      // placeholder(로딩/빈데이터/오류) 제거
+      Array.from(tbody.querySelectorAll('tr:not([' + keyAttr + '])')).forEach(function(tr){
+        tr.remove();
+      });
+
+      var nextNodes = [];
+      var seen = {};
+      rows.forEach(function(r){
+        var k = _trim_(r && r.employee_id);
+        if (!k || seen[k]) return;
+        seen[k] = 1;
+        var html = rowHtmlFn(r);
+        var prev = oldMap[k];
+        if (prev && prev.__rowHtml === html){
+          nextNodes.push(prev);
+          return;
+        }
+        var node = _htmlToRow_(html);
+        if (!node) return;
+        node.__rowHtml = html;
+        if (prev && prev.parentNode === tbody) prev.replaceWith(node);
+        nextNodes.push(node);
+      });
+
+      // 사라진 키 삭제
+      Object.keys(oldMap).forEach(function(k){
+        if (seen[k]) return;
+        var tr = oldMap[k];
+        if (tr && tr.parentNode === tbody) tr.remove();
+      });
+
+      // 정렬 순서 반영(기존 node 이동)
+      nextNodes.forEach(function(node){ tbody.appendChild(node); });
+
+      if (!nextNodes.length){
+        tbody.innerHTML = emptyHtml || '<tr><td colspan="5" style="opacity:.7; padding:1rem;">데이터가 없습니다.</td></tr>';
+      }
+    }
     function _collectPayload_(root){
       var visibles = [];
       Array.from(root.querySelectorAll('[data-emp-vis-tbody="visible"] tr[data-employee-id]')).forEach(function(tr){
@@ -4943,14 +5104,14 @@ function _empUploadPendingEmployeeFiles_(rootEl){
     }
 
     // ✅ (추가) 좌/우 테이블 재조회 + 재렌더
-    function _reloadAdminTables_(root){
+    function _reloadAdminTables_(root, opts){
       root = root || document;
+      opts = opts || {};
+      var useSpinner = (opts.spinner !== false);
       var tbodyV = root.querySelector('[data-emp-vis-tbody="visible"]');
       var tbodyD = root.querySelector('[data-emp-vis-tbody="deleted"]');
 
-      if (tbodyV) tbodyV.innerHTML = '<tr><td colspan="5" style="opacity:.7; padding:1rem;">로딩 중...</td></tr>';
-      if (tbodyD) tbodyD.innerHTML = '<tr><td colspan="5" style="opacity:.7; padding:1rem;">로딩 중...</td></tr>';
-
+      if (useSpinner) _empShowLoading_(root, 'employee-vis-load');
 
       return _callGAS_('EMPLOYEE_adminListVisibility', {})
         .then(function(res){
@@ -4958,14 +5119,8 @@ function _empUploadPendingEmployeeFiles_(rootEl){
           var vRows = (res.visibleRows || []).slice().sort(_cmpEmp_);
           var dRows = (res.deletedRows || []).slice().sort(_cmpEmp_);
 
-          if (tbodyV){
-            tbodyV.innerHTML = vRows.length ? vRows.map(_rowHtmlVisible_).join('')
-              : '<tr><td colspan="5" style="opacity:.7; padding:1rem;">데이터가 없습니다.</td></tr>';
-          }
-          if (tbodyD){
-            tbodyD.innerHTML = dRows.length ? dRows.map(_rowHtmlDeleted_).join('')
-              : '<tr><td colspan="5" style="opacity:.7; padding:1rem;">데이터가 없습니다.</td></tr>';
-          }
+          _patchTbodyByKey_(tbodyV, 'data-employee-id', vRows, _rowHtmlVisible_, '<tr><td colspan="5" style="opacity:.7; padding:1rem;">데이터가 없습니다.</td></tr>');
+          _patchTbodyByKey_(tbodyD, 'data-employee-id', dRows, _rowHtmlDeleted_, '<tr><td colspan="5" style="opacity:.7; padding:1rem;">데이터가 없습니다.</td></tr>');
 
           try{
             if (typeof initUiScope === 'function') initUiScope(root);
@@ -4983,6 +5138,10 @@ function _empUploadPendingEmployeeFiles_(rootEl){
           if (tbodyV) tbodyV.innerHTML = '<tr><td colspan="5" style="opacity:.7; padding:1rem;">'+msg+'</td></tr>';
           if (tbodyD) tbodyD.innerHTML = '<tr><td colspan="3" style="opacity:.7; padding:1rem;">'+msg+'</td></tr>';
           throw err;
+        })
+        .finally(function(){
+          if (!useSpinner) return;
+          _empHideLoading_(root, 'employee-vis-load');
         });
     }
 
@@ -4999,23 +5158,29 @@ function _empUploadPendingEmployeeFiles_(rootEl){
       onSave: function(e, modalEl, bodyHost, done){
         var root = bodyHost.querySelector('[data-emp-vis-admin-root]') || bodyHost;
         var payload = _collectPayload_(root);
+        _empShowLoading_(root, 'employee-vis-save');
         _callGAS_('EMPLOYEE_adminSaveVisibility', payload)
           .then(function(res){
             if (!res || !res.ok) throw new Error((res && res.message) ? res.message : '저장 실패');
-            // ✅ 1) 알림을 먼저 띄움
-            done({ ok:true, message:'저장되었습니다.', close:false, autoAlert:true });
-
-            // ✅ 2) 알림 표시 직후(확인 클릭과 무관) 바로 재조회 시작
-            setTimeout(function(){
-              // 메인 목록 재조회(미표시 처리 즉시 반영)
-              try{ if (typeof window.Employee_reloadList === 'function') window.Employee_reloadList(); }catch(e){}
-              // 모달 내 좌/우 테이블도 재조회
-              try{ _reloadAdminTables_(root).catch(function(){}); }catch(e){}
-            }, 0);
-
-            return;
+            return Promise.resolve()
+              .then(function(){
+                try{
+                  if (typeof window.Employee_reloadList === 'function') {
+                    return Promise.resolve(window.Employee_reloadList({ spinner:false }));
+                  }
+                }catch(e){}
+                return Promise.resolve();
+              })
+              .then(function(){
+                return _reloadAdminTables_(root, { spinner:false });
+              })
+              .then(function(){
+                _empHideLoading_(root, 'employee-vis-save');
+                done({ ok:true, message:'저장되었습니다.', close:false, autoAlert:true });
+              });
           })
           .catch(function(err){
+            _empHideLoading_(root, 'employee-vis-save');
             done({ ok:false, message:(err && err.message) ? err.message : String(err || '저장 실패'), close:false, autoAlert:true });
           });
         return false; // ✅ 비동기 → done 직접 호출
@@ -5025,8 +5190,8 @@ function _empUploadPendingEmployeeFiles_(rootEl){
         var root = bodyHost.querySelector('[data-emp-vis-admin-root]') || bodyHost;
         var tbodyV = root.querySelector('[data-emp-vis-tbody="visible"]');
         var tbodyD = root.querySelector('[data-emp-vis-tbody="deleted"]');
-        if (tbodyV) tbodyV.innerHTML = '<tr><td colspan="5" style="opacity:.7; padding:1rem;">로딩 중...</td></tr>';
-        if (tbodyD) tbodyD.innerHTML = '<tr><td colspan="5" style="opacity:.7; padding:1rem;">로딩 중...</td></tr>';
+        if (tbodyV) tbodyV.innerHTML = '<tr><td colspan="5" style="opacity:.7; padding:1rem;"></td></tr>';
+        if (tbodyD) tbodyD.innerHTML = '<tr><td colspan="5" style="opacity:.7; padding:1rem;"></td></tr>';
 
         // ✅ 필터 이벤트 바인딩(1회)
         if (!root.__empVisAdminFilterBound){
@@ -5041,7 +5206,7 @@ function _empUploadPendingEmployeeFiles_(rootEl){
           });
         }
         // ✅ (정리) onOpen 로딩도 공통 함수로 처리
-        _reloadAdminTables_(root); 
+        _reloadAdminTables_(root);
       }
     });
   };

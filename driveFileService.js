@@ -57,7 +57,7 @@ function FILEUTIL__dataUrlToBlob_(dataUrl, mimeType, fileName){
 // ✅ 파일명 안전 처리(Windows 금지문자 최소 치환)
 function FILEUTIL__safeName_(s){
   s = String(s || '').trim();
-  return s.replace(/[\\/:*?"<>|]/g, '_').replace(/\\s+/g, ' ').trim();
+  return s.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, ' ').trim();
 }
 /**
  * 공통 업로드

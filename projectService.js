@@ -137,6 +137,10 @@ function PROJECT_saveTables(payload){
  *  - pageSize: 기본 50, 최대 200
  */
 function PROJECT_list(payload){
+  var __perf = (typeof DB_perfStart_ === 'function')
+    ? DB_perfStart_('PROJECT_list')
+    : null;
+  var __perfMeta = { ok:false, total:0, rows:0 };
   try{
     // ✅ 페이지 조회 권한 (Permission 시트에 page:project:view가 있어야 함)
     var me = DB_assertPerm_('page:project:view');
@@ -151,16 +155,15 @@ function PROJECT_list(payload){
     if (isNaN(pageSize) || pageSize < 1) pageSize = 50;
     if (pageSize > 200) pageSize = 200;
 
-    var sh = DB_sheet_(PROJECT_SHEET_NAME);
-    var header = DB_header_(sh);
+    var t = DB_readRows_(PROJECT_SHEET_NAME);
+    var header = t.header || [];
+    var rowsSrc = t.rows || [];
     var map = DB_headerMap_(header);
 
-    var lastRow = sh.getLastRow();
-    if (lastRow < 2) {
+    if (!header.length || !rowsSrc.length) {
+      __perfMeta.ok = true;
       return { ok:true, total:0, page:page, pageSize:pageSize, rows:[] };
     }
-
-    var values = sh.getRange(2, 1, lastRow - 1, header.length).getValues();
 
     function truthy_(v){
       if (v === true) return true;
@@ -185,22 +188,16 @@ function PROJECT_list(payload){
     }
 
     var out = [];
-    for (var r=0; r<values.length; r++){
-      var row = values[r];
+    for (var r=0; r<rowsSrc.length; r++){
+      var src = rowsSrc[r] || {};
       var obj = {};
-
-      for (var c=0; c<header.length; c++){
-        var k = String(header[c] || '').trim();
-        if (!k) continue;
-
-        var v = row[c];
-
+      Object.keys(src).forEach(function(k){
+        var v = src[k];
         // 날짜 필드 안전 변환(시트에 Date로 들어가도 프론트에서 다루기 쉽게)
         if (k === 'start_date' || k === 'end_date') v = fmtDate_(v);
         if (k === 'created_at' || k === 'updated_at') v = fmtDateTime_(v);
-
         obj[k] = v;
-      }
+      });
 
       // soft delete 컬럼이 있으면 제외
       if (map['is_deleted'] != null && truthy_(obj.is_deleted)) continue;
@@ -230,11 +227,16 @@ function PROJECT_list(payload){
     var total = out.length;
     var start = (page - 1) * pageSize;
     var rows = out.slice(start, start + pageSize);
+    __perfMeta.ok = true;
+    __perfMeta.total = total;
+    __perfMeta.rows = rows.length;
 
     return { ok:true, total:total, page:page, pageSize:pageSize, rows:rows };
 
   } catch(err){
     return { ok:false, message: (err && err.message) ? err.message : String(err) };
+  } finally{
+    if (__perf && typeof DB_perfEnd_ === 'function') DB_perfEnd_(__perf, __perfMeta);
   }
 }
 
@@ -531,6 +533,10 @@ function PROJECT_listByPanelFilters_(params) {
 }
 
 function PROJECT_getBundle(projectId){
+  var __perf = (typeof DB_perfStart_ === 'function')
+    ? DB_perfStart_('PROJECT_getBundle')
+    : null;
+  var __perfMeta = { ok:false, tableRows:0 };
   try{
     DB_assertPerm_('page:project:view');
 
@@ -558,14 +564,29 @@ function PROJECT_getBundle(projectId){
 
     // 자식 테이블들
     var tables = {};
-    (PROJECT_BUNDLE || []).forEach(function(cfg){
-      var rows = DB_queryByField_(cfg.sheet, 'project_id', projectId) || [];
+    function readProjectRows_(sheetName){
+      var t = DB_readRows_(sheetName);
+      var header = t.header || [];
+      var rows = t.rows || [];
+      if (!header.length || !rows.length) return [];
+      if (header.indexOf('project_id') < 0) return [];
 
-      // ✅ 소프트삭제된 하위 행 제외
-      rows = rows.filter(function(r){
-        // is_deleted 컬럼이 없으면 r.is_deleted가 undefined이므로 자동 통과
-        return !truthy_(r && r.is_deleted);
-      });
+      var out = [];
+      for (var i=0; i<rows.length; i++){
+        var r = rows[i] || {};
+        if (String(r.project_id || '').trim() !== projectId) continue;
+        if (truthy_(r.is_deleted)) continue;
+
+        // cache 오염 방지용 shallow copy
+        var o = {};
+        Object.keys(r).forEach(function(k){ o[k] = r[k]; });
+        out.push(o);
+      }
+      return out;
+    }
+
+    (PROJECT_BUNDLE || []).forEach(function(cfg){
+      var rows = readProjectRows_(cfg.sheet);
 
       if (typeof _pjt_serializeDates_ === 'function') {
         rows = rows.map(function(r){ return _pjt_serializeDates_(r); });
@@ -581,6 +602,11 @@ function PROJECT_getBundle(projectId){
       project: project,
       tables: tables
     };
+    __perfMeta.ok = true;
+    __perfMeta.tableRows = Object.keys(tables || {}).reduce(function(acc, k){
+      var arr = tables[k];
+      return acc + (Array.isArray(arr) ? arr.length : 0);
+    }, 0);
 
     // ✅ 응답 직렬화 강제(안전장치)
     // - Date, undefined, 특수객체 등이 섞여있을 때 클라로 깨지는 걸 방지
@@ -588,6 +614,8 @@ function PROJECT_getBundle(projectId){
   
   } catch(err){
     return { ok:false, message: (err && err.message) ? err.message : String(err) };
+  } finally{
+    if (__perf && typeof DB_perfEnd_ === 'function') DB_perfEnd_(__perf, __perfMeta);
   }
 }
 
@@ -626,30 +654,21 @@ function PROJECT_listTabs(payload){
     }
 
     function readByProjectIds_(sheetName){
-      var sh = DB_sheet_(sheetName);
-      var header = DB_header_(sh);
+      var t = DB_readRows_(sheetName);
+      var header = t.header || [];
+      var values = t.rows || [];
       var map = DB_headerMap_(header);
+      if (!header.length || !values.length) return [];
 
-      var lastRow = sh.getLastRow();
-      if (lastRow < 2) return [];
-
-      var values = sh.getRange(2, 1, lastRow - 1, header.length).getValues();
       var out = [];
-
-      var pidIdx = map['project_id'];
-      if (pidIdx == null) return [];
+      if (map['project_id'] == null) return [];
 
       for (var r=0; r<values.length; r++){
-        var row = values[r];
-        var pid = String(row[pidIdx] || '').trim();
+        var row = values[r] || {};
+        var pid = String(row.project_id || '').trim();
         if (!pid || !pmap[pid]) continue;
-
         var obj = {};
-        for (var c=0; c<header.length; c++){
-          var k = String(header[c] || '').trim();
-          if (!k) continue;
-          obj[k] = row[c];
-        }
+        Object.keys(row).forEach(function(k){ obj[k] = row[k]; });
 
         if (map['is_deleted'] != null && truthy_(obj.is_deleted)) continue;
 
@@ -749,9 +768,9 @@ function PROJECT_listTabs(payload){
 }
 
 /**
- * ✅ 프로젝트 소프트삭제 (Project + 하위 시트 모두 소프트삭제)
- * - is_deleted: 1(삭제), 0(정상)
- * - deleted_at/by(있으면) + updated_at/by(있으면)도 같이 기록
+ * ✅ 프로젝트 소프트삭제 (Project 부모만 소프트삭제)
+ * - 자식 시트는 유지(자식 is_deleted는 자식 자체 삭제 시에만 변경)
+ * - 조회는 부모 is_deleted=0 기준이므로 부모 삭제 시 노출되지 않음
  */
 function PROJECT_delete(projectId){
   try{
@@ -764,25 +783,7 @@ function PROJECT_delete(projectId){
     var lock = LockService.getDocumentLock();
     lock.waitLock(20000);
     try{
-      var detail = {};
-
-      // 1) 자식테이블 삭제
-      (PROJECT_BUNDLE || []).forEach(function(cfg){
-        var sh = DB_sheet_(cfg.sheet);
-        var header = DB_header_(sh);
-        var map = DB_headerMap_(header);
-
-        if (map['project_id'] == null){
-          detail[cfg.key] = { deleted: 0, note: 'project_id 컬럼 없음' };
-          return;
-        }
-
-        // ✅ 소프트삭제(가능하면 is_deleted=1로 마킹)
-        var deleted = DB_deleteWhereUnlocked_(sh, map['project_id'] + 1, projectId, me);
-        detail[cfg.key] = { deleted: deleted };
-      });
-
-      // 2) Project 삭제(소프트/하드)
+      // 1) Project 삭제(소프트/하드)
       var psh = DB_sheet_(PROJECT_SHEET_NAME);
       var pHeader = DB_header_(psh);
       var pMap = DB_headerMap_(pHeader);
@@ -791,34 +792,20 @@ function PROJECT_delete(projectId){
         throw new Error('Project 시트에 project_id 컬럼이 없습니다.');
       }
 
-      // ---- helper: project_id로 "시트 row 번호(1-based)" 찾기 ----
-      function _findRowNoById_(sh, col1Based, id){
-        var last = sh.getLastRow();
-        if (last < 2) return 0;
-        var vals = sh.getRange(2, col1Based, last - 1, 1).getValues(); // [[...],...]
-        id = String(id || '').trim();
-        for (var i=0; i<vals.length; i++){
-          var v = String(vals[i][0] || '').trim();
-          if (v === id) return i + 2; // 실제 row 번호
-        }
-        return 0;
-      }
-
       var deletedProject = null;
 
       // ✅ is_deleted 컬럼이 있으면 소프트삭제
       if (pMap['is_deleted'] != null){
-        var rowNo = _findRowNoById_(psh, pMap[PROJECT_ID_FIELD] + 1, projectId);
+        var rowNo = DB_findRowIndexByIdUnlocked_(psh, PROJECT_ID_FIELD, projectId);
         if (!rowNo){
           return { ok:false, message:'삭제할 프로젝트를 찾을 수 없습니다. project_id=' + projectId };
         }
 
-        // ✅ is_deleted=1 (규칙 통일)
-        psh.getRange(rowNo, pMap['is_deleted'] + 1).setValue(1);
-
-        // 감사 필드 갱신(있을 때만)
-        if (pMap['updated_at'] != null) psh.getRange(rowNo, pMap['updated_at'] + 1).setValue(new Date());
-        if (pMap['updated_by'] != null) psh.getRange(rowNo, pMap['updated_by'] + 1).setValue(DB_actorLabel_(me));
+        var prow = psh.getRange(rowNo, 1, 1, pHeader.length).getValues()[0];
+        prow[pMap['is_deleted']] = 1;
+        if (pMap['updated_at'] != null) prow[pMap['updated_at']] = new Date();
+        if (pMap['updated_by'] != null) prow[pMap['updated_by']] = DB_actorLabel_(me);
+        psh.getRange(rowNo, 1, 1, pHeader.length).setValues([prow]);
 
         deletedProject = { soft: true, row: rowNo };
       } else {
@@ -830,15 +817,10 @@ function PROJECT_delete(projectId){
         }
         deletedProject = { hard: true, deleted: hardDeleted };
       }
+      DB_invalidateSheetCache_(PROJECT_SHEET_NAME);
+      if (typeof DB_bumpDataVersion_ === 'function') DB_bumpDataVersion_('Project');
 
-      return {
-        ok: true,
-        project_id: projectId,
-        deleted: {
-          project: deletedProject,
-          tables: detail
-        }
-      };
+      return { ok: true, project_id: projectId, deleted: { project: deletedProject } };
 
     } finally {
       lock.releaseLock();
@@ -858,8 +840,9 @@ function PROJECT_adminListVisibility(payload){
   try{
     DB_assertPerm_('btn:project:create');
 
-    var sh = DB_sheet_(PROJECT_SHEET_NAME);
-    var header = DB_header_(sh);
+    var t = DB_readRows_(PROJECT_SHEET_NAME);
+    var header = t.header || [];
+    var values = t.rows || [];
     var map = DB_headerMap_(header);
 
     if (map['is_deleted'] == null){
@@ -870,10 +853,7 @@ function PROJECT_adminListVisibility(payload){
       return { ok:false, message:'Project 시트에 is_visible 컬럼이 없습니다. (is_visible 컬럼을 생성해주세요)' };
     }
 
-    var lastRow = sh.getLastRow();
-    if (lastRow < 2) return _jsonSafeKst_({ ok:true, visibleRows:[], deletedRows:[] });
-
-    var values = sh.getRange(2, 1, lastRow - 1, header.length).getValues();
+    if (!header.length || !values.length) return _jsonSafeKst_({ ok:true, visibleRows:[], deletedRows:[] });
 
     function truthy_(v){
       if (v === true) return true;
@@ -892,15 +872,13 @@ function PROJECT_adminListVisibility(payload){
     var deletedRows = [];
 
     for (var r=0; r<values.length; r++){
-      var row = values[r];
+      var row = values[r] || {};
       var obj = {};
-      for (var c=0; c<header.length; c++){
-        var k = String(header[c] || '').trim();
-        if (!k) continue;
-        var v = row[c];
+      Object.keys(row).forEach(function(k){
+        var v = row[k];
         if (k === 'start_date' || k === 'end_date') v = fmtDate_(v);
         obj[k] = v;
-      }
+      });
 
       // project_id 없으면 스킵
       if (!String(obj.project_id || '').trim()) continue;
@@ -934,7 +912,7 @@ function PROJECT_adminListVisibility(payload){
  * ✅ 프로젝트 표시/삭제 관리 저장
  * payload:
  *  - visibles: [{project_id, is_visible}]  // is_deleted=0 대상, 동일행 업데이트
- *  - restoreIds: [project_id, ...]         // is_deleted=1 → 0 복구(부모+자식)
+ *  - restoreIds: [project_id, ...]         // is_deleted=1 → 0 복구(부모만)
  */
 function PROJECT_adminSaveVisibility(payload){
   try{
@@ -954,17 +932,17 @@ function PROJECT_adminSaveVisibility(payload){
     var lock = LockService.getDocumentLock();
     lock.waitLock(20000);
     try{
-      // --- helper: find row by project_id ---
-      function _findRowNoById_(sh, col1Based, id){
+      // --- helper: build {project_id -> rowNo(1-based)} ---
+      function _buildRowMapById_(sh, col1Based){
+        var out = {};
         var last = sh.getLastRow();
-        if (last < 2) return 0;
+        if (last < 2) return out;
         var vals = sh.getRange(2, col1Based, last - 1, 1).getValues();
-        id = String(id || '').trim();
         for (var i=0; i<vals.length; i++){
           var v = String(vals[i][0] || '').trim();
-          if (v === id) return i + 2;
+          if (v) out[v] = i + 2;
         }
-        return 0;
+        return out;
       }
 
       // --- helper: HARD delete rows where (col == value) ---
@@ -984,6 +962,7 @@ function PROJECT_adminSaveVisibility(payload){
         }
         delRows.sort(function(a,b){ return b-a; });
         delRows.forEach(function(r){ s.deleteRow(r); });
+        if (delRows.length) DB_invalidateSheetCache_(sheetName);
         return delRows.length;
       }
 
@@ -1011,75 +990,64 @@ function PROJECT_adminSaveVisibility(payload){
         });
       }
 
-      // --- 1) is_visible 업데이트(동일행) ---
-      var pidCol = map[PROJECT_ID_FIELD] + 1;
-      visibles.forEach(function(it){
-        var pid = String(it && it.project_id || '').trim();
-        if (!pid) return;
-        var rowNo = _findRowNoById_(sh, pidCol, pid);
-        if (!rowNo) return;
-
-        // is_deleted=1 행은 여기서 건드리지 않음(복구 로직에서 처리)
-        var curDel = sh.getRange(rowNo, map['is_deleted'] + 1).getValue();
-        if (String(curDel).trim() === '1') return;
-
-        var v = (it && (it.is_visible === 1 || it.is_visible === '1')) ? 1 : 0;
-        sh.getRange(rowNo, map['is_visible'] + 1).setValue(v);
-      });
-
-      // --- 1.5) ✅ 완전삭제: master + children(행 자체 삭제) ---
+      // --- 1) ✅ 완전삭제: master + children(행 자체 삭제) ---
       hardDeleteIds.forEach(function(projectId){
         projectId = String(projectId || '').trim();
         if (!projectId) return;
         _hardDeleteBundle_(projectId);
       });
 
-      // --- 2) 복구: Project + 하위 시트 is_deleted=0 ---
-      function truthy_(v){
-        if (v === true) return true;
-        var s = String(v || '').trim().toLowerCase();
-        return (s === 'true' || s === 'y' || s === 'yes' || s === '1');
-      }
+      // --- 2) master(Project) 변경사항을 메모리에서 일괄 반영 후 1회 setValues ---
+      var pidCol = map[PROJECT_ID_FIELD] + 1;
+      var rowMap = _buildRowMapById_(sh, pidCol);
+      var last = sh.getLastRow();
+      var values = (last >= 2) ? sh.getRange(2, 1, last - 1, header.length).getValues() : [];
+      var changedMaster = false;
 
-      function _restoreSheet_(sheetName, projectId){
-        var s = DB_sheet_(sheetName);
-        var h = DB_header_(s);
-        var m2 = DB_headerMap_(h);
-        if (m2['project_id'] == null) return;
-        if (m2['is_deleted'] == null) return;
+      // --- 2.1) is_visible 업데이트(동일행) ---
+      visibles.forEach(function(it){
+        var pid = String(it && it.project_id || '').trim();
+        if (!pid) return;
+        var rowNo = rowMap[pid] || 0;
+        if (!rowNo) return;
+        var idx = rowNo - 2;
+        if (idx < 0 || idx >= values.length) return;
 
-        var last = s.getLastRow();
-        if (last < 2) return;
+        var row = values[idx];
+        if (String(row[map['is_deleted']] || '').trim() === '1') return;
 
-        var vals = s.getRange(2, 1, last - 1, h.length).getValues();
-        var pidIdx = m2['project_id'];
-        var delIdx = m2['is_deleted'];
-
-        for (var r=0; r<vals.length; r++){
-          var row = vals[r];
-          var pid = String(row[pidIdx] || '').trim();
-          if (pid !== String(projectId)) continue;
-          if (!truthy_(row[delIdx])) continue;
-
-          // set is_deleted=0
-          s.getRange(r + 2, delIdx + 1).setValue(0);
+        var v = (it && (it.is_visible === 1 || it.is_visible === '1')) ? 1 : 0;
+        if (String(row[map['is_visible']] || '') !== String(v)) {
+          row[map['is_visible']] = v;
+          changedMaster = true;
         }
-      }
+      });
+
+      // --- 2.2) 복구: Project 부모만 is_deleted=0 ---
 
       restoreIds.forEach(function(projectId){
         projectId = String(projectId || '').trim();
         if (!projectId) return;
-        var rowNo = _findRowNoById_(sh, pidCol, projectId);
+        var rowNo = rowMap[projectId] || 0;
         if (!rowNo) return;
+        var idx = rowNo - 2;
+        if (idx < 0 || idx >= values.length) return;
+        var row = values[idx];
 
         // Project is_deleted=0 + is_visible=0(활성)로 복구
-        sh.getRange(rowNo, map['is_deleted'] + 1).setValue(0);
-        sh.getRange(rowNo, map['is_visible'] + 1).setValue(0);
+        if (String(row[map['is_deleted']] || '') !== '0') {
+          row[map['is_deleted']] = 0;
+          changedMaster = true;
+        }
+        if (String(row[map['is_visible']] || '') !== '0') {
+          row[map['is_visible']] = 0;
+          changedMaster = true;
+        }
 
-        (PROJECT_BUNDLE || []).forEach(function(cfg){
-          _restoreSheet_(cfg.sheet, projectId);
-        });
       });
+      if (changedMaster && values.length) sh.getRange(2, 1, values.length, header.length).setValues(values);
+      DB_invalidateSheetCache_(PROJECT_SHEET_NAME);
+      if (typeof DB_bumpDataVersion_ === 'function') DB_bumpDataVersion_('Project');
 
       return { ok:true };
     } finally {

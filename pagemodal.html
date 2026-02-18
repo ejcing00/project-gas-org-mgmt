@@ -141,6 +141,37 @@
   /* ✅ 2번 모달은 1번 모달 위에 */
   #appPageModal2 { z-index: 1070; }
   .modal-backdrop.stack-2 { z-index: 1060; }
+
+  /* 참여인력 Pick(2번 모달) 전용: 상세모달보다 약간 낮은 고정 높이 */
+  #appPageModal2.mode-member-pick-fixed .modal-dialog{
+    height: calc(100vh - 6.5rem);
+  }
+  #appPageModal2.mode-member-pick-fixed .modal-content.page-modal-box{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  #appPageModal2.mode-member-pick-fixed .page-modal-body{
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  #appPageModal2.mode-member-pick-fixed [data-role="page-modal-body"]{
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  #appPageModal2.mode-member-pick-fixed [data-role="page-modal-body"] > *{
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+  }
 </style>
 
 <div class="modal fade app-page-modal" id="appPageModal" data-bs-backdrop="static" tabindex="-1">
@@ -243,7 +274,14 @@
       }
 
       // wrap-scroll 모드
-      var WRAP_SCROLL_TPLS = new Set(['leave-set-page-modal','workstudy-set1-page-modal','workstudy-set2-page-modal']);
+      var WRAP_SCROLL_TPLS = new Set([
+        'leave-set-page-modal',
+        'workstudy-set1-page-modal',
+        'workstudy-set2-page-modal',
+        'project-visibility-admin-page-modal',
+        'employee-visibility-admin-page-modal',
+        'tpl-payment-page-modal'
+      ]);
       modalEl.classList.toggle('mode-wrap-scroll', WRAP_SCROLL_TPLS.has(templateId));
 
       // ✅ 푸터 동적 구성
@@ -517,8 +555,17 @@
       }
 
       // wrap-scroll 모드(원본과 동일하게 토글만; CSS가 #appPageModal에만 있어도 무해)
-      var WRAP_SCROLL_TPLS = new Set(['leave-set-page-modal','workstudy-set1-page-modal','workstudy-set2-page-modal']);
+      var WRAP_SCROLL_TPLS = new Set([
+        'leave-set-page-modal',
+        'workstudy-set1-page-modal',
+        'workstudy-set2-page-modal',
+        'project-visibility-admin-page-modal',
+        'employee-visibility-admin-page-modal',
+        'tpl-payment-page-modal'
+      ]);
       modalEl.classList.toggle('mode-wrap-scroll', WRAP_SCROLL_TPLS.has(templateId));
+      var MEMBER_PICK_FIXED_TPLS = new Set(['project-member-in-pick-page-modal']);
+      modalEl.classList.toggle('mode-member-pick-fixed', MEMBER_PICK_FIXED_TPLS.has(templateId));
 
       // ✅ 푸터 동적 구성 (핵심: .modal-footer가 아니라 page-modal-footer를 찾는다)
       var footerHost =

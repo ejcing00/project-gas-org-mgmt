@@ -38,6 +38,77 @@
   min-height: 0;    /* ✅ 내부 scroll-xy 계산 안정화 */
 }
 
+/* 프로젝트 설정(visibility admin) 모달: 높이 고정 + 테이블 영역만 스크롤 */
+[data-pjt-vis-admin-root]{
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+[data-pjt-vis-admin-root] > .d-flex{
+  flex: 1 1 auto;
+  min-height: 0;
+}
+[data-pjt-vis-admin-root] .col-fill{
+  display: flex;
+  min-height: 0;
+}
+[data-pjt-vis-admin-root] .sec{
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+[data-pjt-vis-admin-root] .sec-body{
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+[data-pjt-vis-admin-root] .wrap.wrap-tbl{
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* 참여인력 Pick 모달: 고정 높이 안에서 테이블 영역만 스크롤 */
+[data-pjt-member-pick-root]{
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+[data-pjt-member-pick-root] > .sec{
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+[data-pjt-member-pick-root] > .sec > .sec-body{
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+[data-pjt-member-pick-root] [data-pick-main-wrap]{
+  flex: 1 1 0;
+  min-height: 0;
+}
+[data-pjt-member-pick-root] [data-pick-preview-sec]{
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+}
+[data-pjt-member-pick-root] [data-pick-preview-sec] > .sec-body{
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+[data-pjt-member-pick-root] [data-pick-preview-wrap]{
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 </style>
 <template id="tpl-project">
   <div class="page-root">
@@ -1615,7 +1686,7 @@
 
 <!-- 참여인력(주관기관 전담조직) 추가: Employee 선택 모달 -->
 <template id="project-member-in-pick-page-modal">
-  <div class="page-root">
+  <div class="page-root" data-pjt-member-pick-root>
     <div class="sec fill">
       <div class="sec-body">
 
@@ -1652,7 +1723,7 @@
         </div>
 
         <!-- ✅ Employee 목록 -->
-        <div class="wrap wrap-tbl scroll-x tbl-sticky" style="min-height:0;">
+        <div class="wrap wrap-tbl scroll-xy tbl-sticky" style="min-height:0;" data-pick-main-wrap>
           <table class="tbl" data-pick-table="employee">
             <thead>
               <tr>
@@ -1670,7 +1741,7 @@
             </thead>
             <tbody data-pjt-member-pick-tbody>
               <tr>
-                <td colspan="10" style="opacity:.7; padding:1rem;">로딩 중...</td>
+                <td colspan="10" style="opacity:.7; padding:1rem;"></td>
               </tr>
             </tbody>
           </table>
@@ -1683,9 +1754,9 @@
         </div>
 
         <!-- ✅ 선택된 참여인력(미리보기) -->
-        <div class="sec">
+        <div class="sec" data-pick-preview-sec>
           <div class="sec-body">
-            <div class="wrap wrap-tbl scroll-x tbl-sticky" style="min-height:0;">
+            <div class="wrap wrap-tbl scroll-xy tbl-sticky" style="min-height:0;" data-pick-preview-wrap>
               <table class="tbl" data-pick-table="member-in">
                 <thead>
                   <tr>
@@ -1735,7 +1806,7 @@
             </div>
           </div>
           <div class="sec-body fill" style="min-height:0;">
-            <div class="wrap wrap-tbl fill scroll-x tbl-sticky" style="min-height:0;">
+            <div class="wrap wrap-tbl fill scroll-xy tbl-sticky" style="min-height:0;">
               <table class="tbl" data-pjt-vis-table="visible">
                 <thead>
                   <tr>
@@ -1747,7 +1818,7 @@
                   </tr>
                 </thead>
                 <tbody data-pjt-vis-tbody="visible">
-                  <tr><td colspan="5" style="opacity:.7; padding:1rem;">로딩 중...</td></tr>
+                  <tr><td colspan="5" style="opacity:.7; padding:1rem;"></td></tr>
                 </tbody>
               </table>
             </div>
@@ -1773,7 +1844,7 @@
             </div>
           </div>
           <div class="sec-body fill" style="min-height:0;">
-            <div class="wrap wrap-tbl fill scroll-x tbl-sticky" style="min-height:0;">
+            <div class="wrap wrap-tbl fill scroll-xy tbl-sticky" style="min-height:0;">
               <table class="tbl" data-pjt-vis-table="deleted">
                 <thead>
                   <tr>
@@ -1785,7 +1856,7 @@
                   </tr>
                 </thead>
                 <tbody data-pjt-vis-tbody="deleted">
-                  <tr><td colspan="5" style="opacity:.7; padding:1rem;">로딩 중...</td></tr>
+                  <tr><td colspan="5" style="opacity:.7; padding:1rem;"></td></tr>
                 </tbody>
               </table>
             </div>
@@ -3129,6 +3200,53 @@ if (!window.__pjtMemberStatusBound){
         return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]);
       });
     }
+    function _htmlToRow_(html){
+      var t = document.createElement('template');
+      t.innerHTML = String(html || '').trim();
+      return t.content.firstElementChild;
+    }
+    function _patchTbodyByKey_(tbody, keyAttr, rows, rowHtmlFn, emptyHtml){
+      if (!tbody) return;
+      rows = Array.isArray(rows) ? rows : [];
+      keyAttr = String(keyAttr || 'data-row-id');
+
+      var oldMap = {};
+      _qsa_(tbody, 'tr[' + keyAttr + ']').forEach(function(tr){
+        var k = _trim_(tr.getAttribute(keyAttr));
+        if (k) oldMap[k] = tr;
+      });
+      _qsa_(tbody, 'tr:not([' + keyAttr + '])').forEach(function(tr){ tr.remove(); });
+
+      var nextNodes = [];
+      var seen = {};
+      rows.forEach(function(r){
+        var k = _trim_(r && r.project_id);
+        if (!k || seen[k]) return;
+        seen[k] = 1;
+        var html = rowHtmlFn(r);
+        var prev = oldMap[k];
+        if (prev && prev.__rowHtml === html){
+          nextNodes.push(prev);
+          return;
+        }
+        var node = _htmlToRow_(html);
+        if (!node) return;
+        node.__rowHtml = html;
+        if (prev && prev.parentNode === tbody) prev.replaceWith(node);
+        nextNodes.push(node);
+      });
+
+      Object.keys(oldMap).forEach(function(k){
+        if (seen[k]) return;
+        var tr = oldMap[k];
+        if (tr && tr.parentNode === tbody) tr.remove();
+      });
+
+      nextNodes.forEach(function(node){ tbody.appendChild(node); });
+      if (!nextNodes.length){
+        tbody.innerHTML = emptyHtml || '<tr><td colspan="5" style="opacity:.7; padding:1rem;">데이터가 없습니다.</td></tr>';
+      }
+    }
 
     function _rowHtmlVisible_(r){
       var pid = _trim_(r.project_id);
@@ -3270,17 +3388,8 @@ if (!window.__pjtMemberStatusBound){
           return cur === sd;
         });
 
-      if (tbodyV){
-        tbodyV.innerHTML = vRows.length
-          ? vRows.map(_rowHtmlVisible_).join('')
-          : '<tr><td colspan="5" style="opacity:.7; padding:1rem;">데이터가 없습니다.</td></tr>';
-      }
-
-      if (tbodyD){
-        tbodyD.innerHTML = dRows.length
-          ? dRows.map(_rowHtmlDeleted_).join('')
-          : '<tr><td colspan="5" style="opacity:.7; padding:1rem;">데이터가 없습니다.</td></tr>';
-      }
+      _patchTbodyByKey_(tbodyV, 'data-project-id', vRows, _rowHtmlVisible_, '<tr><td colspan="5" style="opacity:.7; padding:1rem;">데이터가 없습니다.</td></tr>');
+      _patchTbodyByKey_(tbodyD, 'data-project-id', dRows, _rowHtmlDeleted_, '<tr><td colspan="5" style="opacity:.7; padding:1rem;">데이터가 없습니다.</td></tr>');
 
       _safeUiScope_(root);
     }
@@ -3322,17 +3431,19 @@ if (!window.__pjtMemberStatusBound){
       var sSelV = _qs_(root, '[data-pjt-vis-status="visible"]');
       var sSelD = _qs_(root, '[data-pjt-vis-status="deleted"]');
 
-      function reload(){
+      function reload(opts){
+        opts = opts || {};
+        var useSpinner = (opts.spinner !== false);
         var keepV = ySelV ? ySelV.value : '';
         var keepD = ySelD ? ySelD.value : '';
         var keepSV = sSelV ? sSelV.value : '';
         var keepSD = sSelD ? sSelD.value : '';
 
-        // loading state
-        var tbodyV = _qs_(root, '[data-pjt-vis-tbody="visible"]');
-        var tbodyD = _qs_(root, '[data-pjt-vis-tbody="deleted"]');
-        if (tbodyV) tbodyV.innerHTML = '<tr><td colspan="5" style="opacity:.7; padding:1rem;">로딩 중...</td></tr>';
-        if (tbodyD) tbodyD.innerHTML = '<tr><td colspan="5" style="opacity:.7; padding:1rem;">로딩 중...</td></tr>';
+        if (useSpinner){
+          try{
+            if (window.UI_Loading) UI_Loading.show(root, { key:'project-vis-load', global:false, text:'' });
+          }catch(e){}
+        }
 
         return _callGAS_('PROJECT_adminListVisibility', {})
           .then(function(res){
@@ -3354,26 +3465,43 @@ if (!window.__pjtMemberStatusBound){
               showAlertError((err && err.message) ? err.message : String(err), '조회 실패');
             }
             throw err;
+          })
+          .finally(function(){
+            if (!useSpinner) return;
+            try{
+              if (window.UI_Loading) UI_Loading.hide(root, { key:'project-vis-load', global:false });
+            }catch(e){}
           });
       }
 
       function save(){
         var payload = _collectPayload_(root);
+        try{
+          if (window.UI_Loading) UI_Loading.show(root, { key:'project-vis-save', global:false, text:'' });
+        }catch(e){}
         return _callGAS_('PROJECT_adminSaveVisibility', payload)
           .then(function(res){
             if (!res || !res.ok) throw new Error((res && res.message) ? res.message : '저장 실패');
-            if (typeof showAlertSuccess === 'function') {
-              showAlertSuccess('저장되었습니다.');
-            }
-            return reload().then(function(){
+            return reload({ spinner:false }).then(function(){
               // ✅ 메인 프로젝트 목록도 최신화
-              try { if (typeof window.Project_reloadList === 'function') window.Project_reloadList(); } catch(e){}
+              try {
+                if (typeof window.Project_reloadList === 'function') {
+                  return Promise.resolve(window.Project_reloadList({ spinner:false }));
+                }
+              } catch(e){}
+              return Promise.resolve();
             });
           })
+          .then(function(ret){
+            try{
+              if (window.UI_Loading) UI_Loading.hide(root, { key:'project-vis-save', global:false });
+            }catch(e){}
+            return ret;
+          })
           .catch(function(err){
-            if (typeof showAlertError === 'function') {
-              showAlertError((err && err.message) ? err.message : String(err), '저장 실패');
-            }
+            try{
+              if (window.UI_Loading) UI_Loading.hide(root, { key:'project-vis-save', global:false });
+            }catch(e){}
             throw err;
           });
       }
@@ -3412,7 +3540,7 @@ if (!window.__pjtMemberStatusBound){
         title: '프로젝트 설정',
         size: 'full',
         footerButtons: [
-          { action:'save', text:'저장', icon:'fa-solid fa-floppy-disk', className:'btn-box btn-box-blue', close:false, autoAlert:false }
+          { action:'save', text:'저장', icon:'fa-solid fa-floppy-disk', className:'btn-box btn-box-blue', close:false }
         ],
         onOpen: function(modalEl, bodyHost){
           try{
@@ -3425,10 +3553,12 @@ if (!window.__pjtMemberStatusBound){
           if (action === 'save'){
             var p = (modalEl && modalEl.__pjtVisAdminSave) ? modalEl.__pjtVisAdminSave() : Promise.resolve();
             Promise.resolve(p).then(function(){
-              done({ ok:true, autoAlert:false });
+              done(
+                { ok:true },
+                { successTitle:'저장 완료', successMessage:'요청하신 정보가 저장되었습니다.', close:false }
+              );
             }).catch(function(err){
-              // __pjtVisAdminSave 내부에서 알림 처리하므로 여기서는 조용히 실패만 전달
-              done({ ok:false, autoAlert:false });
+              done({ ok:false, error:(err && err.message) ? err.message : String(err) });
             });
             return false;
           }
@@ -3470,8 +3600,15 @@ if (!window.__pjtMemberStatusBound){
           return;
         }
 
+        try{
+          if (window.UI_Loading) UI_Loading.show(bodyHost, { key:'project-detail-load', global:false, text:'' });
+        }catch(e){}
+
         google.script.run
           .withSuccessHandler(function(res){
+            try{
+              if (window.UI_Loading) UI_Loading.hide(bodyHost, { key:'project-detail-load', global:false });
+            }catch(e){}
             console.log('[PROJECT_getBundle raw]', res);
             res = res || { ok:false, message:'PROJECT_getBundle 응답이 없습니다.' };
 
@@ -3491,6 +3628,9 @@ if (!window.__pjtMemberStatusBound){
             _pjtSetMode_(modalEl, bodyHost, 'view');
           })
           .withFailureHandler(function(err){
+            try{
+              if (window.UI_Loading) UI_Loading.hide(bodyHost, { key:'project-detail-load', global:false });
+            }catch(e){}
             showAlertError((err && err.message) ? err.message : String(err), '상세조회 실패');
           })
           .PROJECT_getBundle(projectId);
@@ -3568,6 +3708,20 @@ if (!window.__pjtMemberStatusBound){
           ],
 
       onAction: function(action, e, modalEl, bodyHost, done){
+        function _hideLoading_(key){
+          try{
+            if (window.UI_Loading) UI_Loading.hide(bodyHost, { key:key, global:false });
+          }catch(e){}
+        }
+        function _reloadMainList_(){
+          try{
+            if (typeof window.Project_reloadList === 'function') {
+              return Promise.resolve(window.Project_reloadList({ spinner:false }));
+            }
+          }catch(e){}
+          return Promise.resolve();
+        }
+
         // ✅ 엑셀(footer btn-box) → 바디의 숨김 트리거 클릭(기존 export 로직 재사용)
         if (action === 'export'){
           var trigger =
@@ -3630,12 +3784,17 @@ if (!window.__pjtMemberStatusBound){
             return false;
           }
 
+          try{
+            if (window.UI_Loading) UI_Loading.show(bodyHost, { key:'project-detail-save', global:false, text:'' });
+          }catch(e){}
+
           google.script.run
             .withSuccessHandler(function(res){
               res = res || { ok:false, message:'PROJECT_saveBundle 응답이 없습니다.' };
               if (res.error && !res.message) res.message = res.error;
 
               if (!(res.ok && res.project_id)) {
+                _hideLoading_('project-detail-save');
                 done(res);
                 return;
               }
@@ -3645,13 +3804,16 @@ if (!window.__pjtMemberStatusBound){
 
               // ✅ 신규등록이면: 삭제처럼 "알림 후 닫기" + 목록 즉시 반영
               if (isCreateNow){
-                if (window.Project_reloadList) window.Project_reloadList();
-
-                done(res, {
-                  successTitle: '등록 완료',
-                  successMessage: '프로젝트가 등록되었습니다.',
-                  close: true
-                });
+                _reloadMainList_()
+                  .catch(function(){})
+                  .finally(function(){
+                    _hideLoading_('project-detail-save');
+                    done(res, {
+                      successTitle: '등록 완료',
+                      successMessage: '프로젝트가 등록되었습니다.',
+                      close: true
+                    });
+                  });
                 return;
               }
 
@@ -3665,10 +3827,12 @@ if (!window.__pjtMemberStatusBound){
                     var st = _pjtGetUiState_(bodyHost);
                     if (st) st.snapshot = _pjtMakeSnapshotFromCurrent_(bodyHost);
                     _pjtSetMode_(modalEl, bodyHost, 'view');
-
-                    if (window.Project_reloadList) window.Project_reloadList();
-
-                    done(res, { successTitle:'저장 완료', successMessage:'저장되었습니다. (재조회는 실패)' });
+                    _reloadMainList_()
+                      .catch(function(){})
+                      .finally(function(){
+                        _hideLoading_('project-detail-save');
+                        done(res, { successTitle:'저장 완료', successMessage:'저장되었습니다. (재조회는 실패)' });
+                      });
                     return;
                   }
 
@@ -3679,26 +3843,32 @@ if (!window.__pjtMemberStatusBound){
                   if (st) st.snapshot = { ok:true, project_id: b.project_id, project: b.project, tables: b.tables };
 
                   _pjtSetMode_(modalEl, bodyHost, 'view');
-
-                  if (window.Project_reloadList) window.Project_reloadList();
-
-                  done(res, {
-                    successTitle: '저장 완료',
-                    successMessage: '요청하신 정보가 저장되었습니다.'
-                  });
+                  _reloadMainList_()
+                    .catch(function(){})
+                    .finally(function(){
+                      _hideLoading_('project-detail-save');
+                      done(res, {
+                        successTitle: '저장 완료',
+                        successMessage: '요청하신 정보가 저장되었습니다.'
+                      });
+                    });
                 })
                 .withFailureHandler(function(err){
                   var st = _pjtGetUiState_(bodyHost);
                   if (st) st.snapshot = _pjtMakeSnapshotFromCurrent_(bodyHost);
                   _pjtSetMode_(modalEl, bodyHost, 'view');
 
-                  if (window.Project_reloadList) window.Project_reloadList();
-
-                  done(res, { successTitle:'저장 완료', successMessage:'저장되었습니다. (재조회 실패)' });
+                  _reloadMainList_()
+                    .catch(function(){})
+                    .finally(function(){
+                      _hideLoading_('project-detail-save');
+                      done(res, { successTitle:'저장 완료', successMessage:'저장되었습니다. (재조회 실패)' });
+                    });
                 })
                 .PROJECT_getBundle(res.project_id);
             })
             .withFailureHandler(function(err){
+              _hideLoading_('project-detail-save');
               showAlertError((err && err.message) ? err.message : String(err), '저장 실패');
               done({ ok:false, message: (err && err.message) ? err.message : String(err) });
             })
@@ -3724,23 +3894,32 @@ if (!window.__pjtMemberStatusBound){
             return false;
           }
 
+          try{
+            if (window.UI_Loading) UI_Loading.show(bodyHost, { key:'project-detail-delete', global:false, text:'' });
+          }catch(e){}
+
           google.script.run
             .withSuccessHandler(function(res){
               res = res || { ok:false, message:'PROJECT_delete 응답이 없습니다.' };
               if (!res.ok){
+                _hideLoading_('project-detail-delete');
                 done(res);
                 return;
               }
 
-              if (window.Project_reloadList) window.Project_reloadList();
-
-              done(res, {
-                successTitle: '삭제 완료',
-                successMessage: '프로젝트가 삭제되었습니다.',
-                close: true
-              });
+              _reloadMainList_()
+                .catch(function(){})
+                .finally(function(){
+                  _hideLoading_('project-detail-delete');
+                  done(res, {
+                    successTitle: '삭제 완료',
+                    successMessage: '프로젝트가 삭제되었습니다.',
+                    close: true
+                  });
+                });
             })
             .withFailureHandler(function(err){
+              _hideLoading_('project-detail-delete');
               showAlertError((err && err.message) ? err.message : String(err), '삭제 실패');
               done({ ok:false, message: (err && err.message) ? err.message : String(err) });
             })
@@ -4713,10 +4892,16 @@ function _initMemberInPickModal_(parentRoot, modalEl, bodyHost){
   var tbody = table ? (table.querySelector('tbody[data-pjt-member-pick-tbody]') || table.querySelector('tbody')) : null;
 
   if (tbody){
-    tbody.innerHTML = '<tr><td colspan="10" style="opacity:.7; padding:1rem;">로딩 중...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="opacity:.7; padding:1rem;"></td></tr>';
   }
+  try{
+    if (window.UI_Loading) UI_Loading.show(bodyHost, { key:'project-pick-load', global:false, text:'' });
+  }catch(e){}
 
   _loadAllEmployeesForPick_(function(res){
+    try{
+      if (window.UI_Loading) UI_Loading.hide(bodyHost, { key:'project-pick-load', global:false });
+    }catch(e){}
     if (!res || !res.ok){
       showAlertError(res && res.message ? res.message : 'Employee 목록을 불러오지 못했습니다.', '불러오기 실패');
       if (tbody) tbody.innerHTML = '<tr><td colspan="10" style="opacity:.7; padding:1rem;">불러오기 실패</td></tr>';
@@ -6270,44 +6455,123 @@ function _ymdToInt_(s){
 
 
 
-  function loadProjectTabs_(pageRoot){
+  function loadProjectTabs_(pageRoot, opts){
+    opts = opts || {};
+    var useSpinner = (opts.spinner !== false);
+    var loadingKey = String(opts.loadingKey || 'project-main');
+    var loadingDone = false;
+    function finishLoading_(){
+      if (loadingDone) return;
+      loadingDone = true;
+      try{
+        if (useSpinner && window.UI_Loading) {
+          UI_Loading.hide(pageRoot, { key: loadingKey, global:false });
+        }
+      }catch(e){}
+    }
+
+    try{
+      if (useSpinner && window.UI_Loading) {
+        UI_Loading.show(pageRoot, { key: loadingKey, global:false, text:'' });
+      }
+    }catch(e){}
+
     var hasGAS = (typeof google !== 'undefined' && google.script && google.script.run);
     if (!hasGAS) {
       console.warn('google.script.run 없음(웹앱에서 실행 필요)');
-      return;
+      finishLoading_();
+      return Promise.resolve({ ok:false, message:'google.script.run 없음(웹앱에서 실행 필요)' });
     }
 
-    google.script.run
-      .withSuccessHandler(function(res){
-        res = res || { ok:false, message:'PROJECT_listTabs 응답이 없습니다.' };
-        if (!res.ok){
-          showAlertError(res.message || '목록 조회 실패', '오류');
-          return;
-        }
+    return new Promise(function(resolve){
+      google.script.run
+        .withSuccessHandler(function(res){
+          res = res || { ok:false, message:'PROJECT_listTabs 응답이 없습니다.' };
+          if (!res.ok){
+            var em = res.message || '목록 조회 실패';
+            finishLoading_();
+            if (window.showRetryConfirm){
+              window.showRetryConfirm(em, '오류', function(){
+                Promise.resolve(loadProjectTabs_(pageRoot, opts || {})).then(resolve);
+              }, function(){
+                showAlertError(em, '오류');
+                resolve(res);
+              });
+              return;
+            }
+            showAlertError(em, '오류');
+            resolve(res);
+            return;
+          }
 
-        // ✅ 파생필드(계좌 조합/참여인력 상태) 계산
-        if (typeof decorateDerivedFields_ === 'function') {
-          try { decorateDerivedFields_(res); } catch(e){}
-        }
+          // ✅ 파생필드(계좌 조합/참여인력 상태) 계산
+          if (typeof decorateDerivedFields_ === 'function') {
+            try { decorateDerivedFields_(res); } catch(e){}
+          }
 
-        // ✅ 탭 프리로드 데이터 저장 → 필터/요약/탭렌더는 여기서 모두 처리
-        pageRoot.__projectDataBase = res;
-        populateFilterOptionsFromData_(pageRoot, res);
-        applyFiltersAndRender_(pageRoot);
-      })
-      .withFailureHandler(function(err){
-        showAlertError((err && err.message) ? err.message : String(err), '목록 조회 실패');
-      })
-      .PROJECT_listTabs({ page:1, pageSize:200 });
+          // ✅ 탭 프리로드 데이터 저장 → 필터/요약/탭렌더는 여기서 모두 처리
+          pageRoot.__projectDataBase = res;
+          populateFilterOptionsFromData_(pageRoot, res);
+          applyFiltersAndRender_(pageRoot);
+          finishLoading_();
+          resolve(res);
+        })
+        .withFailureHandler(function(err){
+          var em = (err && err.message) ? err.message : String(err);
+          finishLoading_();
+          if (window.showRetryConfirm){
+            window.showRetryConfirm(em, '목록 조회 실패', function(){
+              Promise.resolve(loadProjectTabs_(pageRoot, opts || {})).then(resolve);
+            }, function(){
+              showAlertError(em, '목록 조회 실패');
+              resolve({ ok:false, error:em });
+            });
+            return;
+          }
+          showAlertError(em, '목록 조회 실패');
+          resolve({ ok:false, error:em });
+        })
+        .PROJECT_listTabs({ page:1, pageSize:200 });
+    });
   }
 
   // ✅ index.html에서 호출할 init
   function Project_init(scope){
     var container = scope || document;
     var pageRoot = container.querySelector('.page-root');
-    if (!pageRoot) return;
-    if (pageRoot.__projectInited) return;
+    if (!pageRoot) return Promise.resolve();
+    if (pageRoot.__projectInited) return Promise.resolve();
     pageRoot.__projectInited = true;
+
+    // ✅ 초기 진입 시 템플릿 샘플값(필터칩/요약카드/테이블 예시행) 숨김
+    (function _clearProjectMainPlaceholders_(root){
+      if (!root) return;
+      try{
+        root.querySelectorAll('.sum-item-value').forEach(function(el){
+          el.textContent = '-';
+        });
+      }catch(e){}
+      try{
+        root.querySelectorAll('.wf-chip').forEach(function(chip){
+          var v = String(chip.getAttribute('data-value') || '').trim();
+          var t = String(chip.textContent || '').trim();
+          if (!v || t === 'DB 중복제거 리스트업' || t === '0000년' || t === '사업명' || t === '00000 가나다'){
+            chip.remove();
+          }
+        });
+      }catch(e){}
+      try{
+        root.querySelectorAll('table.tbl tbody').forEach(function(tb){
+          Array.from(tb.querySelectorAll('tr')).forEach(function(tr){
+            var txt = String(tr.textContent || '').trim();
+            if (!txt) return;
+            if (/00000|0000-00-00|표시할 소속인력이 없습니다\./.test(txt)){
+              tr.remove();
+            }
+          });
+        });
+      }catch(e){}
+    })(pageRoot);
 
     // 보기 버튼(돋보기) → 상세 모달
     pageRoot.addEventListener('click', function(e){
@@ -6321,7 +6585,7 @@ function _ymdToInt_(s){
     });
 
     // 외부(저장 성공 후)에서 재로드 할 수 있게 노출
-    window.Project_reloadList = function(){ loadProjectTabs_(pageRoot); };
+    window.Project_reloadList = function(opts){ return loadProjectTabs_(pageRoot, opts || {}); };
 
     // ✅ 필터 변경 → 서버 추가호출 없이 즉시 목록/요약 갱신
     var filterWrap = _getFilterWrap_(pageRoot);
@@ -6337,7 +6601,7 @@ function _ymdToInt_(s){
       });
     }
 
-    loadProjectTabs_(pageRoot);
+    return loadProjectTabs_(pageRoot, { spinner:false });
   }
 
   window.Project_init = Project_init;

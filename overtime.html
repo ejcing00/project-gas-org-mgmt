@@ -461,7 +461,7 @@
 
   // ===== main =====
   window.Overtime_init = function(scopeEl){
-    if (!scopeEl) return;
+    if (!scopeEl) return Promise.resolve();
     // 루트(페이지) 기준으로만 찾기
     var root = scopeEl.querySelector('[data-overtime-root]') || scopeEl;
 
@@ -480,7 +480,7 @@
     var tables = root.querySelectorAll('table.tbl');
     if (!tables || tables.length < 3){
       console.error('Overtime_init: 테이블을 찾지 못했습니다. table.tbl count=', tables ? tables.length : 0);
-      return;
+      return Promise.resolve();
     }
     var tbl2 = tables[0]; // STEP2
     var tbl3 = tables[1]; // STEP3
@@ -1132,7 +1132,7 @@
     }
 
     // first load
-    reloadContext_();
+    return reloadContext_();
   };
 
 })();

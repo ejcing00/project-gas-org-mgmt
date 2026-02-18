@@ -4,6 +4,10 @@
  * return: { years:[], employees:[], salaryMap:{}, capAmount:number }
  */
 function OVERTIME_getContext(payload){
+  var __perf = (typeof DB_perfStart_ === 'function')
+    ? DB_perfStart_('OVERTIME_getContext')
+    : null;
+  var __perfMeta = { ok:false, years:0, employees:0, salaryKeys:0 };
   payload = payload || {};
   var yearSel  = String(payload.year || '').trim();
   var monthSel = String(payload.month || '').trim(); // "1".."12"
@@ -22,12 +26,19 @@ function OVERTIME_getContext(payload){
     var n = Number(v);
     return isFinite(n) ? n : 0;
   }
+  function _sheetValues_(sh){
+    if (!sh) return [];
+    var lr = sh.getLastRow();
+    var lc = sh.getLastColumn();
+    if (lr < 1 || lc < 1) return [];
+    return sh.getRange(1, 1, lr, lc).getValues();
+  }
 
   // ---- read Basesalary_Std years (중복 제거) ----
   var years = [];
   try{
     var shBase = DB_sheet_('Basesalary_Std');
-    var values = shBase.getDataRange().getValues();
+    var values = _sheetValues_(shBase);
     var header = values.shift() || [];
     var hm = DB_headerMap_(header);
     var yi = hm['year'];
@@ -47,7 +58,7 @@ function OVERTIME_getContext(payload){
   var employees = [];
   try{
     var shEmp = DB_sheet_('Employee');
-    var v2 = shEmp.getDataRange().getValues();
+    var v2 = _sheetValues_(shEmp);
     var h2 = v2.shift() || [];
     var hm2 = DB_headerMap_(h2);
     var idI = hm2['employee_id'];
@@ -71,7 +82,7 @@ function OVERTIME_getContext(payload){
   var salaryMap = {};
   try{
     var shPay = DB_sheet_('Payment');
-    var v3 = shPay.getDataRange().getValues();
+    var v3 = _sheetValues_(shPay);
     var h3 = v3.shift() || [];
     var hm3 = DB_headerMap_(h3);
 
@@ -98,7 +109,7 @@ function OVERTIME_getContext(payload){
   var capAmount = 0;
   try{
     var shAlw = DB_sheet_('Alw_Std');
-    var v4 = shAlw.getDataRange().getValues();
+    var v4 = _sheetValues_(shAlw);
     var h4 = v4.shift() || [];
     var hm4 = DB_headerMap_(h4);
 
@@ -120,10 +131,16 @@ function OVERTIME_getContext(payload){
     console.error(err);
   }
 
-  return {
+  var out = {
     years: years,
     employees: employees,
     salaryMap: salaryMap,
     capAmount: capAmount
   };
+  __perfMeta.ok = true;
+  __perfMeta.years = years.length;
+  __perfMeta.employees = employees.length;
+  __perfMeta.salaryKeys = Object.keys(salaryMap || {}).length;
+  if (__perf && typeof DB_perfEnd_ === 'function') DB_perfEnd_(__perf, __perfMeta);
+  return out;
 }

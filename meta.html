@@ -1127,9 +1127,25 @@
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
   }
   .ui-loading-ov .ui-loading-text{
-    /* ✅ 박스 제거 + 스피너만 쓰려면 텍스트 숨김
-      텍스트를 살리고 싶으면 이 블록 대신 margin-left만 주면 됨 */
-    display: none !important;
+    display: none;
+  }
+  .ui-loading-ov.has-text .ui-loading-box{
+    width: auto;
+    height: auto;
+    min-width: 10rem;
+    padding: 0.75rem 0.9rem;
+    border-radius: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .ui-loading-ov.has-text .ui-loading-text{
+    display: block;
+    color: #ffffff;
+    font-size: 0.82rem;
+    line-height: 1.35;
+    text-align: center;
+    white-space: nowrap;
   }
 
   /* 부트(첫 진입)처럼 화면 전체를 더 꽉 막고 싶을 때 */
@@ -3259,7 +3275,9 @@
   function _makeOverlay_(hostEl, opts){
     opts = opts || {};
     var ov = document.createElement('div');
-    ov.className = 'ui-loading-ov' + (opts.boot ? ' is-boot' : '');
+    ov.className = 'ui-loading-ov'
+      + (opts.boot ? ' is-boot' : '')
+      + ((opts.textVisible === true && opts.text != null && String(opts.text).trim() !== '') ? ' has-text' : '');
     ov.setAttribute('aria-busy', 'true');
     ov.setAttribute('aria-live', 'polite');
     ov.setAttribute('role', 'status');
@@ -3308,7 +3326,20 @@
       // text 갱신(옵션)
       if (opts.text != null){
         var t = slot.ov.querySelector('.ui-loading-text');
-        if (t) t.textContent = String(opts.text);
+        var tx = String(opts.text);
+        var useText = (opts.textVisible === true && tx.trim() !== '');
+        slot.ov.classList.toggle('has-text', useText);
+        if (t){
+          t.textContent = tx;
+        }else if (useText){
+          var box = slot.ov.querySelector('.ui-loading-box');
+          if (box){
+            t = document.createElement('div');
+            t.className = 'ui-loading-text';
+            t.textContent = tx;
+            box.appendChild(t);
+          }
+        }
       }
     }
     slot.ov.classList.add('is-on');

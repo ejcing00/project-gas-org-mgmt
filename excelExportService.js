@@ -372,6 +372,77 @@ function ExcelExportService_buildWorkbook_(req){
   };
 }
 
+function Export_buildUiSheetOrderMap_(req){
+  req = req || {};
+  var src = req.uiSheetOrders || {};
+  var out = {};
+  if (!src || typeof src !== 'object') return out;
+  Object.keys(src).forEach(function(sheetName){
+    var list = Array.isArray(src[sheetName]) ? src[sheetName] : [];
+    var map = {};
+    var n = 0;
+    for (var i=0; i<list.length; i++){
+      var id = String(list[i] || '').trim();
+      if (!id || Object.prototype.hasOwnProperty.call(map, id)) continue;
+      map[id] = n++;
+    }
+    if (n > 0) out[sheetName] = map;
+  });
+  return out;
+}
+
+function Export_pkFieldBySheet_(sheetName){
+  var m = {
+    Project: 'project_id',
+    Project_Finance: 'finance_id',
+    Project_Program: 'program_id',
+    Project_Kpi: 'kpi_id',
+    Project_Opi: 'opi_id',
+    Project_Member_Ex: 'member_ex_id',
+    Project_Member_In: 'member_in_id',
+    Employee: 'employee_id',
+    Employee_Position: 'position_id',
+    Employee_Agreement: 'agreement_id',
+    Employee_Experience: 'experience_id',
+    Employee_Education: 'education_id',
+    Employee_Training: 'training_id',
+    Employee_Qualification: 'qualification_id'
+  };
+  return m[String(sheetName || '').trim()] || '';
+}
+
+function Export_employeeSortDateFieldsBySheet_(sheetName){
+  var m = {
+    Employee_Position: ['start_date'],
+    Employee_Agreement: ['start_date'],
+    Employee_Experience: ['working_start_date'],
+    Employee_Education: ['start_date', 'education_start_date'],
+    Employee_Training: ['issue_date', 'date'],
+    Employee_Qualification: ['issue_date', 'acquisition_date']
+  };
+  return m[String(sheetName || '').trim()] || [];
+}
+
+function Export_toYmdTs_(v){
+  if (v == null || v === '') return Number.MAX_SAFE_INTEGER;
+  if (Object.prototype.toString.call(v) === '[object Date]'){
+    var d0 = v;
+    var t0 = d0.getTime();
+    return isFinite(t0) ? t0 : Number.MAX_SAFE_INTEGER;
+  }
+  var s = String(v).trim();
+  if (!s) return Number.MAX_SAFE_INTEGER;
+  var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (m){
+    var y = Number(m[1]);
+    var mo = Number(m[2]) - 1;
+    var d = Number(m[3]);
+    return new Date(y, mo, d).getTime();
+  }
+  var t = Date.parse(s);
+  return isFinite(t) ? t : Number.MAX_SAFE_INTEGER;
+}
+
 // =========================
 // PAYROLL UI Workbook Normalize
 // - UI에서 "3,000,000원"으로 렌더된 문자열을 엑셀 숫자(Number)로 변환
@@ -545,23 +616,24 @@ function ProjectExport_buildListWorkbook_(req){
   // project_id -> 정렬우선순위
   var orderMap = {};
   for (var i=0; i<pids.length; i++) orderMap[pids[i]] = i;
+  var uiSheetOrderMap = Export_buildUiSheetOrderMap_(req);
 
   // 2) 각 시트 구성
   var sheets = [];
   var projectMetaMap = Export_buildProjectMetaMap_(pids);
 
-  sheets.push(Export_buildSheetUiLike_('기본정보', 'Project', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project, PROJECT_EXPORT_HEADER_LABELS_.Project));
-  sheets.push(Export_buildSheetUiLike_('예산회계', 'Project_Finance', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Finance, PROJECT_EXPORT_HEADER_LABELS_.Project_Finance));
-  sheets.push(Export_buildSheetUiLike_('프로그램', 'Project_Program', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Program, PROJECT_EXPORT_HEADER_LABELS_.Project_Program));
-  sheets.push(Export_buildSheetUiLike_('핵심성과', 'Project_Kpi', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Kpi, PROJECT_EXPORT_HEADER_LABELS_.Project_Kpi));
+  sheets.push(Export_buildSheetUiLike_('기본정보', 'Project', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project, PROJECT_EXPORT_HEADER_LABELS_.Project, uiSheetOrderMap));
+  sheets.push(Export_buildSheetUiLike_('예산회계', 'Project_Finance', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Finance, PROJECT_EXPORT_HEADER_LABELS_.Project_Finance, uiSheetOrderMap));
+  sheets.push(Export_buildSheetUiLike_('프로그램', 'Project_Program', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Program, PROJECT_EXPORT_HEADER_LABELS_.Project_Program, uiSheetOrderMap));
+  sheets.push(Export_buildSheetUiLike_('핵심성과', 'Project_Kpi', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Kpi, PROJECT_EXPORT_HEADER_LABELS_.Project_Kpi, uiSheetOrderMap));
 
   if (includeMembers) {
-    sheets.push(Export_buildSheetUiLike_('참여인력_외부', 'Project_Member_Ex', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Member_Ex, PROJECT_EXPORT_HEADER_LABELS_.Project_Member_Ex));
-    sheets.push(Export_buildSheetUiLike_('참여인력_내부', 'Project_Member_In', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Member_In, PROJECT_EXPORT_HEADER_LABELS_.Project_Member_In));
+    sheets.push(Export_buildSheetUiLike_('참여인력_외부', 'Project_Member_Ex', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Member_Ex, PROJECT_EXPORT_HEADER_LABELS_.Project_Member_Ex, uiSheetOrderMap));
+    sheets.push(Export_buildSheetUiLike_('참여인력_내부', 'Project_Member_In', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Member_In, PROJECT_EXPORT_HEADER_LABELS_.Project_Member_In, uiSheetOrderMap));
   }
 
   if (includeOPI) {
-    sheets.push(Export_buildSheetUiLike_('창업성과', 'Project_Opi', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Opi, PROJECT_EXPORT_HEADER_LABELS_.Project_Opi));
+    sheets.push(Export_buildSheetUiLike_('창업성과', 'Project_Opi', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Opi, PROJECT_EXPORT_HEADER_LABELS_.Project_Opi, uiSheetOrderMap));
   }
 
   return { sheets: sheets };
@@ -579,19 +651,20 @@ function ProjectExport_buildDetailWorkbook_(req){
 
   var pids = [pid];
   var orderMap = {}; orderMap[pid] = 0;
+  var uiSheetOrderMap = Export_buildUiSheetOrderMap_(req);
 
   var sheets = [];
   var projectMetaMap = Export_buildProjectMetaMap_(pids);
-  sheets.push(Export_buildSheetUiLike_('기본정보', 'Project', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project, PROJECT_EXPORT_HEADER_LABELS_.Project));
-  sheets.push(Export_buildSheetUiLike_('예산회계', 'Project_Finance', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Finance, PROJECT_EXPORT_HEADER_LABELS_.Project_Finance));
-  sheets.push(Export_buildSheetUiLike_('프로그램', 'Project_Program', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Program, PROJECT_EXPORT_HEADER_LABELS_.Project_Program));
-  sheets.push(Export_buildSheetUiLike_('핵심성과', 'Project_Kpi', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Kpi, PROJECT_EXPORT_HEADER_LABELS_.Project_Kpi));
+  sheets.push(Export_buildSheetUiLike_('기본정보', 'Project', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project, PROJECT_EXPORT_HEADER_LABELS_.Project, uiSheetOrderMap));
+  sheets.push(Export_buildSheetUiLike_('예산회계', 'Project_Finance', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Finance, PROJECT_EXPORT_HEADER_LABELS_.Project_Finance, uiSheetOrderMap));
+  sheets.push(Export_buildSheetUiLike_('프로그램', 'Project_Program', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Program, PROJECT_EXPORT_HEADER_LABELS_.Project_Program, uiSheetOrderMap));
+  sheets.push(Export_buildSheetUiLike_('핵심성과', 'Project_Kpi', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Kpi, PROJECT_EXPORT_HEADER_LABELS_.Project_Kpi, uiSheetOrderMap));
 
   if (includeMembers) {
-    sheets.push(Export_buildSheetUiLike_('참여인력_외부', 'Project_Member_Ex', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Member_Ex, PROJECT_EXPORT_HEADER_LABELS_.Project_Member_Ex));
-    sheets.push(Export_buildSheetUiLike_('참여인력_내부', 'Project_Member_In', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Member_In, PROJECT_EXPORT_HEADER_LABELS_.Project_Member_In));
+    sheets.push(Export_buildSheetUiLike_('참여인력_외부', 'Project_Member_Ex', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Member_Ex, PROJECT_EXPORT_HEADER_LABELS_.Project_Member_Ex, uiSheetOrderMap));
+    sheets.push(Export_buildSheetUiLike_('참여인력_내부', 'Project_Member_In', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Member_In, PROJECT_EXPORT_HEADER_LABELS_.Project_Member_In, uiSheetOrderMap));
   }
-  if (includeOPI) sheets.push(Export_buildSheetUiLike_('창업성과', 'Project_Opi', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Opi, PROJECT_EXPORT_HEADER_LABELS_.Project_Opi));
+  if (includeOPI) sheets.push(Export_buildSheetUiLike_('창업성과', 'Project_Opi', pids, orderMap, projectMetaMap, PROJECT_EXPORT_HIDE_FIELDS_.Project_Opi, PROJECT_EXPORT_HEADER_LABELS_.Project_Opi, uiSheetOrderMap));
 
   return { sheets: sheets };
 }
@@ -975,11 +1048,22 @@ function EmployeeExport_buildListWorkbook_(req){
   var uiEids = Array.isArray(req.eids)
     ? req.eids.map(function(v){ return String(v||'').trim(); }).filter(Boolean)
     : [];
+  if (uiEids.length){
+    var seenUi = {};
+    uiEids = uiEids.filter(function(id){
+      if (seenUi[id]) return false;
+      seenUi[id] = true;
+      return true;
+    });
+  }
 
   var filtersActive = Export_hasAnyCriteriaInFilters_(req.filters);
   var eids = [];
 
-  if (filtersActive) {
+  // UI에서 보이는 순서가 전달되면 그 순서를 최우선 사용한다.
+  if (uiEids.length){
+    eids = uiEids.slice();
+  } else if (filtersActive) {
     try {
       if (typeof EMPLOYEE_list === 'function') {
         var payload = EmployeeExport_buildPayloadFromFilters_(req.filters);
@@ -991,7 +1075,6 @@ function EmployeeExport_buildListWorkbook_(req){
       }
     } catch(e){}
 
-    if (!eids.length && uiEids.length) eids = uiEids.slice();
     if (!eids.length) eids = ['__NO_MATCH__'];
 
   } else {
@@ -1029,18 +1112,19 @@ function EmployeeExport_buildListWorkbook_(req){
   // order map
   var orderMap = {};
   for (var i=0; i<eids.length; i++) orderMap[eids[i]] = i;
+  var uiSheetOrderMap = Export_buildUiSheetOrderMap_(req);
 
   var empMetaMap = Export_buildEmployeeMetaMap_(eids);
   var empComputedMap = Export_buildEmployeeComputedMap_(eids);
 
   var sheets = [];
-  sheets.push(Export_buildEmployeeSheetUiLike_('기본정보', 'Employee', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee));
-  sheets.push(Export_buildEmployeeSheetUiLike_('직위', 'Employee_Position', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Position, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Position));
-  sheets.push(Export_buildEmployeeSheetUiLike_('계약', 'Employee_Agreement', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Agreement, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Agreement));
-  sheets.push(Export_buildEmployeeSheetUiLike_('경력', 'Employee_Experience', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Experience, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Experience));
-  sheets.push(Export_buildEmployeeSheetUiLike_('학력', 'Employee_Education', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Education, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Education));
-  sheets.push(Export_buildEmployeeSheetUiLike_('교육', 'Employee_Training', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Training, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Training));
-  sheets.push(Export_buildEmployeeSheetUiLike_('자격', 'Employee_Qualification', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Qualification, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Qualification));
+  sheets.push(Export_buildEmployeeSheetUiLike_('기본정보', 'Employee', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee, uiSheetOrderMap));
+  sheets.push(Export_buildEmployeeSheetUiLike_('직위', 'Employee_Position', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Position, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Position, uiSheetOrderMap));
+  sheets.push(Export_buildEmployeeSheetUiLike_('계약', 'Employee_Agreement', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Agreement, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Agreement, uiSheetOrderMap));
+  sheets.push(Export_buildEmployeeSheetUiLike_('경력', 'Employee_Experience', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Experience, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Experience, uiSheetOrderMap));
+  sheets.push(Export_buildEmployeeSheetUiLike_('학력', 'Employee_Education', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Education, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Education, uiSheetOrderMap));
+  sheets.push(Export_buildEmployeeSheetUiLike_('교육', 'Employee_Training', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Training, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Training, uiSheetOrderMap));
+  sheets.push(Export_buildEmployeeSheetUiLike_('자격', 'Employee_Qualification', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Qualification, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Qualification, uiSheetOrderMap));
 
   return { sheets: sheets };
 }
@@ -1054,17 +1138,18 @@ function EmployeeExport_buildDetailWorkbook_(req){
 
   var eids = [eid];
   var orderMap = {}; orderMap[eid] = 0;
+  var uiSheetOrderMap = Export_buildUiSheetOrderMap_(req);
   var empMetaMap = Export_buildEmployeeMetaMap_(eids);
   var empComputedMap = Export_buildEmployeeComputedMap_(eids);
 
   var sheets = [];
-  sheets.push(Export_buildEmployeeSheetUiLike_('기본정보', 'Employee', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee));
-  sheets.push(Export_buildEmployeeSheetUiLike_('직위', 'Employee_Position', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Position, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Position));
-  sheets.push(Export_buildEmployeeSheetUiLike_('계약', 'Employee_Agreement', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Agreement, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Agreement));
-  sheets.push(Export_buildEmployeeSheetUiLike_('경력', 'Employee_Experience', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Experience, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Experience));
-  sheets.push(Export_buildEmployeeSheetUiLike_('학력', 'Employee_Education', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Education, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Education));
-  sheets.push(Export_buildEmployeeSheetUiLike_('교육', 'Employee_Training', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Training, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Training));
-  sheets.push(Export_buildEmployeeSheetUiLike_('자격', 'Employee_Qualification', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Qualification, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Qualification));
+  sheets.push(Export_buildEmployeeSheetUiLike_('기본정보', 'Employee', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee, uiSheetOrderMap));
+  sheets.push(Export_buildEmployeeSheetUiLike_('직위', 'Employee_Position', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Position, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Position, uiSheetOrderMap));
+  sheets.push(Export_buildEmployeeSheetUiLike_('계약', 'Employee_Agreement', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Agreement, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Agreement, uiSheetOrderMap));
+  sheets.push(Export_buildEmployeeSheetUiLike_('경력', 'Employee_Experience', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Experience, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Experience, uiSheetOrderMap));
+  sheets.push(Export_buildEmployeeSheetUiLike_('학력', 'Employee_Education', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Education, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Education, uiSheetOrderMap));
+  sheets.push(Export_buildEmployeeSheetUiLike_('교육', 'Employee_Training', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Training, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Training, uiSheetOrderMap));
+  sheets.push(Export_buildEmployeeSheetUiLike_('자격', 'Employee_Qualification', eids, orderMap, empMetaMap, empComputedMap, EMPLOYEE_EXPORT_HIDE_FIELDS_.Employee_Qualification, EMPLOYEE_EXPORT_HEADER_LABELS_.Employee_Qualification, uiSheetOrderMap));
 
   return { sheets: sheets };
 }
@@ -1099,7 +1184,7 @@ function Export_buildEmployeeMetaMap_(eids){
   return map;
 }
 
-function Export_buildEmployeeSheetUiLike_(sheetTitle, dbSheetName, eids, orderMap, empMetaMap, empComputedMap, hideFields, labelMap){
+function Export_buildEmployeeSheetUiLike_(sheetTitle, dbSheetName, eids, orderMap, empMetaMap, empComputedMap, hideFields, labelMap, uiSheetOrderMap){
   var t = Export_readSheetTable_(dbSheetName);
 
   var eidIdx = Export_indexOf_(t.headers, 'employee_id');
@@ -1126,10 +1211,43 @@ function Export_buildEmployeeSheetUiLike_(sheetTitle, dbSheetName, eids, orderMa
       return true;
     });
 
+    var pkField = Export_pkFieldBySheet_(dbSheetName);
+    var pkIdx = pkField ? Export_indexOf_(t.headers, pkField) : -1;
+    var rowOrder = (uiSheetOrderMap && uiSheetOrderMap[dbSheetName]) ? uiSheetOrderMap[dbSheetName] : null;
+    var sortDateFields = Export_employeeSortDateFieldsBySheet_(dbSheetName);
+
     rows.sort(function(a,b){
       var ea = String(a[eidIdx] || '').trim();
       var eb = String(b[eidIdx] || '').trim();
-      return (orderMap[ea] || 0) - (orderMap[eb] || 0);
+      var p = (orderMap[ea] || 0) - (orderMap[eb] || 0);
+      if (p) return p;
+      if (rowOrder && pkIdx >= 0){
+        var ka = String(a[pkIdx] || '').trim();
+        var kb = String(b[pkIdx] || '').trim();
+        var ia = Object.prototype.hasOwnProperty.call(rowOrder, ka) ? rowOrder[ka] : 9999999;
+        var ib = Object.prototype.hasOwnProperty.call(rowOrder, kb) ? rowOrder[kb] : 9999999;
+        if (ia !== ib) return ia - ib;
+      }
+      if (sortDateFields && sortDateFields.length){
+        var va = '';
+        var vb = '';
+        for (var i=0; i<sortDateFields.length; i++){
+          var idx = Export_indexOf_(t.headers, sortDateFields[i]);
+          if (idx < 0) continue;
+          if (!va) va = a[idx];
+          if (!vb) vb = b[idx];
+          if (va && vb) break;
+        }
+        var ta = Export_toYmdTs_(va);
+        var tb = Export_toYmdTs_(vb);
+        if (ta !== tb) return ta - tb;
+      }
+      if (pkIdx >= 0){
+        var pa = String(a[pkIdx] || '').trim();
+        var pb = String(b[pkIdx] || '').trim();
+        if (pa !== pb) return pa.localeCompare(pb);
+      }
+      return 0;
     });
   }
 
@@ -1701,10 +1819,12 @@ function Export_buildSheetFromTable_(sheetTitle, dbSheetName, pids, orderMap){
 
 function Export_readSheetTable_(sheetName){
   var sh = DB_sheet_(sheetName); // dbCore.js 사용
-  var data = sh.getDataRange().getValues();
-  if (!data || data.length < 1) {
+  var lastRow = sh.getLastRow();
+  var lastCol = sh.getLastColumn();
+  if (lastRow < 1 || lastCol < 1) {
     return { headers: [], rows: [] };
   }
+  var data = sh.getRange(1, 1, lastRow, lastCol).getValues();
 
   var headerRaw = data[0] || [];
   var headers = Export_trimRightEmpty_(headerRaw.map(function(h){ return String(h || '').trim(); }));
@@ -1850,7 +1970,7 @@ function Export_formatYmd_(v){
  * - A: year, B: business_name
  * - C~: 해당 테이블 헤더 순서대로, hideFields + year/business_name + 빈헤더 제외
  */
-function Export_buildSheetUiLike_(sheetTitle, dbSheetName, pids, orderMap, projectMetaMap, hideFields, labelMap){
+function Export_buildSheetUiLike_(sheetTitle, dbSheetName, pids, orderMap, projectMetaMap, hideFields, labelMap, uiSheetOrderMap){
   var t = Export_readSheetTable_(dbSheetName);
 
   var pidIdx = Export_indexOf_(t.headers, 'project_id');
@@ -1875,10 +1995,23 @@ function Export_buildSheetUiLike_(sheetTitle, dbSheetName, pids, orderMap, proje
       return true;
     });
 
+    var pkField = Export_pkFieldBySheet_(dbSheetName);
+    var pkIdx = pkField ? Export_indexOf_(t.headers, pkField) : -1;
+    var rowOrder = (uiSheetOrderMap && uiSheetOrderMap[dbSheetName]) ? uiSheetOrderMap[dbSheetName] : null;
+
     rows.sort(function(a,b){
       var pa = String(a[pidIdx] || '').trim();
       var pb = String(b[pidIdx] || '').trim();
-      return (orderMap[pa] || 0) - (orderMap[pb] || 0);
+      var p = (orderMap[pa] || 0) - (orderMap[pb] || 0);
+      if (p) return p;
+      if (rowOrder && pkIdx >= 0){
+        var ka = String(a[pkIdx] || '').trim();
+        var kb = String(b[pkIdx] || '').trim();
+        var ia = Object.prototype.hasOwnProperty.call(rowOrder, ka) ? rowOrder[ka] : 9999999;
+        var ib = Object.prototype.hasOwnProperty.call(rowOrder, kb) ? rowOrder[kb] : 9999999;
+        if (ia !== ib) return ia - ib;
+      }
+      return 0;
     });
   }
 

@@ -76,6 +76,13 @@ function PAYROLL_safeReadSheetObjects_(sheetName){
     }
   } catch(e){}
 
+  try {
+    if (typeof DB_readRows_ === 'function') {
+      var t = DB_readRows_(sheetName);
+      return (t && t.rows) ? t.rows : [];
+    }
+  } catch(e){}
+
   // 최후의 fallback: 시트 직접 읽기(헤더 기반)
   try {
     var sh = DB_sheet_(sheetName);
@@ -331,15 +338,24 @@ function PAYROLL_saveSalaryStd(payload){
   var y = PAYROLL_normYear_(payload.year);
   if (!y) throw new Error('year 형식 오류(YYYY): ' + payload.year);
 
-  // ✅ 작성자: 이메일이 아니라 "사번 성명"
-  var actorLabel = PAYROLL_actorLabel_();
+  if (typeof DB_assertPerm_ === 'function') DB_assertPerm_('btn:payroll:stdset');
 
-  PAYROLL_syncYearRows_('BaseSalary_Std',     y, payload.baseStd || [], actorLabel);
-  PAYROLL_syncYearRows_('BaseSalary_Std_Exc', y, payload.baseExc || [], actorLabel);
-  PAYROLL_syncYearRows_('Alw_Std',            y, payload.alwStd  || [], actorLabel);
-  PAYROLL_syncYearRows_('Socialins_Std',      y, payload.insStd  || [], actorLabel);
+  var lock = LockService.getDocumentLock();
+  lock.waitLock(20000);
+  try{
+    // ✅ 작성자: 이메일이 아니라 "사번 성명"
+    var actorLabel = PAYROLL_actorLabel_();
 
-  return { ok:true, year:y };
+    PAYROLL_syncYearRows_('BaseSalary_Std',     y, payload.baseStd || [], actorLabel);
+    PAYROLL_syncYearRows_('BaseSalary_Std_Exc', y, payload.baseExc || [], actorLabel);
+    PAYROLL_syncYearRows_('Alw_Std',            y, payload.alwStd  || [], actorLabel);
+    PAYROLL_syncYearRows_('Socialins_Std',      y, payload.insStd  || [], actorLabel);
+
+    if (typeof DB_bumpDataVersion_ === 'function') DB_bumpDataVersion_('BaseSalary_Std');
+    return { ok:true, year:y };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // =========================================================
@@ -380,9 +396,14 @@ function PAYMENT_saveMonth(payload){
   var month = PAYROLL_normMonthNumber_(payload.month);
   if (!year || !month) throw new Error('Invalid year/month');
 
-  var rows = Array.isArray(payload.rows) ? payload.rows : [];
-  var actorLabel = PAYROLL_actorLabel_();
-  var now = new Date();
+  if (typeof DB_assertPerm_ === 'function') DB_assertPerm_('btn:payroll:paymentset');
+
+  var lock = LockService.getDocumentLock();
+  lock.waitLock(20000);
+  try{
+    var rows = Array.isArray(payload.rows) ? payload.rows : [];
+    var actorLabel = PAYROLL_actorLabel_();
+    var now = new Date();
 
   var sh = DB_sheet_('Payment');
   var lastRow = sh.getLastRow();
@@ -635,7 +656,11 @@ function PAYMENT_saveMonth(payload){
   // ✅ 캐시 무효화(이 year의 Payment 조회 캐시만)
   PAYROLL_invalidatePaymentYearCache_(String(year));
 
-  return { ok:true, year:year, month:month, saved:Object.keys(incomingByEmp).length };
+    if (typeof DB_bumpDataVersion_ === 'function') DB_bumpDataVersion_('Payment');
+    return { ok:true, year:year, month:month, saved:Object.keys(incomingByEmp).length };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 
@@ -1800,6 +1825,10 @@ function PAYROLL_testComputeMonthly(){
  *  - from_year, from_month, to_year, to_month
  */
 function PAYROLL_computeRange(payload){
+  var __perf = (typeof DB_perfStart_ === 'function')
+    ? DB_perfStart_('PAYROLL_computeRange')
+    : null;
+  var __perfMeta = { ok:false, months:0, attendance:0, budget:0, actual:0 };
   payload = payload || {};
 
   // ✅ 요청 시작 시 캐시 초기화(요청 단위 캐시)
@@ -1827,18 +1856,27 @@ function PAYROLL_computeRange(payload){
     actual: []
   };
 
-  var cy = fy, cm = fm;
-  while ((cy * 100 + cm) <= (ty * 100 + tm)) {
-    var r = PAYROLL_computeMonthly({ year: cy, month: cm });
-    out.attendance = out.attendance.concat(r.attendance || []);
-    out.budget = out.budget.concat(r.budget || []);
-    out.actual = out.actual.concat(r.actual || []);
+  try{
+    var cy = fy, cm = fm;
+    while ((cy * 100 + cm) <= (ty * 100 + tm)) {
+      var r = PAYROLL_computeMonthly({ year: cy, month: cm });
+      out.attendance = out.attendance.concat(r.attendance || []);
+      out.budget = out.budget.concat(r.budget || []);
+      out.actual = out.actual.concat(r.actual || []);
+      __perfMeta.months++;
 
-    cm++;
-    if (cm > 12) { cm = 1; cy++; }
+      cm++;
+      if (cm > 12) { cm = 1; cy++; }
+    }
+
+    __perfMeta.ok = true;
+    __perfMeta.attendance = out.attendance.length;
+    __perfMeta.budget = out.budget.length;
+    __perfMeta.actual = out.actual.length;
+    return out;
+  } finally {
+    if (__perf && typeof DB_perfEnd_ === 'function') DB_perfEnd_(__perf, __perfMeta);
   }
-
-  return out;
 }
 
 /**
@@ -1985,29 +2023,41 @@ function PAYROLL_readSheetObjects_(sheetName, opts){
   // DB_sheet_ 는 프로젝트 공통 DB util에 이미 있다고 가정
   // (없으면 기존 DB 유틸이 있는 파일명을 알려줘. 거기에 맞춰 즉시 수정 가능)
   try {
-    var sh = DB_sheet_(sheetName);
-    var lastRow = sh.getLastRow();
-    var lastCol = sh.getLastColumn();
-    if (lastRow < 2 || lastCol < 1) {
-      // ✅ 정상적으로 "데이터 없음"인 경우만 캐시
-      PAYROLL__SHEETOBJ_CACHE[sheetName] = [];
-      return PAYROLL__SHEETOBJ_CACHE[sheetName];
-    }
-    var values = sh.getRange(1,1,lastRow,lastCol).getValues();
-    var header = values[0].map(function(v){ return String(v||'').trim(); });
     var out = [];
-    for (var r=1; r<values.length; r++){
-      var row = values[r];
-      var obj = {};
-      var empty = true;
-      for (var c=0; c<header.length; c++){
-        var k = header[c];
-        if (!k) continue;
-        var v = row[c];
-        if (v !== '' && v != null) empty = false;
-        obj[k] = v;
+    if (typeof DB_readRows_ === 'function') {
+      var t = DB_readRows_(sheetName, { force: force });
+      var rows = (t && t.rows) ? t.rows : [];
+      rows.forEach(function(row){
+        var obj = row || {};
+        var keys = Object.keys(obj);
+        var empty = true;
+        for (var i=0; i<keys.length; i++){
+          var v = obj[keys[i]];
+          if (v !== '' && v != null) { empty = false; break; }
+        }
+        if (!empty) out.push(obj);
+      });
+    } else {
+      var sh = DB_sheet_(sheetName);
+      var lastRow = sh.getLastRow();
+      var lastCol = sh.getLastColumn();
+      if (lastRow >= 2 && lastCol >= 1) {
+        var values = sh.getRange(1,1,lastRow,lastCol).getValues();
+        var header = values[0].map(function(v){ return String(v||'').trim(); });
+        for (var r=1; r<values.length; r++){
+          var row = values[r];
+          var obj = {};
+          var empty = true;
+          for (var c=0; c<header.length; c++){
+            var k = header[c];
+            if (!k) continue;
+            var vv = row[c];
+            if (vv !== '' && vv != null) empty = false;
+            obj[k] = vv;
+          }
+          if (!empty) out.push(obj);
+        }
       }
-      if (!empty) out.push(obj);
     }
     PAYROLL__SHEETOBJ_CACHE[sheetName] = out;
     return out;

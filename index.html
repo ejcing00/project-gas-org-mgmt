@@ -41,6 +41,32 @@
           accesscontrol: 'tpl-accesscontrol',
           styleguide: 'tpl-styleguide'
         };
+        var PAGE_INIT_HANDLERS = {
+          accesscontrol: 'AccessControl_init',
+          project: 'Project_init',
+          employee: 'Employee_init',
+          payroll: 'Payroll_init',
+          overtime: 'Overtime_init',
+          leave: 'Leave_init'
+        };
+        var _pageLoadSeq = 0;
+
+        function _toPromise_(v){
+          if (v && typeof v.then === 'function') return v;
+          return Promise.resolve(v);
+        }
+
+        function _runPageInit_(page, container){
+          var fnName = PAGE_INIT_HANDLERS[page];
+          var fn = fnName ? window[fnName] : null;
+          if (typeof fn !== 'function') return Promise.resolve();
+          try{
+            return _toPromise_(fn(container));
+          }catch(e){
+            console.error('[APP] page init error:', page, e);
+            return Promise.resolve();
+          }
+        }
 
         function loadPage(page) {
           var container = document.getElementById('page-container');
@@ -73,24 +99,25 @@
           if (window.initUiScope) window.initUiScope(container);
           if (typeof ACL_applyToScope === 'function') ACL_applyToScope(container);
 
-          if (page === 'accesscontrol' && typeof window.AccessControl_init === 'function') {
-            window.AccessControl_init(container);
-          }
-          if (page === 'project' && typeof window.Project_init === 'function') {
-            window.Project_init(container);
-          }
-          if (page === 'employee' && typeof window.Employee_init === 'function') {
-            window.Employee_init(container);
-          }
-          if (page === 'payroll' && typeof window.Payroll_init === 'function') {
-            window.Payroll_init(container);
-          }
-          if (page === 'overtime' && typeof window.Overtime_init === 'function') {
-            window.Overtime_init(container);
-          }
-          if (page === 'leave' && typeof window.Leave_init === 'function') {
-            window.Leave_init(container);
-          }
+          var seq = ++_pageLoadSeq;
+          var useEnterLoading = (page !== 'leave');
+          try{
+            if (useEnterLoading && window.UI_Loading) {
+              UI_Loading.show(container, { key:'app-page-enter', global:false, text:'' });
+            }
+          }catch(e){}
+          _runPageInit_(page, container)
+            .catch(function(e){
+              console.error('[APP] page init promise rejected:', page, e);
+            })
+            .finally(function(){
+              if (seq !== _pageLoadSeq) return;
+              try{
+                if (useEnterLoading && window.UI_Loading) {
+                  UI_Loading.hide(container, { key:'app-page-enter', global:false });
+                }
+              }catch(e){}
+            });
         }
 
         return {
@@ -101,6 +128,26 @@
       document.addEventListener('DOMContentLoaded', function () {
         console.log('[APP] app-shell loaded');
 
+        var _bootLoadingDone = false;
+        function _showBootLoading_(){
+          try{
+            if (window.UI_Loading) UI_Loading.show(document.body, { key:'app-boot', boot:true, text:'' });
+          }catch(e){}
+        }
+        function _hideBootLoading_(){
+          if (_bootLoadingDone) return;
+          _bootLoadingDone = true;
+          try{
+            if (window.UI_Loading) UI_Loading.hide(document.body, { key:'app-boot' });
+          }catch(e){}
+        }
+        function _loadFirstPage_(){
+          if (window.App) window.App.loadPage('dashboard');
+          setTimeout(_hideBootLoading_, 0);
+        }
+
+        _showBootLoading_();
+
         if (typeof ACL_bindSidebar === 'function') ACL_bindSidebar();
 
         if (typeof ACL_bootstrap === 'function'){
@@ -110,10 +157,10 @@
                 showAlertError((res && res.message) ? res.message : 'ACL 로드 실패', '권한');
               }
             }
-            if (window.App) window.App.loadPage('dashboard');
+            _loadFirstPage_();
           });
         } else {
-          if (window.App) window.App.loadPage('dashboard');
+          _loadFirstPage_();
         }
       });
     </script>

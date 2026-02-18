@@ -370,14 +370,6 @@
         </div>
         <div class="sec-body">
           <div class="wrap wrap-list fill" data-leave-set-emp-list>
-            <button type="button" class="wrap-list-item">
-              <div class="wrap-list-icon"><i class="fa-solid fa-user"></i></div>
-              <div class="wrap-list-main">
-                <div class="wrap-list-name">00001 가가가</div>
-                <div class="wrap-list-sub">00개월 00일(00년 00개월 00일) · 00년차</div>
-              </div>
-              <div class="wrap-list-badge">재직</div>
-            </button>
           </div>
         </div>
       </div>
@@ -420,6 +412,9 @@
 <script>
 /*연차신청 페이지모달*/
 function leaveApplyPageModal() {
+  // ✅ 승인관리 상태에서 연차신청 클릭 시 승인모드 해제
+  try{ leaveToggleApprovalMode(false); }catch(e){}
+
   // ✅ 선택 직원 확인
   var leaveRoot = document.getElementById('leave-root');
   var selEmp = leaveRoot ? (leaveRoot.__leaveSelectedEmp || null) : null;
@@ -427,6 +422,44 @@ function leaveApplyPageModal() {
     if (typeof showAlertWarn === 'function') showAlertWarn('직원을 선택해 주세요.', '연차신청');
     return;
   }
+
+  // ✅ 선택 직원의 부여/잔여 연차가 0일이면 신청 모달 진입 차단
+  try{
+    function _dayNumFromTxt_(txt){
+      txt = String(txt || '').trim();
+      var m = txt.match(/(-?\d+)\s*일/);
+      return m ? Number(m[1]) : NaN;
+    }
+    var btn = leaveRoot.querySelector('button.wrap-list-item[data-employee-id="' + String(selEmp.employee_id).trim() + '"]');
+    var grantTxt = '';
+    var remainTxt = '';
+    if (btn){
+      grantTxt = String(btn.dataset.grantTxt || '').trim();
+      remainTxt = String(btn.dataset.remainTxt || '').trim();
+      if (!grantTxt || !remainTxt){
+        var subEl = btn.querySelector('.wrap-list-sub');
+        var subTxt = String((subEl && subEl.textContent) || '').trim();
+        var mg = subTxt.match(/부여\s*([^·]+)/);
+        var mr = subTxt.match(/잔여\s*([^·]+)/);
+        grantTxt = grantTxt || (mg ? String(mg[1]).trim() : '');
+        remainTxt = remainTxt || (mr ? String(mr[1]).trim() : '');
+      }
+    }
+    var grantDay = _dayNumFromTxt_(grantTxt);
+    var remainDay = _dayNumFromTxt_(remainTxt);
+    if (isFinite(grantDay) && grantDay <= 0){
+      if (typeof showAlertWarn === 'function') {
+        showAlertWarn('부여연차가 0일로 신청이 불가합니다.', '연차신청');
+      }
+      return;
+    }
+    if (isFinite(remainDay) && remainDay <= 0){
+      if (typeof showAlertWarn === 'function') {
+        showAlertWarn('잔여연차가 0일로 신청할 수 없습니다.', '연차신청');
+      }
+      return;
+    }
+  }catch(e){}
 
   var _applyModalEl = null;
   var _isApplySaving = false;
@@ -463,13 +496,24 @@ function leaveApplyPageModal() {
 
       LeaveApply_init(bodyHost);
     },
-    onSave: function () {
-      var bodyHost = document.querySelector('#appPageModal [data-role="page-modal-body"]');
-      if (!bodyHost) return false;
+    onSave: function (e, modalEl, bodyHostArg, done) {
+      var bodyHost = bodyHostArg || document.querySelector('#appPageModal [data-role="page-modal-body"]');
+      if (!bodyHost){
+        if (typeof done === 'function') done({ ok:false, error:'모달 컨텍스트를 찾을 수 없습니다.' });
+        return false;
+      }
+
+      var __doneCalled = false;
+      function _done_(res, opt){
+        if (__doneCalled) return;
+        __doneCalled = true;
+        if (typeof done === 'function') done(res, opt);
+      }
 
       var emp = bodyHost.__leaveApplyEmp || null;
       if (!emp || !emp.employee_id){
         if (typeof showAlertWarn === 'function') showAlertWarn('직원을 선택해 주세요.', '연차신청');
+        _done_({ ok:false, error:'직원을 선택해 주세요.' });
         return false;
       }
 
@@ -507,20 +551,71 @@ function leaveApplyPageModal() {
         var dt = new Date(y, mo-1, d);
         return dt.getFullYear()===y && (dt.getMonth()+1)===mo && dt.getDate()===d;
       }
+      function extractYear_(v){
+        var m = String(v || '').trim().match(/(\d{4})/);
+        return m ? Number(m[1]) : NaN;
+      }
+      function timeToMin_(hhmm){
+        var s = String(hhmm || '').trim();
+        var m = s.match(/^(\d{1,2}):(\d{2})$/);
+        if (!m) return NaN;
+        var h = Number(m[1]), mm = Number(m[2]);
+        if (!isFinite(h) || !isFinite(mm)) return NaN;
+        if (h < 0 || h > 23 || mm < 0 || mm > 59) return NaN;
+        return h * 60 + mm;
+      }
 
       // ✅ 필수값 검증
       if (!category){
         if (typeof showAlertWarn === 'function') showAlertWarn('연차구분을 선택해 주세요.', '연차신청');
+        _done_({ ok:false, error:'연차구분을 선택해 주세요.' });
         return false;
       }
       dateVal = normDate_(dateVal); // ✅ 요일 제거 후 저장/검증
       if (!isValidDateStr(dateVal)){
         if (typeof showAlertWarn === 'function') showAlertWarn('일자를 입력해 주세요. (yyyy-mm-dd)', '연차신청');
+        _done_({ ok:false, error:'일자를 입력해 주세요. (yyyy-mm-dd)' });
         return false;
       }
+
+      // ✅ 연차일자는 현재 연차적용연도와 동일한 연도만 허용
+      try{
+        var yearSelEl = (leaveRoot && leaveRoot.querySelector) ? leaveRoot.querySelector('[data-leave-year-select]') : null;
+        var selectedYear = extractYear_(yearSelEl ? yearSelEl.value : '');
+        var dateYear = extractYear_(dateVal);
+        if (isFinite(selectedYear) && isFinite(dateYear) && selectedYear !== dateYear){
+          if (typeof showAlertWarn === 'function') {
+            showAlertWarn('연차일자는 적용연도(' + selectedYear + '년)만 저장할 수 있습니다.', '연차신청');
+          }
+          _done_({ ok:false, error:'연차일자는 적용연도(' + selectedYear + '년)만 저장할 수 있습니다.' });
+          return false;
+        }
+      }catch(e){}
+
       if (category === '시간'){
         if (!stVal || !etVal){
           if (typeof showAlertWarn === 'function') showAlertWarn('시작시간/종료시간을 입력해 주세요.', '연차신청');
+          _done_({ ok:false, error:'시작시간/종료시간을 입력해 주세요.' });
+          return false;
+        }
+        // ✅ 시간 연차는 09:00~18:00 범위만 허용 + 시작<종료
+        var stMin = timeToMin_(stVal);
+        var etMin = timeToMin_(etVal);
+        var minFrom = 9 * 60;
+        var minTo = 18 * 60;
+        if (!isFinite(stMin) || !isFinite(etMin)){
+          if (typeof showAlertWarn === 'function') showAlertWarn('시간은 HH:mm 형식으로 입력해 주세요.', '연차신청');
+          _done_({ ok:false, error:'시간은 HH:mm 형식으로 입력해 주세요.' });
+          return false;
+        }
+        if (stMin < minFrom || stMin > minTo || etMin < minFrom || etMin > minTo){
+          if (typeof showAlertWarn === 'function') showAlertWarn('시간연차는 09:00~18:00 범위에서만 신청할 수 있습니다.', '연차신청');
+          _done_({ ok:false, error:'시간연차는 09:00~18:00 범위에서만 신청할 수 있습니다.' });
+          return false;
+        }
+        if (stMin >= etMin){
+          if (typeof showAlertWarn === 'function') showAlertWarn('종료시간은 시작시간보다 늦어야 합니다.', '연차신청');
+          _done_({ ok:false, error:'종료시간은 시작시간보다 늦어야 합니다.' });
           return false;
         }
       }else{
@@ -591,12 +686,7 @@ function leaveApplyPageModal() {
 	          if (window.UI_Loading){
             if (on) UI_Loading.show(rootEl, { key:'leave-apply-flow', text:'' });
             else UI_Loading.hide(rootEl, { key:'leave-apply-flow' });
-            return;
           }
-        }catch(e){}
-        // 구버전 호환 fallback
-        try{
-          if (typeof showLoading === 'function') showLoading(!!on);
         }catch(e){}
 	      }
 
@@ -605,6 +695,7 @@ function leaveApplyPageModal() {
           _isApplySaving = false;
           _closeApplyModal_(function(){
             if (typeof showAlertSuccess === 'function') showAlertSuccess('신청되었습니다.', '연차신청');
+            _done_({ ok:true }, { close:false });
           });
 	      }
 	      function _afterApplyDoneError_(msg){
@@ -613,6 +704,7 @@ function leaveApplyPageModal() {
 	        if (typeof showAlertError === 'function') {
 	          showAlertError(String(msg || '저장 후 화면 갱신에 실패했습니다.'), '연차신청');
 	        }
+          _done_({ ok:false, error:String(msg || '저장 후 화면 갱신에 실패했습니다.') });
 	      }
       function _reloadMainAndThenAlert_(){
         try{
@@ -654,7 +746,10 @@ function leaveApplyPageModal() {
 	      }
 
         function _runApply_(){
-          if (_isApplySaving) return;
+          if (_isApplySaving){
+            _done_({ ok:false, error:'이미 저장 중입니다.' });
+            return;
+          }
           _isApplySaving = true;
           _setApplyFlowLoading_(true);
           google.script.run
@@ -706,11 +801,7 @@ function leaveSetPageModal() {
       if (window.UI_Loading){
         if (on) UI_Loading.show(scope, { key:'leave-set-flow', text:'' });
         else UI_Loading.hide(scope, { key:'leave-set-flow' });
-        return;
       }
-    }catch(e){}
-    try{
-      if (typeof showLoading === 'function') showLoading(!!on);
     }catch(e){}
   }
   function _reloadLeaveMainAfterSet_(){
@@ -739,11 +830,58 @@ function leaveSetPageModal() {
         }
         mainRoot.addEventListener('leave:main-loaded', onLoaded_);
         timer = setTimeout(function(){ finish_(false, '메인페이지 갱신 완료를 확인하지 못했습니다.'); }, 12000);
-        try{
-          mainRoot.__leaveSilentReload = true;
-          mainRoot.__leaveReloadToken = reloadToken;
-        }catch(e){}
-        mainYearSel.dispatchEvent(new Event('change'));
+
+        function dispatchMainReload_(){
+          try{
+            mainRoot.__leaveSilentReload = true;
+            mainRoot.__leaveReloadToken = reloadToken;
+          }catch(e){}
+          mainYearSel.dispatchEvent(new Event('change'));
+        }
+
+        // ✅ 저장 후 메인 연차적용연도 옵션도 서버에서 재조회
+        google.script.run
+          .withSuccessHandler(function(res){
+            var ok = !!(res && (res.ok === true || res.success === true));
+            var years = ok ? (res.years || []) : [];
+            if (ok && years.length){
+              var prev = String(mainYearSel.value || '').trim();
+              mainYearSel.innerHTML = '';
+              years.forEach(function(y){
+                var opt = document.createElement('option');
+                opt.value = String(y);
+                opt.textContent = String(y);
+                mainYearSel.appendChild(opt);
+              });
+
+              var picked = '';
+              if (years.indexOf(prev) >= 0){
+                picked = prev;
+              }else{
+                var nowY = (new Date()).getFullYear();
+                var nowLabel = String(nowY) + '년';
+                if (years.indexOf(nowLabel) >= 0) picked = nowLabel;
+                else picked = String(years[years.length - 1] || '');
+              }
+              mainYearSel.value = picked;
+            }
+
+            // has-value 동기화
+            try{
+              var has = !!String(mainYearSel.value || '').trim();
+              mainYearSel.classList.toggle('has-value', has);
+              var grp = mainYearSel.closest('.inputgroup1, .inputgroup2');
+              if (grp) grp.classList.toggle('has-value', has);
+              if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(grp || mainYearSel);
+            }catch(e){}
+
+            dispatchMainReload_();
+          })
+          .withFailureHandler(function(){
+            // 연도 옵션 재조회 실패 시에도 데이터 재조회는 진행
+            dispatchMainReload_();
+          })
+          .LEAVE_listYears(_leaveToWire_({ only_active:true }));
       }catch(e){
         resolve({ ok:false, error: (e && e.message) ? e.message : String(e) });
       }
@@ -895,7 +1033,7 @@ function Leave_init(container){
   }else{
     root = document.getElementById('leave-root');
   }
-  if (!root) return;
+  if (!root) return Promise.resolve();
 
   // =========================================================
   // ✅ 1회 부팅 로딩(빈 UI 노출 방지): meta 공용 UI_Loading 사용
@@ -925,6 +1063,19 @@ function Leave_init(container){
   var statusSel = root.querySelector('[data-leave-info-status-filter]');
   var cbAllInfo = infoTbl ? infoTbl.querySelector('thead input[type="checkbox"].chk-anim') : null;
 
+  function _syncLeaveYearSelectHasValue_(){
+    try{
+      if (!yearSel) return;
+      var has = !!String(yearSel.value || '').trim();
+      yearSel.classList.toggle('has-value', has);
+      var grp = yearSel.closest('.inputgroup1, .inputgroup2');
+      if (grp) grp.classList.toggle('has-value', has);
+      if (typeof refreshFloatingInputs === 'function') {
+        refreshFloatingInputs(grp || yearSel);
+      }
+    }catch(e){}
+  }
+
   // 연차정보(Leave_Apply) 캐시: 연도별
   var _leaveApplyAll = [];   // 현재 연도의 전체 rows
   var _leaveApplyYear = '';  // "2025년" 같은 label
@@ -939,7 +1090,7 @@ function Leave_init(container){
 
   if (!yearSel || !empWrap){
     _hideBootLoading_();
-    return;
+    return Promise.resolve();
   }
   // =========================================================
   // ✅ 메인(직원명단/요약/연차정보테이블) "동시 로드 후 한번에 표시" 유틸
@@ -987,29 +1138,12 @@ function Leave_init(container){
       try{ runner(resolve, reject); }catch(e){ reject(e); }
     });
   }
-  function fetchEmployeesForYear_(yearLabel){
+  function fetchMainBundleForYear_(yearLabel){
     return _pRun_(function(resolve, reject){
       google.script.run
         .withSuccessHandler(function(res){ resolve(res); })
         .withFailureHandler(function(err){ reject(err); })
-        .LEAVE_listLeaveEmployees({ year: yearLabel });
-    });
-  }
-  function fetchLeaveAppliesForYear_(yearLabel){
-    return _pRun_(function(resolve, reject){
-      google.script.run
-        .withSuccessHandler(function(res){ resolve(res); })
-        .withFailureHandler(function(err){ reject(err); })
-        .LEAVE_listLeaveApplies(_leaveToWire_({ year: yearLabel }));
-    });
-  }
-  function fetchGrantCacheForYear_(yearLabel){
-    // 기존 loadGrantCacheForYear_의 서버호출만 Promise화
-    return _pRun_(function(resolve, reject){
-      google.script.run
-        .withSuccessHandler(function(res){ resolve(res); })
-        .withFailureHandler(function(err){ reject(err); })
-        .LEAVE_listLeaveGrantsByYear(_leaveToWire_({ year: yearLabel }));
+        .LEAVE_loadMainBundle(_leaveToWire_({ year: yearLabel }));
     });
   }
   function emitMainLoaded_(success, reloadToken, errorMessage){
@@ -1037,18 +1171,23 @@ function Leave_init(container){
       try{ showEmpStatus_('데이터 없음'); }catch(e){}
       try{ showInfoStatusRow_('데이터 없음'); }catch(e){}
       emitMainLoaded_(false, reloadToken, 'invalid-year');
-      return;
+      return Promise.resolve({ ok:false, error:'invalid-year' });
     }
 
     // ✅ 배치 로드 시작
     // - UX 요구: 스피너 중에도 기본 UI(테이블/요약/목록)는 계속 보이게 유지
     // - 따라서 영역 숨김(_hideMainParts_)은 사용하지 않음
+    try{
+      window._leaveMainBatchLoading = true;
+      window._leaveSummaryDirty = false;
+      if (root) root.__leaveMainBatchLoading = true;
+    }catch(e){}
     if (!silent){
       if (useMainLoading) _setMainLoading_(true);
     }
 
     // 내부 상태 초기화
-    // silent면 "로딩중..." 노출/선택초기화는 UX상 깜빡임이라 스킵
+    // silent면 로딩 텍스트 노출/선택초기화는 UX상 깜빡임이라 스킵
     if (!silent){
       try{ setSelectedEmployee_('', ''); }catch(e){}
       try{ leaveToggleApprovalMode(false); }catch(e){}
@@ -1056,22 +1195,17 @@ function Leave_init(container){
     _leaveApplyYear = y;
     _leaveApplyAll = [];
     window._leaveApplyAll = _leaveApplyAll;
-    if (!silent){
-      try{ showEmpStatus_('로딩중...'); }catch(e){}
-      try{ showInfoStatusRow_('로딩중...'); }catch(e){}
-    }
+    // 로딩 표시는 스피너(UI_Loading)만 사용
 
-    Promise.all([
-      fetchEmployeesForYear_(y),
-      fetchLeaveAppliesForYear_(y),
-      fetchGrantCacheForYear_(y)
-    ]).then(function(results){
+    return fetchMainBundleForYear_(y).then(function(bundle){
       // ✅ 연도 변경 중간에 이전 요청이 늦게 끝나면 무시
-      if (seq !== _mainBatchSeq) return;
+      if (seq !== _mainBatchSeq) return { ok:false, stale:true };
 
-      var resEmp   = results[0] || {};
-      var resApply = results[1] || {};
-      var resGrant = results[2] || {};
+      var okBundle = !!(bundle && (bundle.ok === true || bundle.success === true));
+      var resEmp = okBundle ? { ok:true, rows:(bundle.employees || []) } : { ok:false };
+      var resApply = okBundle ? { ok:true, rows:(bundle.leaveApplies || []) } : { ok:false };
+      var grantObj = okBundle ? (bundle.grants || {}) : {};
+      var resGrant = okBundle ? { ok:true, rows:(grantObj.rows || []), total_unofficial_days: grantObj.total_unofficial_days } : { ok:false };
 
       // 1) 직원명단
       var okEmp = !!(resEmp && (resEmp.ok === true || resEmp.success === true));
@@ -1107,6 +1241,10 @@ function Leave_init(container){
         window._leaveGrantTotal = total;
       }
       try{ syncGrantUnofficialDaysFromCache_(); }catch(e){}
+      try{
+        window._leaveMainBatchLoading = false;
+        if (root) root.__leaveMainBatchLoading = false;
+      }catch(e){}
       updateLeaveSummary_(); // ✅ 최종 1회 갱신
 
       // ✅ 표시/스피너 해제
@@ -1120,8 +1258,9 @@ function Leave_init(container){
 
       // 체크박스/셀렉트 디자인/연결 갱신(기존 로직 유지 성격)
       try{ refreshSelectTbl_(); }catch(e){}
+      return { ok:true };
     }).catch(function(err){
-      if (seq !== _mainBatchSeq) return;
+      if (seq !== _mainBatchSeq) return { ok:false, stale:true };
       if (!silent){
         if (useMainLoading) _setMainLoading_(false);
       }
@@ -1129,8 +1268,15 @@ function Leave_init(container){
       // ✅ 실패여도 UI는 노출(무한 로딩 방지)
       _hideBootLoading_();
       
-      if (typeof showAlertError === 'function'){
-        showAlertError((err && err.message) ? err.message : String(err), '연차');
+      var em = (err && err.message) ? err.message : String(err);
+      if (window.showRetryConfirm){
+        window.showRetryConfirm(em, '연차', function(){
+          loadMainForYearBatch_(y, opts || {});
+        }, function(){
+          if (typeof showAlertError === 'function') showAlertError(em, '연차');
+        });
+      } else if (typeof showAlertError === 'function'){
+        showAlertError(em, '연차');
       }
       // 실패 시도 최소한 기본 렌더 상태로 맞춤
       try{ renderEmployees_([]); }catch(e){}
@@ -1140,8 +1286,13 @@ function Leave_init(container){
       window._leaveGrantMap = {};
       window._leaveGrantTotal = 0;
       try{ syncGrantUnofficialDaysFromCache_(); }catch(e){}
+      try{
+        window._leaveMainBatchLoading = false;
+        if (root) root.__leaveMainBatchLoading = false;
+      }catch(e){}
       try{ updateLeaveSummary_(); }catch(e){}
-      emitMainLoaded_(false, reloadToken, (err && err.message) ? err.message : String(err));
+      emitMainLoaded_(false, reloadToken, em);
+      return { ok:false, error:em };
     });
   }
   function showEmpStatus_(msg){
@@ -1149,7 +1300,7 @@ function Leave_init(container){
     var box = document.createElement('div');
     box.className = 'text-muted';
     box.style.padding = '0.5rem';
-    box.textContent = msg || '로딩중...';
+    box.textContent = (msg == null) ? '' : String(msg);
     empWrap.appendChild(box);
   }
 
@@ -1188,6 +1339,8 @@ function Leave_init(container){
       if (isSelected) selectedMatched = true;
       btn.className = 'wrap-list-item' + (isSelected ? ' is-active' : '');
       btn.dataset.employeeId = eid;
+      btn.dataset.grantTxt = grant || '';
+      btn.dataset.remainTxt = rem || '';
       btn.innerHTML =
         '<div class="wrap-list-icon"><i class="fa-solid fa-user"></i></div>' +
         '<div class="wrap-list-main">' +
@@ -1336,7 +1489,7 @@ function Leave_init(container){
     td.colSpan = colN;
     td.className = 'text-muted';
     td.style.padding = '0.75rem';
-    td.textContent = msg || '로딩중...';
+    td.textContent = (msg == null) ? '' : String(msg);
     tr.appendChild(td);
     infoTbody.appendChild(tr);
   }
@@ -1464,7 +1617,7 @@ function Leave_init(container){
     if (!infoTbody) return;
     _leaveApplyYear = String(yearLabel || '').trim();
     _leaveApplyAll = [];
-    showInfoStatusRow_('로딩중...');
+    // 로딩 표시는 스피너(UI_Loading)만 사용
 
     google.script.run
       .withSuccessHandler(function(res){
@@ -1500,7 +1653,7 @@ function Leave_init(container){
       return;
     }
 
-    showEmpStatus_('로딩중...');
+    // 로딩 표시는 스피너(UI_Loading)만 사용
     try{ setSelectedEmployee_('', ''); }catch(e){}
     try{ leaveToggleApprovalMode(false); }catch(e){}
     google.script.run
@@ -1524,62 +1677,73 @@ function Leave_init(container){
   }
 
   function loadYears_(){
-    yearSel.innerHTML = '';
-    showEmpStatus_('로딩중...');
-    google.script.run
-      .withSuccessHandler(function(res){
-        var ok = !!(res && (res.ok === true || res.success === true));
-        if (!ok){
-          var em = (res && (res.error || res.message)) || '적용연도를 불러오지 못했습니다.';
-          if (typeof showAlertError === 'function') showAlertError(em, '연차');
+    return new Promise(function(resolve){
+      yearSel.innerHTML = '';
+      // 로딩 표시는 스피너(UI_Loading)만 사용
+      google.script.run
+        .withSuccessHandler(function(res){
+          var ok = !!(res && (res.ok === true || res.success === true));
+          if (!ok){
+            var em = (res && (res.error || res.message)) || '적용연도를 불러오지 못했습니다.';
+            if (typeof showAlertError === 'function') showAlertError(em, '연차');
+            yearSel.innerHTML = '<option value="">-</option>';
+            showEmpStatus_('데이터 없음');
+            _hideBootLoading_();
+            resolve({ ok:false });
+            return;
+          }
+
+          var years = res.years || [];
+          if (!years.length){
+            yearSel.innerHTML = '<option value="">-</option>';
+            showEmpStatus_('데이터 없음');
+            _hideBootLoading_();
+            resolve({ ok:false, empty:true });
+            return;
+          }
+
+          years.forEach(function(y){
+            var opt = document.createElement('option');
+            opt.value = String(y);
+            opt.textContent = String(y);
+            yearSel.appendChild(opt);
+          });
+
+          // ✅ 기본 선택: "오늘 연도"가 있으면 그 연도, 없으면 "마지막 연도"
+          // - years는 "2025년" 같은 라벨 배열
+          var nowY = (new Date()).getFullYear();
+          var nowLabel = String(nowY) + '년';
+          var picked = '';
+          try{
+            if (years.indexOf(nowLabel) >= 0) picked = nowLabel;
+            else picked = String(years[years.length - 1] || '');
+          }catch(e){
+            picked = String(years[0] || '');
+          }
+          // (기존) 기본연도 선택 로직은 유지(너가 이미 "오늘연도 우선"으로 패치함)
+          // ✅ 실제 select에 반영
+          yearSel.value = picked;
+          // ✅ programmatic value 설정 후 has-value 동기화(즉시 + 렌더 이후 1회)
+          _syncLeaveYearSelectHasValue_();
+          try{ requestAnimationFrame(_syncLeaveYearSelectHasValue_); }catch(e){}
+          try{ setTimeout(_syncLeaveYearSelectHasValue_, 0); }catch(e){}
+
+          // ✅ 선택된 연도 기준으로 3개를 "동시 로드 후 한번에 표시"
+          Promise.resolve(loadMainForYearBatch_(yearSel.value))
+            .then(function(ret){ resolve(ret || { ok:true }); });
+        })
+        .withFailureHandler(function(err){
+          if (typeof showAlertError === 'function') {
+            showAlertError((err && err.message) ? err.message : String(err), '연차');
+          }
           yearSel.innerHTML = '<option value="">-</option>';
           showEmpStatus_('데이터 없음');
+          _syncLeaveYearSelectHasValue_();
           _hideBootLoading_();
-          return;
-        }
-
-        var years = res.years || [];
-        if (!years.length){
-          yearSel.innerHTML = '<option value="">-</option>';
-          showEmpStatus_('데이터 없음');
-          _hideBootLoading_();
-          return;
-        }
-
-        years.forEach(function(y){
-          var opt = document.createElement('option');
-          opt.value = String(y);
-          opt.textContent = String(y);
-          yearSel.appendChild(opt);
-        });
-
-        // ✅ 기본 선택: "오늘 연도"가 있으면 그 연도, 없으면 "마지막 연도"
-        // - years는 "2025년" 같은 라벨 배열
-        var nowY = (new Date()).getFullYear();
-        var nowLabel = String(nowY) + '년';
-        var picked = '';
-        try{
-          if (years.indexOf(nowLabel) >= 0) picked = nowLabel;
-          else picked = String(years[years.length - 1] || '');
-        }catch(e){
-          picked = String(years[0] || '');
-        }
-        // (기존) 기본연도 선택 로직은 유지(너가 이미 "오늘연도 우선"으로 패치함)
-        // ✅ 실제 select에 반영
-        yearSel.value = picked;
-
-        // ✅ 선택된 연도 기준으로 3개를 "동시 로드 후 한번에 표시"
-        loadMainForYearBatch_(yearSel.value);
-      })
-      .withFailureHandler(function(err){
-        if (typeof showAlertError === 'function') {
-          showAlertError((err && err.message) ? err.message : String(err), '연차');
-        }
-        yearSel.innerHTML = '<option value="">-</option>';
-        showEmpStatus_('데이터 없음');
-        _hideBootLoading_();
-      })
-      .LEAVE_listYears(_leaveToWire_({ only_active:true }));
+          resolve({ ok:false, error:(err && err.message) ? err.message : String(err) });
+        })
+        .LEAVE_listYears(_leaveToWire_({ only_active:true }));
+    });
   }
 
   if (!yearSel.__leaveYearBound){
@@ -1606,7 +1770,7 @@ function Leave_init(container){
     });
   }
 
-  loadYears_();
+  return loadYears_();
 }
 
 // =========================================================
@@ -1793,11 +1957,16 @@ function LeaveSet_init(scopeEl){
   }
 
   function renderYearList(years){
+    years = Array.isArray(years) ? years : [];
+    var nowY = (new Date()).getFullYear();
+    var defaultYear = years.length ? years[years.length - 1] : nowY;
+    if (years.indexOf(nowY) >= 0) defaultYear = nowY;
+
     yearList.innerHTML = '';
-    years.forEach(function(y, idx){
+    years.forEach(function(y){
       var btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'wrap-list-item' + (idx === 0 ? ' is-active' : '');
+      btn.className = 'wrap-list-item' + (Number(y) === Number(defaultYear) ? ' is-active' : '');
       btn.dataset.year = String(y);
       btn.innerHTML =
         '<div class="wrap-list-main">' +
@@ -1917,7 +2086,7 @@ function LeaveSet_init(scopeEl){
   }
 
   // ======================================================
-  // ✅ 로딩/빈데이터 표기 유틸
+  // ✅ 빈데이터 표기 유틸
   // - 직원명단(empList) / 연차정보(infoTbody)
   // ======================================================
   function showEmpListStatus_(msg){
@@ -1926,7 +2095,7 @@ function LeaveSet_init(scopeEl){
       var box = document.createElement('div');
       box.className = 'text-muted';
       box.style.padding = '0.5rem';
-      box.textContent = msg || '로딩중...';
+      box.textContent = (msg == null) ? '' : String(msg);
       empList.appendChild(box);
     }catch(e){}
   }
@@ -1949,7 +2118,7 @@ function LeaveSet_init(scopeEl){
       td.colSpan = colN;
       td.className = 'text-muted';
       td.style.padding = '0.75rem';
-      td.textContent = msg || '로딩중...';
+      td.textContent = (msg == null) ? '' : String(msg);
       tr.appendChild(td);
       infoTbody.appendChild(tr);
     }catch(e){}
@@ -2002,7 +2171,7 @@ function LeaveSet_init(scopeEl){
     var y = getSelectedYear();
 
     // ✅ 서버는 최초 1회만: 전체 목록을 받아 캐시에 저장
-    showEmpListStatus_('로딩중...');
+    // 로딩 표시는 스피너(UI_Loading)만 사용
     google.script.run
       .withSuccessHandler(function(res){
         var ok = !!(res && (res.ok === true || res.success === true));
@@ -2206,7 +2375,7 @@ function LeaveSet_init(scopeEl){
   function loadLeaveSettingsForYear_(year){
     year = Number(year);
     if (!isFinite(year)) year = getSelectedYear();
-    showInfoTableStatus_('로딩중...');
+    // 로딩 표시는 스피너(UI_Loading)만 사용
     google.script.run
       .withSuccessHandler(function(res){
         var ok = !!(res && (res.ok === true || res.success === true));
@@ -2603,6 +2772,7 @@ function leaveInitApprovalUI() {
 function leaveToggleApprovalMode(on) {
   var root = document.getElementById('leave-root');
   if (!root) return;
+  root.__leaveApprovalMode = !!on;
 
   // 승인관리 버튼: on이면 숨김
   root.querySelectorAll('[data-approval-hide]').forEach(el => on ? uiHide(el) : uiShow(el));
@@ -2631,11 +2801,7 @@ function _setLeaveApprovalFlowLoading_(on){
     if (window.UI_Loading){
       if (on) UI_Loading.show(root, { key:'leave-approval-flow', text:'' });
       else UI_Loading.hide(root, { key:'leave-approval-flow' });
-      return;
     }
-  }catch(e){}
-  try{
-    if (typeof showLoading === 'function') showLoading(!!on);
   }catch(e){}
 }
 
@@ -2773,8 +2939,6 @@ function leaveDeleteSelectedRows() {
     return;
   }
 
-  if (!confirm('선택한 ' + ids.length + '건을 삭제할까요?')) return;
-
   _setLeaveApprovalFlowLoading_(true);
   google.script.run
     .withSuccessHandler(function(res){
@@ -2894,6 +3058,11 @@ function setSum_(key, txt){
   }catch(e){}
 }
 function updateLeaveSummary_(){
+  var __rootEl = window._leaveRoot || document.getElementById('leave-root') || document;
+  if (window._leaveMainBatchLoading || (!!__rootEl && __rootEl.__leaveMainBatchLoading === true)){
+    window._leaveSummaryDirty = true;
+    return;
+  }
   try{ syncGrantUnofficialDaysFromCache_(); }catch(e){}
   // ✅ 테이블과 동일한 필터(직원 + 상태) 적용
   var rows = getFilteredLeaveApplyRows_(_leaveApplyAll);
