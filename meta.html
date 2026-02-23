@@ -598,6 +598,24 @@
  .text-tbl { width: 100%; padding: 0.35rem 0.5rem; font-size: var(--t-size); font-weight: var(--t-weight2); color: var(--t-color); }
  .text-comment { color: var(--t-color-2); font-size: var(--t-size-1); font-weight: var(--t-weight1); }
 
+/* 입력값 길이에 맞춰 자동 너비(옵션: .auto-width) */
+  .input1.auto-width,
+  .select1.auto-width,
+  .input-tbl.auto-width,
+  .select-tbl.auto-width,
+  .inputgroup1 input.auto-width,
+  .inputgroup1 select.auto-width,
+  .inputgroup1 textarea.auto-width,
+  .inputgroup2 input.auto-width,
+  .inputgroup2 select.auto-width,
+  .inputgroup2 textarea.auto-width,
+  .text-tbl.auto-width{
+    width: auto;
+    max-width: 100%;
+    min-width: var(--auto-width-min, 6ch);
+    display: inline-block;
+  }
+
 /* 인풋 - 텍스트, 셀렉 공통 */
   .input1,
   .select1,
@@ -692,7 +710,7 @@
   .input-time-wrap > .input1.input-time,
   .input-time-wrap > .input-tbl.input-time,
   .inputgroup1 .input-time-wrap > input.input-time,
-  .inputgroup2 .input-time-wrap > input.input-time { padding-right: 1.2rem; }
+  .inputgroup2 .input-time-wrap > input.input-time { padding-right: 1.6rem; }
   .input-date-wrap > .input-icon-btn { position: absolute; top: 50%; right: 0.6rem; transform: translateY(-50%); border: none; background: transparent; width: 0.75rem; height: 0.75rem; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
   .input-time-wrap > .input-icon-btn { position: absolute; top: 50%; right: 0.6rem; transform: translateY(-50%); border: none; background: transparent; width: 0.75rem; height: 0.75rem; display: flex; align-items: center; justify-content: center; cursor: default; padding: 0; pointer-events: none; }  
   .input-date-wrap > .input-icon-btn i,
@@ -1219,6 +1237,9 @@
         } else {
           parent.classList.remove('has-value');
         }
+        if (window.refreshAutoWidthField) {
+          window.refreshAutoWidthField(field);
+        }
       }
 
       // 처음 한 번 체크
@@ -1238,6 +1259,119 @@
       window.initInputTimeFields(scope);
     }
   }
+
+/* auto-width input/select/text (opt-in: .auto-width) */
+  var AUTO_WIDTH_SELECTOR =
+    '.input1.auto-width, .select1.auto-width, .input-tbl.auto-width, .select-tbl.auto-width,' +
+    '.inputgroup1 input.auto-width, .inputgroup1 select.auto-width, .inputgroup1 textarea.auto-width,' +
+    '.inputgroup2 input.auto-width, .inputgroup2 select.auto-width, .inputgroup2 textarea.auto-width,' +
+    '.text-tbl.auto-width';
+
+  var __autoWidthMeasureEl = null;
+  function _getAutoWidthMeasureEl() {
+    if (__autoWidthMeasureEl) return __autoWidthMeasureEl;
+    var el = document.createElement('span');
+    el.style.position = 'absolute';
+    el.style.visibility = 'hidden';
+    el.style.whiteSpace = 'pre';
+    el.style.left = '-99999px';
+    el.style.top = '-99999px';
+    el.style.pointerEvents = 'none';
+    document.body.appendChild(el);
+    __autoWidthMeasureEl = el;
+    return __autoWidthMeasureEl;
+  }
+
+  function _copyAutoWidthFontStyle(from, to) {
+    var cs = window.getComputedStyle(from);
+    to.style.fontFamily = cs.fontFamily;
+    to.style.fontSize = cs.fontSize;
+    to.style.fontWeight = cs.fontWeight;
+    to.style.fontStyle = cs.fontStyle;
+    to.style.letterSpacing = cs.letterSpacing;
+    to.style.textTransform = cs.textTransform;
+    return cs;
+  }
+
+  function _autoWidthText(el) {
+    var tag = (el.tagName || '').toLowerCase();
+    if (tag === 'select') {
+      var idx = el.selectedIndex;
+      if (idx >= 0 && el.options && el.options[idx]) {
+        return el.options[idx].text || '';
+      }
+      return '';
+    }
+    if (tag === 'input' || tag === 'textarea') {
+      var val = el.value || '';
+      if (String(val).trim() !== '') return val;
+      return el.getAttribute('placeholder') || '';
+    }
+    return (el.textContent || '').trim();
+  }
+
+  function _parsePx(v) {
+    var n = parseFloat(v);
+    return isNaN(n) ? 0 : n;
+  }
+
+  function _parseCh(v, fallback) {
+    var n = parseFloat(v);
+    return isNaN(n) ? fallback : n;
+  }
+
+  function refreshAutoWidthField(el) {
+    if (!el || !el.matches || !el.matches(AUTO_WIDTH_SELECTOR)) return;
+
+    var probe = _getAutoWidthMeasureEl();
+    var cs = _copyAutoWidthFontStyle(el, probe);
+    var text = _autoWidthText(el) || ' ';
+    probe.textContent = text.replace(/ /g, '\u00a0');
+
+    var textPx = Math.ceil(probe.getBoundingClientRect().width);
+    var padX = _parsePx(cs.paddingLeft) + _parsePx(cs.paddingRight);
+    var borderX = _parsePx(cs.borderLeftWidth) + _parsePx(cs.borderRightWidth);
+    var isSelect = ((el.tagName || '').toLowerCase() === 'select');
+    var hasInputIcon = !!(el.classList && (el.classList.contains('input-date') || el.classList.contains('input-time')));
+    var isUnitInput = !!(el.classList && el.classList.contains('input-unit'));
+    var arrowPx = isSelect ? 20 : 0;
+    var iconPx = hasInputIcon ? 10 : 0;
+    var unitPx = 0;
+    if (isUnitInput && document.activeElement === el) {
+      var unitText = (el.dataset && el.dataset.unit) ? String(el.dataset.unit) : '';
+      if (unitText) {
+        probe.textContent = unitText.replace(/ /g, '\u00a0');
+        unitPx = Math.ceil(probe.getBoundingClientRect().width) + 2;
+      }
+    }
+    var guardPx = 2;
+    var desired = textPx + padX + borderX + arrowPx + iconPx + unitPx + guardPx;
+
+    probe.textContent = '0';
+    var chPx = Math.max(1, Math.ceil(probe.getBoundingClientRect().width));
+    var minCh = _parseCh(el.getAttribute('data-auto-min-ch'), 6);
+    var maxCh = _parseCh(el.getAttribute('data-auto-max-ch'), 40);
+    var minPx = Math.ceil(minCh * chPx) + padX + borderX;
+    var maxPx = Math.ceil(maxCh * chPx) + padX + borderX + arrowPx + iconPx + unitPx;
+
+    var next = Math.max(minPx, Math.min(desired, maxPx));
+    el.style.width = next + 'px';
+  }
+  window.refreshAutoWidthField = refreshAutoWidthField;
+
+  function initAutoWidthFields(root) {
+    var scope = root || document;
+    var fields = scope.querySelectorAll(AUTO_WIDTH_SELECTOR);
+    fields.forEach(function(el){
+      if (!el.__autoWidthBound) {
+        el.addEventListener('input', function(){ refreshAutoWidthField(el); });
+        el.addEventListener('change', function(){ refreshAutoWidthField(el); });
+        el.__autoWidthBound = true;
+      }
+      refreshAutoWidthField(el);
+    });
+  }
+  window.initAutoWidthFields = initAutoWidthFields;
 
 /*아이콘 버튼(.btn-icon)에 data-tooltip 자동 세팅 (CSS ::after 툴팁용)*/
   function initIconTooltips(root) {
@@ -2545,6 +2679,7 @@
     function onBlur(){
       // locked여도 blur 때 표시 포맷 유지해주면 "출력용 input" 안정적
       applyUnitDisplay(el);
+      if (window.refreshAutoWidthField) window.refreshAutoWidthField(el);
 
       // 라벨(has-value) 동기화가 필요하면
       if (typeof refreshFloatingInputs === 'function') {
@@ -2559,6 +2694,7 @@
       }
       // 편집 가능하면 단위 제거 + 콤마만
       applyUnitEditView(el);
+      if (window.refreshAutoWidthField) window.refreshAutoWidthField(el);
       var len = el.value.length;
       try { el.setSelectionRange(len, len); } catch(e) {}
     }
@@ -3393,6 +3529,7 @@ function initUiScope(scope){
 
   // 3) input/date/time + has-value
   if (typeof refreshFloatingInputs === 'function') refreshFloatingInputs(root);
+  if (window.initAutoWidthFields) window.initAutoWidthFields(root);
   if (window.initUnitInputs) window.initUnitInputs(root);       // ✅ input-unit 바인딩/표시
   if (window.initUnitTextTbl) window.initUnitTextTbl(root);     // ✅ text-unit(표시형) 있으면 같이
 

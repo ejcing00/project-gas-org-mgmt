@@ -6,6 +6,7 @@ function include(filename) {
 }
 
 var DB_SPREADSHEET_ID = '11iT1zbRA60P8N9ip3Lki-EZSg30HiACJcj9NoVrehsY';
+var SECURITY_VERSION_PROP = 'SECURITY_VERSION';
 
 /*접속유저찾기: User*/
 var USER_SHEET_NAME   = 'User';
@@ -153,8 +154,40 @@ function UI_getAcl() {
     ok: true,
     user: { email:user.email, emp_id:user.emp_id, emp_name:user.emp_name, role:user.role },
     allowPages: allowPages,
-    permMap: permMap
+    permMap: permMap,
+    securityVersion: UI_getSecurityVersion()
   };
+}
+
+function _securityVersionFromProps_(){
+  try{
+    var props = PropertiesService.getScriptProperties();
+    var raw = String(props.getProperty(SECURITY_VERSION_PROP) || '').trim();
+    if (!raw) return 1;
+    var n = Number(raw);
+    return (isFinite(n) && n > 0) ? Math.floor(n) : 1;
+  }catch(e){
+    return 1;
+  }
+}
+
+function SECURITY_bumpVersion_(){
+  try{
+    var props = PropertiesService.getScriptProperties();
+    var cur = _securityVersionFromProps_();
+    var next = cur + 1;
+    props.setProperty(SECURITY_VERSION_PROP, String(next));
+    return next;
+  }catch(e){
+    return _securityVersionFromProps_();
+  }
+}
+
+function UI_getSecurityVersion(){
+  // 로그인 유효성 확인(비인가 호출 방지)
+  var me = USER_getCurrentUser_();
+  if (!me) throw new Error('로그인 사용자 없음(User 시트 확인 필요)');
+  return _securityVersionFromProps_();
 }
 
 // ✅ 기존 호출 유지용(호환)
@@ -200,5 +233,4 @@ function doGet(e) {
     .setTitle('통합 관리 시스템')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
-
 

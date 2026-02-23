@@ -1,4 +1,463 @@
 <!--dashboard.html-->
+<style>
+  #dashboard-root .page-body { gap: 0.5rem; }
+  .dash-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(120px, 1fr));
+    gap: 0.5rem;
+    align-items: end;
+  }
+  .dash-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+  .dash-kpi-item {
+    border: var(--bd-size) var(--bd-color-wrap);
+    border-radius: var(--bd-radius);
+    background: var(--bg-color-accent);
+    padding: 0.5rem 0.6rem;
+  }
+  .dash-kpi-label { font-size: var(--t-size1); color: var(--t-color-1); font-weight: var(--t-weight2); }
+  .dash-kpi-value { margin-top: 0.2rem; font-size: var(--t-size3); font-weight: var(--t-weight3); color: var(--t-color-on); }
+  .dash-kpi-sub { margin-top: 0.15rem; font-size: var(--t-size); color: var(--t-color-1); }
+
+  .dash-grid-2 {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 0.5rem;
+    min-height: 0;
+  }
+  .dash-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    min-height: 0;
+  }
+  .dash-stack-wrap {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+    border: var(--bd-size) var(--bd-color-wrap);
+    border-radius: var(--bd-radius);
+    background: var(--bg-color-accent);
+    padding: 0.5rem;
+  }
+  .dash-stack-row { display: flex; align-items: center; gap: 0.45rem; }
+  .dash-stack-label { flex: 0 0 130px; font-size: var(--t-size1); font-weight: var(--t-weight2); color: var(--t-color); }
+  .dash-stack-bar {
+    flex: 1 1 auto;
+    height: 10px;
+    background: #d8e3eb;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .dash-stack-fill { height: 100%; border-radius: 999px; }
+  .dash-stack-value { flex: 0 0 96px; text-align: right; font-size: var(--t-size1); font-weight: var(--t-weight2); color: var(--t-color-1); }
+  .dash-calendar {
+    border: var(--bd-size) var(--bd-color-wrap);
+    border-radius: var(--bd-radius);
+    background: var(--bg-color-accent);
+    padding: 0.5rem;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.25rem;
+  }
+  .dash-cal-cell {
+    border-radius: var(--bd-radius-1);
+    min-height: 50px;
+    background: rgba(255,255,255,0.72);
+    border: 1px solid rgba(173,181,189,0.55);
+    padding: 0.2rem 0.3rem;
+    font-size: var(--t-size);
+    color: var(--t-color-1);
+  }
+  .dash-cal-cell.is-head {
+    min-height: auto;
+    text-align: center;
+    font-weight: var(--t-weight2);
+    background: #edf5fb;
+  }
+  .dash-tag {
+    display: inline-block;
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    font-size: var(--t-size-1);
+    font-weight: var(--t-weight2);
+    background: rgba(42,143,155,0.15);
+    color: var(--accent-color-2);
+  }
+
+  @media (max-width: 1280px) {
+    .dash-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dash-grid-2 { grid-template-columns: 1fr; }
+    .dash-grid-3 { grid-template-columns: 1fr; }
+    .dash-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+</style>
+
 <template id="tpl-dashboard">
-내용없음
+  <div class="page-root" id="dashboard-root">
+    <div class="hr-opt">
+      <hr class="hr-out-bar">
+      <div class="hr-txt hr-left">
+        <div class="d-flex align-items-center gap-2">
+          <span class="dash-tag">통합 운영 대시보드</span>
+          <span style="font-size:var(--t-size1);color:var(--t-color-1);">프로젝트 · 소속인력 · 근태급여 · 연차</span>
+        </div>
+      </div>
+      <div class="hr-txt hr-right">
+        <button type="button" class="btn-circle">
+          <span class="icon"><i class="fa-solid fa-rotate"></i></span>
+          <span class="text">새로고침</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="sec">
+        <div class="sec-header"><div>조회 기준</div></div>
+        <div class="sec-body">
+          <div class="dash-filter-grid">
+            <label class="input-float">
+              <select id="dash-view-mode">
+                <option value="year">연도</option>
+                <option value="month">연도 + 월</option>
+              </select>
+              <span>조회모드</span>
+            </label>
+            <label class="input-float">
+              <select id="dash-year"></select>
+              <span>연도</span>
+            </label>
+            <label class="input-float">
+              <select id="dash-month"></select>
+              <span>월</span>
+            </label>
+            <label class="input-float">
+              <input id="dash-base-date" type="text" readonly>
+              <span>기준일</span>
+            </label>
+            <label class="input-float">
+              <select>
+                <option>전체 조직</option>
+                <option>부설연구소</option>
+                <option>산학협력단</option>
+              </select>
+              <span>조직</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec fill">
+        <div class="sec-header"><div>핵심 요약</div></div>
+        <div class="sec-body scroll-y">
+          <div class="dash-kpi-grid">
+            <div class="dash-kpi-item">
+              <div class="dash-kpi-label">프로젝트 운영 수</div>
+              <div class="dash-kpi-value">24건</div>
+              <div class="dash-kpi-sub">진행 19 · 준비 5</div>
+            </div>
+            <div class="dash-kpi-item">
+              <div class="dash-kpi-label">프로젝트 예산 총계</div>
+              <div class="dash-kpi-value">₩4,280,000,000</div>
+              <div class="dash-kpi-sub">보조금 + 대응자금 + 기타</div>
+            </div>
+            <div class="dash-kpi-item">
+              <div class="dash-kpi-label">소속인력 재직</div>
+              <div class="dash-kpi-value">138명</div>
+              <div class="dash-kpi-sub">교원 45 · 직원 93</div>
+            </div>
+            <div class="dash-kpi-item">
+              <div class="dash-kpi-label">연차변경 대상자</div>
+              <div class="dash-kpi-value">17명</div>
+              <div class="dash-kpi-sub">다음 3개월 내 변경 예정</div>
+            </div>
+            <div class="dash-kpi-item">
+              <div class="dash-kpi-label">직위변경 대상자</div>
+              <div class="dash-kpi-value">11명</div>
+              <div class="dash-kpi-sub">심사 대기 6 · 확정 5</div>
+            </div>
+            <div class="dash-kpi-item">
+              <div class="dash-kpi-label">계약만료 대상자</div>
+              <div class="dash-kpi-value">8명</div>
+              <div class="dash-kpi-sub">D-30 이내 3명</div>
+            </div>
+            <div class="dash-kpi-item">
+              <div class="dash-kpi-label">계약시작 대상자</div>
+              <div class="dash-kpi-value">6명</div>
+              <div class="dash-kpi-sub">당월 시작 예정</div>
+            </div>
+            <div class="dash-kpi-item">
+              <div class="dash-kpi-label">연차사용 일정</div>
+              <div class="dash-kpi-value">23건</div>
+              <div class="dash-kpi-sub">월간 신청 기준</div>
+            </div>
+          </div>
+
+          <div class="dash-grid-2 mt-2">
+            <div class="crd">
+              <div class="crd-header">프로젝트 예산 구성</div>
+              <div class="crd-body">
+                <div class="dash-stack-wrap">
+                  <div class="dash-stack-row">
+                    <div class="dash-stack-label">보조금</div>
+                    <div class="dash-stack-bar"><div class="dash-stack-fill" style="width:42%; background:#5b9cb7;"></div></div>
+                    <div class="dash-stack-value">₩1,800,000,000</div>
+                  </div>
+                  <div class="dash-stack-row">
+                    <div class="dash-stack-label">대응자금(현금)</div>
+                    <div class="dash-stack-bar"><div class="dash-stack-fill" style="width:21%; background:#3b7e8c;"></div></div>
+                    <div class="dash-stack-value">₩900,000,000</div>
+                  </div>
+                  <div class="dash-stack-row">
+                    <div class="dash-stack-label">대응자금(현물)</div>
+                    <div class="dash-stack-bar"><div class="dash-stack-fill" style="width:12%; background:#6ea5ba;"></div></div>
+                    <div class="dash-stack-value">₩520,000,000</div>
+                  </div>
+                  <div class="dash-stack-row">
+                    <div class="dash-stack-label">기타자금</div>
+                    <div class="dash-stack-bar"><div class="dash-stack-fill" style="width:25%; background:#8ca9bf;"></div></div>
+                    <div class="dash-stack-value">₩1,060,000,000</div>
+                  </div>
+                </div>
+                <div class="wrap-sum mt-2">
+                  <div class="sum-grid">
+                    <div class="sum-row">
+                      <div class="sum-item">
+                        <div class="sum-item-label">보조금+대응자금 계</div>
+                        <div class="sum-item-value">₩3,220,000,000</div>
+                      </div>
+                      <div class="sum-item is-accent1">
+                        <div class="sum-item-label">총계</div>
+                        <div class="sum-item-value">₩4,280,000,000</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="crd">
+              <div class="crd-header">소속인력 재직 현황</div>
+              <div class="crd-body">
+                <div class="wrap-tbl tbl-sticky scroll-y">
+                  <table class="tbl">
+                    <thead>
+                      <tr>
+                        <th>구분</th>
+                        <th>인원</th>
+                        <th>비율</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>교원</td><td>45</td><td>32.6%</td></tr>
+                      <tr><td>직원(대학본부)</td><td>28</td><td>20.3%</td></tr>
+                      <tr><td>직원(산학협력단)</td><td>37</td><td>26.8%</td></tr>
+                      <tr><td>직원(부설연구소)</td><td>28</td><td>20.3%</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dash-grid-2 mt-2">
+            <div class="crd">
+              <div class="crd-header">연차변경 대상자</div>
+              <div class="crd-body">
+                <div class="wrap-tbl tbl-sticky scroll-y">
+                  <table class="tbl">
+                    <thead>
+                      <tr>
+                        <th>성명</th>
+                        <th>변경월</th>
+                        <th>변경전</th>
+                        <th>변경후</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>김지원</td><td>2026-03</td><td>2년차</td><td>3년차</td></tr>
+                      <tr><td>이준호</td><td>2026-04</td><td>4년차</td><td>5년차</td></tr>
+                      <tr><td>박수민</td><td>2026-05</td><td>1년차</td><td>2년차</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="crd">
+              <div class="crd-header">직위변경 대상자</div>
+              <div class="crd-body">
+                <div class="wrap-tbl tbl-sticky scroll-y">
+                  <table class="tbl">
+                    <thead>
+                      <tr>
+                        <th>성명</th>
+                        <th>현직위</th>
+                        <th>유지조건</th>
+                        <th>반영예정일</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>정하늘</td><td>선임</td><td>충족</td><td>2026-07-01</td></tr>
+                      <tr><td>오민재</td><td>주임</td><td>심사대기</td><td>2027-01-01</td></tr>
+                      <tr><td>한지우</td><td>책임</td><td>충족</td><td>2026-07-01</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dash-grid-3 mt-2">
+            <div class="crd">
+              <div class="crd-header">계약만료 대상자</div>
+              <div class="crd-body">
+                <div class="wrap-tbl tbl-sticky scroll-y">
+                  <table class="tbl">
+                    <thead>
+                      <tr>
+                        <th>성명</th>
+                        <th>부서</th>
+                        <th>만료일</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>강도윤</td><td>연구지원팀</td><td>2026-03-12</td></tr>
+                      <tr><td>최서연</td><td>성과관리팀</td><td>2026-03-28</td></tr>
+                      <tr><td>윤태성</td><td>행정지원팀</td><td>2026-04-07</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="crd">
+              <div class="crd-header">계약시작 대상자</div>
+              <div class="crd-body">
+                <div class="wrap-tbl tbl-sticky scroll-y">
+                  <table class="tbl">
+                    <thead>
+                      <tr>
+                        <th>성명</th>
+                        <th>부서</th>
+                        <th>시작일</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>홍나래</td><td>인사총무팀</td><td>2026-03-01</td></tr>
+                      <tr><td>서지훈</td><td>연구지원팀</td><td>2026-03-15</td></tr>
+                      <tr><td>임가영</td><td>기획예산팀</td><td>2026-04-01</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="crd">
+              <div class="crd-header">연차사용 일정</div>
+              <div class="crd-body">
+                <div class="dash-calendar">
+                  <div class="dash-cal-cell is-head">월</div>
+                  <div class="dash-cal-cell is-head">화</div>
+                  <div class="dash-cal-cell is-head">수</div>
+                  <div class="dash-cal-cell is-head">목</div>
+                  <div class="dash-cal-cell is-head">금</div>
+                  <div class="dash-cal-cell is-head">토</div>
+                  <div class="dash-cal-cell is-head">일</div>
+                  <div class="dash-cal-cell">1</div>
+                  <div class="dash-cal-cell">2<br><span class="dash-tag">연차 1건</span></div>
+                  <div class="dash-cal-cell">3</div>
+                  <div class="dash-cal-cell">4</div>
+                  <div class="dash-cal-cell">5</div>
+                  <div class="dash-cal-cell">6</div>
+                  <div class="dash-cal-cell">7</div>
+                  <div class="dash-cal-cell">8</div>
+                  <div class="dash-cal-cell">9</div>
+                  <div class="dash-cal-cell">10</div>
+                  <div class="dash-cal-cell">11</div>
+                  <div class="dash-cal-cell">12<br><span class="dash-tag">연차 3건</span></div>
+                  <div class="dash-cal-cell">13</div>
+                  <div class="dash-cal-cell">14</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
+
+<script>
+  function Dashboard_init(scope) {
+    var root = scope && scope.querySelector ? scope.querySelector('#dashboard-root') : document.getElementById('dashboard-root');
+    if (!root) return;
+
+    var modeEl = root.querySelector('#dash-view-mode');
+    var yearEl = root.querySelector('#dash-year');
+    var monthEl = root.querySelector('#dash-month');
+    var baseDateEl = root.querySelector('#dash-base-date');
+    if (!modeEl || !yearEl || !monthEl || !baseDateEl) return;
+
+    var now = new Date();
+    var thisYear = now.getFullYear();
+    var thisMonth = now.getMonth() + 1;
+
+    yearEl.innerHTML = '';
+    for (var y = thisYear - 3; y <= thisYear + 1; y++) {
+      var yOpt = document.createElement('option');
+      yOpt.value = String(y);
+      yOpt.textContent = String(y) + '년';
+      if (y === thisYear) yOpt.selected = true;
+      yearEl.appendChild(yOpt);
+    }
+
+    monthEl.innerHTML = '';
+    var allOpt = document.createElement('option');
+    allOpt.value = 'all';
+    allOpt.textContent = '전체';
+    monthEl.appendChild(allOpt);
+    for (var m = 1; m <= 12; m++) {
+      var mOpt = document.createElement('option');
+      mOpt.value = String(m);
+      mOpt.textContent = String(m) + '월';
+      if (m === thisMonth) mOpt.selected = true;
+      monthEl.appendChild(mOpt);
+    }
+
+    function getLastDay(year, month) {
+      return new Date(year, month, 0).getDate();
+    }
+
+    function setBaseDate() {
+      var mode = modeEl.value;
+      var y = Number(yearEl.value);
+      var mRaw = monthEl.value;
+      var m = mRaw === 'all' ? null : Number(mRaw);
+      var dateText = '';
+
+      if (mode === 'year') {
+        dateText = String(y) + '-12-31';
+      } else {
+        if (!m) {
+          m = thisMonth;
+          monthEl.value = String(m);
+        }
+        var d = getLastDay(y, m);
+        var mm = m < 10 ? '0' + m : String(m);
+        var dd = d < 10 ? '0' + d : String(d);
+        dateText = String(y) + '-' + mm + '-' + dd;
+      }
+      baseDateEl.value = dateText;
+      monthEl.disabled = (mode === 'year');
+    }
+
+    modeEl.addEventListener('change', setBaseDate);
+    yearEl.addEventListener('change', setBaseDate);
+    monthEl.addEventListener('change', setBaseDate);
+    setBaseDate();
+  }
+</script>

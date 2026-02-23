@@ -42,6 +42,7 @@
           styleguide: 'tpl-styleguide'
         };
         var PAGE_INIT_HANDLERS = {
+          dashboard: 'Dashboard_init',
           accesscontrol: 'AccessControl_init',
           project: 'Project_init',
           employee: 'Employee_init',
@@ -155,6 +156,10 @@
             if (!ok){
               if (typeof showAlertError === 'function') {
                 showAlertError((res && res.message) ? res.message : 'ACL 로드 실패', '권한');
+              }
+            } else {
+              if (typeof ACL_startSecurityWatch === 'function') {
+                ACL_startSecurityWatch({ intervalMs: 10 * 60 * 1000 }); // 10분
               }
             }
             _loadFirstPage_();

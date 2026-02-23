@@ -2185,32 +2185,74 @@
       var p = pickLatestBy_(g.pos, 'start_date');
       if (p && _normStr_(p.name)) e.position_now = _normStr_(p.name);
 
-      // 계약(최근)
-      var a = pickLatestBy_(g.agr, 'start_date');
-      if (a){
-        if (_normStr_(a.start_date)) e.agreement_start_date = _normStr_(a.start_date);
-        if (_normStr_(a.end_date)) e.agreement_end_date = _normStr_(a.end_date);
-        e.agreement_category_now = _normStr_(a.category);
-        var endYmd = _normStr_(a.end_date);
-        // 계약기간: start ~ end(없으면 오늘)
-        var endForContract = endYmd || todayYmd;
-        // 재직기간(오늘까지): end가 과거면 end, 미래(또는 없음)이면 오늘
-        var endForNow = (endYmd && ymdDate_(endYmd) && ymdDate_(todayYmd) && ymdDate_(endYmd) < ymdDate_(todayYmd))
-          ? endYmd
-          : todayYmd;
-        e.agreement_period_now = mdTextNoLeading_(_periodTextFromTo_(_normStr_(a.start_date), endForNow));
-        e.agreement_period = mdTextNoLeading_(_periodTextFromTo_(_normStr_(a.start_date), endForContract));
+      // 계약(상세 페이지와 동일 규칙)
+      // - 계약시작일: '신규계약' start_date 중 가장 빠른 날짜
+      // - 계약종료일: 하나라도 end_date 공란이면 공란, 아니면 최댓값
+      // - 재직기간: 계약시작일 ~ min(오늘, 계약종료일)
+      var aLatest = pickLatestBy_(g.agr, 'start_date'); // agreement_category_now 유지용
+      if (aLatest) e.agreement_category_now = _normStr_(aLatest.category);
 
-        // 재직기간(오늘까지) — 총근무연수/연차 산정용
-        var sInt = ymdInt_(_normStr_(a.start_date));
-        var nowInt = ymdInt_(todayYmd);
-        isTenureValid = (sInt != null && nowInt != null && sInt <= nowInt);
+      var contractStart = '';
+      (g.agr || []).forEach(function(r){
+        if (_normStr_(r && r.category) !== '신규계약') return;
+        var d = ymdDate_(r && r.start_date);
+        if (!d) return;
+        if (!contractStart) contractStart = _normStr_(r.start_date);
+        else {
+          var cur = ymdDate_(contractStart);
+          if (cur && d < cur) contractStart = _normStr_(r.start_date);
+        }
+      });
 
+      var hasOpenEnd = (g.agr || []).some(function(r){
+        return !_normStr_(r && r.end_date);
+      });
+      var contractEnd = '';
+      if (!hasOpenEnd){
+        var maxEnd = null;
+        (g.agr || []).forEach(function(r){
+          var d = ymdDate_(r && r.end_date);
+          if (!d) return;
+          if (!maxEnd || d > maxEnd) maxEnd = d;
+        });
+        if (maxEnd){
+          contractEnd = maxEnd.getFullYear() + '-' + String(maxEnd.getMonth()+1).padStart(2,'0') + '-' + String(maxEnd.getDate()).padStart(2,'0');
+        }
+      }
+
+      e.agreement_start_date = contractStart;
+      e.agreement_end_date = contractEnd;
+
+      var contractStartD = contractStart ? ymdDate_(contractStart) : null;
+      var contractEndD = contractEnd ? ymdDate_(contractEnd) : null;
+      var todayD = ymdDate_(todayYmd);
+
+      // 계약기간: start ~ (end || today), 단 start <= end인 경우만
+      var periodEndD = contractEndD || todayD;
+      if (contractStartD && periodEndD && contractStartD <= periodEndD){
+        var periodEndYmd = periodEndD.getFullYear() + '-' + String(periodEndD.getMonth()+1).padStart(2,'0') + '-' + String(periodEndD.getDate()).padStart(2,'0');
+        e.agreement_period = mdTextNoLeading_(_periodTextFromTo_(contractStart, periodEndYmd));
+      } else {
+        e.agreement_period = '';
+      }
+
+      // 재직기간(오늘까지): start ~ min(today, end)
+      var tenureEndD = todayD;
+      if (contractEndD && todayD && contractEndD < todayD) tenureEndD = contractEndD;
+      isTenureValid = !!(contractStartD && tenureEndD && contractStartD <= tenureEndD);
+
+      if (isTenureValid){
+        var tenureEndYmd = tenureEndD.getFullYear() + '-' + String(tenureEndD.getMonth()+1).padStart(2,'0') + '-' + String(tenureEndD.getDate()).padStart(2,'0');
+        e.agreement_period_now = mdTextNoLeading_(_periodTextFromTo_(contractStart, tenureEndYmd));
         var oTenure = (typeof _diffMonthsDaysInclusiveObj_ === 'function')
-          ? _diffMonthsDaysInclusiveObj_(_normStr_(a.start_date), endForNow)
+          ? _diffMonthsDaysInclusiveObj_(contractStart, tenureEndYmd)
           : null;
         tenureMo = oTenure ? (oTenure.months || 0) : 0;
         tenureDa = oTenure ? (oTenure.days || 0) : 0;
+      } else {
+        e.agreement_period_now = '';
+        tenureMo = 0;
+        tenureDa = 0;
       }
 
       // 승인경력기간(카테고리에 '적용' 포함)
@@ -4236,12 +4278,14 @@ function _empBindEmployeeFileSection_(rootEl){
   var btnDownload = sec.querySelector('button[data-emp-file-action="download"]');
 
   function _employeeId_(){
-    var el = rootEl.querySelector('[name="employee_id"], [data-field="employee_id"]');
+    var el = rootEl.querySelector('[data-field="employee_id"][data-pk="1"]')
+          || rootEl.querySelector('[name="employee_id"], [data-field="employee_id"]');
     return String(el ? el.value : '').trim();
   }
 
   function _employeeName_(){
-    var el = rootEl.querySelector('[name="name"], [data-field="name"]');
+    var el = rootEl.querySelector('[data-field="name"]')
+          || rootEl.querySelector('[name="name"]');
     if (!el) return '';
     if (el.matches && el.matches('input,select,textarea')) return String(el.value || '').trim();
     return String(el.textContent || '').trim();
@@ -4304,6 +4348,16 @@ function _empBindEmployeeFileSection_(rootEl){
     // 자료구분 기본값
     var sel = tr.querySelector('select[data-field="file_category"]');
     if (sel) sel.value = '';
+
+    // ✅ 조회모드에서 캡처된 disabled 템플릿이 복제되는 경우를 방지
+    // - create/edit에서 추가되는 Employee_File 행은 입력 가능해야 한다.
+    if (_mode_() !== 'view'){
+      tr.querySelectorAll('input, select, textarea').forEach(function(el){
+        var t = String(el.getAttribute('type') || '').toLowerCase();
+        if (t === 'hidden') return;
+        el.disabled = false;
+      });
+    }
 
     return tr;
   }
@@ -4557,7 +4611,8 @@ function _empUploadPendingEmployeeFiles_(rootEl, opts){
         return reject(new Error('DriveFileUtil이 없습니다. driveFileUtil.html 포함 여부를 확인해주세요.'));
       }
 
-      var empEl = rootEl.querySelector('[name="employee_id"], [data-field="employee_id"]');
+      var empEl = rootEl.querySelector('[data-field="employee_id"][data-pk="1"]')
+               || rootEl.querySelector('[name="employee_id"], [data-field="employee_id"]');
       var empId = String(empEl ? empEl.value : '').trim();
       if (!empId) return reject(new Error('사번(employee_id) 입력이 필요합니다.'));
 

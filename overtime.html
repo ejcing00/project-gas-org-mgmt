@@ -77,6 +77,9 @@
     }
     .ot-print-table .t-right{ text-align:right; }
     .ot-print-table .t-left{ text-align:left; }
+    .ot-print-table .ot-col-time{
+      white-space: nowrap;
+    }
 
     /* 지급기준(고정문구) */
     .ot-print-foot{
@@ -381,19 +384,19 @@
           <table>
             <thead>
               <tr>
-                <th rowspan="2" style="width:36px;">순번</th>
-                <th rowspan="2" style="width:65px;">직원명</th>
-                <th rowspan="2" style="width:70px;">통상임금</th>
+                <th rowspan="2" style="width:30px;">순번</th>
+                <th rowspan="2" style="width:52px;">직원명</th>
+                <th rowspan="2" style="width:58px;">통상임금</th>
                 <th colspan="4">초과근무시간</th>
                 <th colspan="4">초과근무수당</th>
-                <th rowspan="2" style="width:90px;">최종지급액<br><span style="font-weight:400; font-size:10px;">*천원단위 절사</span></th>
-                <th rowspan="2" style="width:150px;">비고</th>
+                <th rowspan="2" style="width:74px;">최종지급액<br><span style="font-weight:400; font-size:10px;">*천원단위 절사</span></th>
+                <th rowspan="2" style="width:140px;">비고</th>
               </tr>
               <tr>
-                <th style="width:72px;">연장근무</th>
-                <th style="width:72px;">휴일근무</th>
-                <th style="width:72px;">야간근무</th>
-                <th style="width:72px;">합계</th>
+                <th class="ot-col-time" style="width:82px;">연장근무</th>
+                <th class="ot-col-time" style="width:82px;">휴일근무</th>
+                <th class="ot-col-time" style="width:82px;">야간근무</th>
+                <th class="ot-col-time" style="width:82px;">합계</th>
                 <th style="width:78px;">연장근무</th>
                 <th style="width:78px;">휴일근무</th>
                 <th style="width:78px;">야간근무</th>
@@ -1049,10 +1052,10 @@
           '<td>' + cellText(0) + '</td>',
           '<td>' + cellText(1) + '</td>',
           '<td class="t-right">' + cellText(2) + '</td>',
-          '<td>' + cellText(3) + '</td>',
-          '<td>' + cellText(4) + '</td>',
-          '<td>' + cellText(5) + '</td>',
-          '<td>' + cellText(6) + '</td>',
+          '<td class="ot-col-time">' + cellText(3) + '</td>',
+          '<td class="ot-col-time">' + cellText(4) + '</td>',
+          '<td class="ot-col-time">' + cellText(5) + '</td>',
+          '<td class="ot-col-time">' + cellText(6) + '</td>',
           '<td class="t-right">' + cellText(7) + '</td>',
           '<td class="t-right">' + cellText(8) + '</td>',
           '<td class="t-right">' + cellText(9) + '</td>',

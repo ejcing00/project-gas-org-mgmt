@@ -4,7 +4,18 @@
   if (window.__ACL_UI_BOUND) return;
   window.__ACL_UI_BOUND = true;
 
-  window.ACL = window.ACL || { loaded:false, ok:false, user:null, allowPages:{}, permMap:{} };
+  window.ACL = window.ACL || {
+    loaded:false,
+    ok:false,
+    user:null,
+    allowPages:{},
+    permMap:{},
+    securityVersion: 0,
+    securityWatchStarted: false,
+    securityCheckBusy: false,
+    lastSecurityCheckAt: 0,
+    securityIntervalId: null
+  };
 
   function isTrue_(v){ return v === true || String(v||'').trim().toUpperCase() === 'TRUE'; }
   function normDeny_(v){
@@ -181,6 +192,7 @@
           window.ACL.user = res.user || null;
           window.ACL.allowPages = res.allowPages || {};
           window.ACL.permMap = res.permMap || {};
+          window.ACL.securityVersion = Number(res.securityVersion || 0) || 0;
           window.ACL.ok = true;
           window.ACL.loaded = true;
           applySidebar_();
@@ -199,11 +211,73 @@
       .UI_getAcl();
   }
 
+  function forceReloadBySecurity_(){
+    if (window.__ACL_SECURITY_RELOADING) return;
+    window.__ACL_SECURITY_RELOADING = true;
+    try{
+      if (typeof showAlertWarn === 'function'){
+        showAlertWarn('권한 또는 역할이 변경되어 화면을 새로고침합니다.', '보안');
+      }
+    }catch(e){}
+    setTimeout(function(){
+      try{ window.location.reload(); }catch(e){}
+    }, 600);
+  }
+
+  function checkSecurityVersion_(reason){
+    if (!window.ACL || !window.ACL.loaded || !window.ACL.ok) return;
+    if (window.__ACL_SECURITY_RELOADING) return;
+    if (window.ACL.securityCheckBusy) return;
+    var now = Date.now();
+    // 과도한 호출 방지(최소 60초 간격)
+    if (now - Number(window.ACL.lastSecurityCheckAt || 0) < 60000) return;
+
+    window.ACL.securityCheckBusy = true;
+    window.ACL.lastSecurityCheckAt = now;
+
+    google.script.run
+      .withSuccessHandler(function(ver){
+        window.ACL.securityCheckBusy = false;
+        var serverVer = Number(ver || 0) || 0;
+        var localVer = Number(window.ACL.securityVersion || 0) || 0;
+        if (localVer > 0 && serverVer > 0 && serverVer !== localVer){
+          forceReloadBySecurity_();
+        }
+      })
+      .withFailureHandler(function(){
+        window.ACL.securityCheckBusy = false;
+      })
+      .UI_getSecurityVersion();
+  }
+
+  function startSecurityWatch_(opts){
+    opts = opts || {};
+    if (!window.ACL || window.ACL.securityWatchStarted) return;
+    window.ACL.securityWatchStarted = true;
+
+    var intervalMs = Number(opts.intervalMs || 600000); // 10분
+    if (!isFinite(intervalMs) || intervalMs < 60000) intervalMs = 60000;
+
+    window.ACL.securityIntervalId = setInterval(function(){
+      checkSecurityVersion_('interval');
+    }, intervalMs);
+
+    window.addEventListener('focus', function(){
+      checkSecurityVersion_('focus');
+    });
+
+    document.addEventListener('visibilitychange', function(){
+      if (!document.hidden) checkSecurityVersion_('visible');
+    });
+  }
+
   // 전역 export
   window.ACL_bootstrap   = bootstrap_;
   window.ACL_applyToScope= applyToScope_;
   window.ACL_applySidebar= applySidebar_;
   window.ACL_bindSidebar = bindSidebarNav_;
+  window.ACL_checkSecurityVersion = checkSecurityVersion_;
+  window.ACL_startSecurityWatch = startSecurityWatch_;
 
 })();
 </script>

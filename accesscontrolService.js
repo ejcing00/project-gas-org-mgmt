@@ -97,6 +97,9 @@ function AC_save(payload){
       lock.releaseLock();
     }
 
+    // 권한/역할/사용자 매핑 변경 시 전 사용자 강제 갱신 트리거
+    if (typeof SECURITY_bumpVersion_ === 'function') SECURITY_bumpVersion_();
+
     return { ok:true };
   } catch(err){
     return { ok:false, message: err.message };
