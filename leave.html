@@ -388,9 +388,21 @@
                   <th><input type="checkbox" class="chk-anim" aria-label="전체선택"></th>
                   <th style="min-width: 80px">사번</th>
                   <th style="min-width: 100px">성명</th>
-                  <th style="min-width: 140px">총근무연수</th>
-                  <th style="min-width: 110px">총근무연차</th>
-                  <th>법정연차</th>
+                  <th style="min-width: 190px">총근무연수·연차(현재)</th>
+                  <th style="min-width: 220px">총근무연수·연차(1월 1일)</th>
+                  <th>
+                    <span class="d-inline-flex align-items-center gap-1">
+                      <span>법정연차</span>
+                      <button
+                        type="button"
+                        class="btn-icon btn-icon-s btn-icon-blue"
+                        aria-label="법정연차 기준표"
+                        data-tt-mode="multi"
+                        data-tooltip="법정연차 기준표&#10;1년차: 11일&#10;2년차: 15일&#10;3년차: 16일&#10;4년차: 16일&#10;5년차: 17일&#10;이후 2년마다 +1일 (최대 25일)"
+                        style="margin-left:0; vertical-align:middle;"
+                      ><i class="fa-solid fa-circle-info"></i></button>
+                    </span>
+                  </th>
                   <th style="min-width: 80px">부여연차</th>
                   <th style="min-width: 80px">공식연차</th>
                   <th style="min-width: 80px">비공식연차</th>
@@ -930,12 +942,6 @@ function leaveSetPageModal() {
         _setSaveDisabled_(false);
         return false;
       }
-      if (!payload.rows || payload.rows.length === 0){
-        if (typeof showAlertWarn === 'function') showAlertWarn('저장할 연차정보가 없습니다.', '연차설정');
-        _setSaveDisabled_(false);
-        return false;
-      }
-
       function _runSave_(){
         if (_isLeaveSetSaving) return;
         _isLeaveSetSaving = true;
@@ -1824,8 +1830,8 @@ function LeaveSet_init(scopeEl){
         + '<td><input type="checkbox" class="chk-anim" aria-label="선택"></td>'
         + '<td><div class="text-tbl"></div></td>'  /* 사번 */
         + '<td><div class="text-tbl"></div></td>'  /* 성명 */
-        + '<td><div class="text-tbl"></div></td>'  /* 총근무연수 */
-        + '<td><div class="text-tbl"></div></td>'  /* 총근무연차 */
+        + '<td><div class="text-tbl"></div></td>'  /* 총근무연수·연차(현재) */
+        + '<td><div class="text-tbl"></div></td>'  /* 총근무연수·연차(1월 1일) */
         + '<td><div class="text-tbl"></div></td>'  /* 법정연차 */
         + '<td>' + buildDaySelectHtml_() + '</td>'  /* 부여연차 */
         + '<td>' + buildDaySelectHtml_() + '</td>'  /* 공식연차 */
@@ -2023,18 +2029,6 @@ function LeaveSet_init(scopeEl){
     if (!p && !y) return '-';
     if (p && y) return p + ' · ' + y;
     return p || y;
-  }
-
-  function fmtWorkPeriod_(work){
-    if (!work) return '-';
-    var p = (work.working_period || '').trim();
-    return p || '-';
-  }
-
-  function fmtWorkYearcount_(work){
-    if (!work) return '-';
-    var y = (work.working_yearcount || '').trim();
-    return y || '-';
   }
 
   function renderEmployees(list){
@@ -2241,7 +2235,7 @@ function LeaveSet_init(scopeEl){
   }
   function calcStatutoryDays_(work){
     var yno = parseYearNo_(work);
-    if (!isFinite(yno) || yno <= 0) return 0;
+    if (!isFinite(yno) || yno <= 0) return NaN;
     if (yno === 1) return 11;
     var days = 15 + Math.floor((yno - 1) / 2);
     return Math.min(days, 25);
@@ -2312,9 +2306,10 @@ function LeaveSet_init(scopeEl){
       var r = rowsById[eid] || null; // ✅ 직원 캐시
       var empNoTxt = eid;
       var empNameTxt = String((r && r.name) || '');
-      var workPeriodTxt = (r ? fmtWorkPeriod_(r.work) : '-');
-      var workYearTxt   = (r ? fmtWorkYearcount_(r.work) : '-');
-      var statTxt = (calcStatutoryDays_(r ? r.work : null) || 0) + '일';
+      var workCurrentTxt = (r ? fmtWork(r.work) : '-');
+      var workJan1Txt    = (r ? fmtWork(r.work_jan1) : '-');
+      var statDays = calcStatutoryDays_(r ? r.work_jan1 : null);
+      var statTxt = isFinite(statDays) ? (statDays + '일') : '';
 
       var tr = infoTplTr.cloneNode(true);
       if (tr.dataset) tr.dataset.employeeId = eid;
@@ -2328,11 +2323,11 @@ function LeaveSet_init(scopeEl){
       }
 
       // ✅ 현재 템플릿 컬럼:
-      // 0:checkbox, 1:사번, 2:성명, 3:총근무연수, 4:총근무연차, 5:법정연차, 6:부여(select), 7:공식(select), 8:비공식(text), 9:비고(input)
+      // 0:checkbox, 1:사번, 2:성명, 3:총근무연수·연차(현재), 4:총근무연수·연차(1월 1일), 5:법정연차, 6:부여(select), 7:공식(select), 8:비공식(text), 9:비고(input)
       _setText_(tr.children[1], empNoTxt);
       _setText_(tr.children[2], empNameTxt);
-      _setText_(tr.children[3], workPeriodTxt);
-      _setText_(tr.children[4], workYearTxt);
+      _setText_(tr.children[3], workCurrentTxt);
+      _setText_(tr.children[4], workJan1Txt);
       _setText_(tr.children[5], statTxt);
 
       var grantV   = _dayVal_(x.grant_days);
@@ -2400,8 +2395,9 @@ function LeaveSet_init(scopeEl){
   // ✅ 선택추가: 우측 연차정보 테이블에 행 생성
   // - 중복 추가 방지 (tbody tr[data-employee-id])
   // - 직원: "employee_id name"
-  // - 총근무연수/연차: fmtWork(row.work)
-  // - 법정연차: calcStatutoryDays_(row.work)
+  // - 총근무연수·연차(현재): fmtWork(row.work)
+  // - 총근무연수·연차(1월 1일): fmtWork(row.work_jan1)
+  // - 법정연차: calcStatutoryDays_(row.work_jan1)
   // ======================================================
   if (!btnAdd.__leaveAddBound){
     btnAdd.__leaveAddBound = true;
@@ -2468,25 +2464,26 @@ function LeaveSet_init(scopeEl){
           elNm.textContent = String(r.name || '');
         }
 
-        // 3) 총근무연수 (col 3)
+        // 3) 총근무연수·연차(현재) (col 3)
         var tdWorkP = tr.children[3];
         if (tdWorkP){
           var elP = tdWorkP.querySelector('.text-tbl') || tdWorkP;
-          elP.textContent = fmtWorkPeriod_(r.work);
+          elP.textContent = fmtWork(r.work);
         }
 
-        // 4) 총근무연차 (col 4)
+        // 4) 총근무연수·연차(1월 1일) (col 4)
         var tdWorkY = tr.children[4];
         if (tdWorkY){
           var elY = tdWorkY.querySelector('.text-tbl') || tdWorkY;
-          elY.textContent = fmtWorkYearcount_(r.work);
+          elY.textContent = fmtWork(r.work_jan1);
         }
 
         // 5) 법정연차 (col 5)
         var tdLaw = tr.children[5];
         if (tdLaw){
           var el3 = tdLaw.querySelector('.text-tbl') || tdLaw;
-          el3.textContent = calcStatutoryDays_(r.work) + '일';
+          var statDays = calcStatutoryDays_(r.work_jan1);
+          el3.textContent = isFinite(statDays) ? (statDays + '일') : '';
         }
 
         // ✅ 비공식연차(col 8): select가 있으면 제거하고 text-tbl로 교체

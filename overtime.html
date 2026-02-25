@@ -930,7 +930,9 @@
         var payNight = (rate.rateNight * (mins.night/60));
         var paySum   = payExt + payHol + payNight;
 
-        var finalPay = Math.floor(paySum / 1000) * 1000; // 천원단위 절사
+        // 최종지급액 = 상한 적용 후 천원단위 절사
+        var cappedPay = (ctx.capAmount > 0) ? Math.min(paySum, ctx.capAmount) : paySum;
+        var finalPay = Math.floor(cappedPay / 1000) * 1000;
 
         var tr = document.createElement('tr');
         tr.innerHTML = [

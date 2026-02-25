@@ -427,6 +427,14 @@ function LEAVE_sendStatusNoticeMail_(ctx){
 function LEAVE_listEmployeesForSetting(payload){
   payload = payload || {};
   var statusFilter = String(payload.status || '전체');
+  var yearRaw = payload.year;
+  var yearNum = NaN;
+  if (typeof yearRaw === 'string'){
+    var ym = yearRaw.match(/(\d{4})/);
+    yearNum = ym ? Number(ym[1]) : Number(yearRaw);
+  }else{
+    yearNum = Number(yearRaw);
+  }
 
   try{
     var ss = LEAVE_ss_();
@@ -442,6 +450,8 @@ function LEAVE_listEmployeesForSetting(payload){
     // ✅ 기준일(오늘) - 날짜만 사용
     var now = new Date();
     var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var targetYear = isFinite(yearNum) ? yearNum : today.getFullYear();
+    var jan1 = new Date(targetYear, 0, 1);
 
     var values = LEAVE_sheetMatrixBySheet_(sh);
     if (!values || values.length < 2) return { ok:true, rows:[] };
@@ -461,14 +471,15 @@ function LEAVE_listEmployeesForSetting(payload){
       return '';
     }
     // ======================================================
-    // 1) 계약맵(현재 유효 계약의 start_date) 구성
-    //    - 유효: start_date <= today && (end_date 비었거나 end_date >= today)
-    //    - 여러 개면: 가장 최근 start_date 선택
+    // 1) 계약맵 구성
+    //    - agMap: 오늘 기준 유효 계약의 start_date(기존 UI/status용)
+    //    - agRowsByEmp: 직원별 계약구간(1월1일 기준 계산용)
     // ======================================================
     var agVals = LEAVE_sheetMatrixBySheet_(shAg);
     var agHead = (agVals && agVals.length) ? agVals[0].map(function(v){ return String(v||'').trim(); }) : [];
     var agIdx  = indexMap_(agHead);
     var agMap  = {}; // employee_id -> Date(start)
+    var agRowsByEmp = {}; // employee_id -> [{start:Date, end:Date|null}]
 
     function agPick(row, key){ var p = agIdx[key]; return (p!=null) ? row[p] : ''; }
     function isDeletedRow_(row, idxMap){
@@ -491,6 +502,8 @@ function LEAVE_listEmployeesForSetting(payload){
       if (!sdt) continue;
       sdt = new Date(sdt.getFullYear(), sdt.getMonth(), sdt.getDate());
       if (edt) edt = new Date(edt.getFullYear(), edt.getMonth(), edt.getDate());
+      if (!agRowsByEmp[eid]) agRowsByEmp[eid] = [];
+      agRowsByEmp[eid].push({ start:sdt, end:edt || null });
 
       var valid = (sdt.getTime() <= today.getTime()) && (!edt || edt.getTime() >= today.getTime());
       if (!valid) continue;
@@ -501,14 +514,15 @@ function LEAVE_listEmployeesForSetting(payload){
     }
 
     // ======================================================
-    // 2) 적용경력(개월) 합계 맵 구성
-    //    - category: 내부경력(적용), 외부경력(적용)
-    //    - period: 개월
+    // 2) 적용경력 맵 구성
+    //    - exMap: 기존 현재기준 표기용(기존 방식 유지)
+    //    - exRowsByEmp: payroll 방식 누적 계산용
     // ======================================================
     var exVals = LEAVE_sheetMatrixBySheet_(shEx);
     var exHead = (exVals && exVals.length) ? exVals[0].map(function(v){ return String(v||'').trim(); }) : [];
     var exIdx  = indexMap_(exHead);
     var exMap  = {}; // employee_id -> monthsSum
+    var exRowsByEmp = {}; // employee_id -> experience row objects
 
     function exPick(row, key){ var p = exIdx[key]; return (p!=null) ? row[p] : ''; }
     for (var j=1; j<(exVals||[]).length; j++){
@@ -518,6 +532,14 @@ function LEAVE_listEmployeesForSetting(payload){
       var ee = String(exPick(rr,'employee_id')||'').trim();
       if (!ee) continue;
       var cat = String(exPick(rr,'category')||'').trim();
+      if (!exRowsByEmp[ee]) exRowsByEmp[ee] = [];
+      exRowsByEmp[ee].push({
+        category: cat,
+        period: parseMonths_(exPick(rr,'period')),
+        working_start_date: parseDate_(exPick(rr,'working_start_date')),
+        working_end_date: parseDate_(exPick(rr,'working_end_date')),
+        is_deleted: false
+      });
       if (cat !== '내부경력(적용)' && cat !== '외부경력(적용)') continue;
       // period가 "10개월" 같은 문자열일 수 있으므로 숫자만 파싱
       var mo = parseMonths_(exPick(rr,'period'));
@@ -553,6 +575,173 @@ function LEAVE_listEmployeesForSetting(payload){
       return { working_period: periodTxt, working_yearcount: ycTxt };
     }
 
+    function isDeletedValue_(v){
+      if (v === 1 || v === '1' || v === true) return true;
+      if (typeof v === 'string' && v.trim().toLowerCase() === 'true') return true;
+      return false;
+    }
+    function daysInclusive_(a, b){
+      var s = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+      var e = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+      if (e.getTime() < s.getTime()) return 0;
+      return Math.floor((e.getTime() - s.getTime()) / 86400000) + 1;
+    }
+    function mergeIntervals_(spans){
+      var arr = (spans || []).slice().sort(function(x, y){
+        return x.start.getTime() - y.start.getTime();
+      });
+      if (!arr.length) return [];
+      var outSpans = [ { start: arr[0].start, end: arr[0].end } ];
+      for (var i2=1; i2<arr.length; i2++){
+        var cur = arr[i2];
+        var last = outSpans[outSpans.length - 1];
+        if (cur.start.getTime() <= (last.end.getTime() + 86400000)){
+          if (cur.end.getTime() > last.end.getTime()) last.end = cur.end;
+        }else{
+          outSpans.push({ start: cur.start, end: cur.end });
+        }
+      }
+      return outSpans;
+    }
+    function unionOverlapDays_(spans, winStart, winEnd){
+      var clips = [];
+      (spans || []).forEach(function(sp){
+        var s = (sp.start.getTime() > winStart.getTime()) ? sp.start : winStart;
+        var e = (sp.end.getTime() < winEnd.getTime()) ? sp.end : winEnd;
+        if (e.getTime() < s.getTime()) return;
+        clips.push({ start:s, end:e });
+      });
+      var merged = mergeIntervals_(clips);
+      var sum = 0;
+      merged.forEach(function(sp){
+        sum += daysInclusive_(sp.start, sp.end);
+      });
+      return sum;
+    }
+    function agreementAccUpTo_(agreements, cutoffEnd){
+      var monthDays = 0;
+      var extraDays = 0;
+      if (!agreements || !agreements.length) return { monthDays:0, extraDays:0 };
+      var spans = [];
+      (agreements || []).forEach(function(a){
+        if (!a) return;
+        if (isDeletedValue_(a.is_deleted)) return;
+        var s = a.start_date || a.start;
+        var e = a.end_date || a.end;
+        s = parseDate_(s);
+        e = parseDate_(e);
+        if (!s) return;
+        s = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+        if (!e) e = cutoffEnd;
+        else e = new Date(e.getFullYear(), e.getMonth(), e.getDate());
+        if (e.getTime() < s.getTime()) return;
+        spans.push({ start:s, end:e });
+      });
+      if (!spans.length) return { monthDays:0, extraDays:0 };
+      var mergedSpans = mergeIntervals_(spans);
+      if (!mergedSpans.length) return { monthDays:0, extraDays:0 };
+      var cur = new Date(mergedSpans[0].start.getFullYear(), mergedSpans[0].start.getMonth(), 1);
+      mergedSpans.forEach(function(sp){
+        var m0 = new Date(sp.start.getFullYear(), sp.start.getMonth(), 1);
+        if (m0.getTime() < cur.getTime()) cur = m0;
+      });
+      var endMonth = new Date(cutoffEnd.getFullYear(), cutoffEnd.getMonth(), 1);
+      while (cur.getTime() <= endMonth.getTime()){
+        var ms = new Date(cur.getFullYear(), cur.getMonth(), 1);
+        var fullEnd = new Date(cur.getFullYear(), cur.getMonth()+1, 0);
+        var windowEnd = (fullEnd.getTime() > cutoffEnd.getTime())
+          ? new Date(cutoffEnd.getFullYear(), cutoffEnd.getMonth(), cutoffEnd.getDate())
+          : fullEnd;
+        var union = unionOverlapDays_(mergedSpans, ms, windowEnd);
+        if (union > 0){
+          var isFullMonthWindow = (windowEnd.getTime() === fullEnd.getTime());
+          if (isFullMonthWindow){
+            var daysInFullMonth = daysInclusive_(ms, fullEnd);
+            if (union >= daysInFullMonth) monthDays += 30;
+            else extraDays += union;
+          }else{
+            extraDays += union;
+          }
+        }
+        cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+      }
+      return { monthDays:monthDays, extraDays:extraDays };
+    }
+    function experienceMonthsUpTo_(rows, cutoffEnd){
+      var t = new Date(cutoffEnd.getFullYear(), cutoffEnd.getMonth(), cutoffEnd.getDate(), 0,0,0,0);
+      var total = 0;
+      (rows || []).forEach(function(r){
+        if (!r) return;
+        if (isDeletedValue_(r.is_deleted)) return;
+        var cat = String(r.category || '').trim();
+        var per = Number(r.period || 0) || 0;
+        if (cat !== '내부경력(적용)' && cat !== '외부경력(적용)') return;
+        if (cat === '외부경력(적용)'){
+          if (per > 0) total += per;
+          return;
+        }
+        var s = parseDate_(r.working_start_date);
+        var e = parseDate_(r.working_end_date);
+        if (!s) return;
+        if (!e) e = t;
+        var ss = new Date(s.getFullYear(), s.getMonth(), 1, 0,0,0,0);
+        var ee = new Date(e.getFullYear(), e.getMonth(), 1, 0,0,0,0);
+        var tt = new Date(t.getFullYear(), t.getMonth(), 1, 0,0,0,0);
+        if (tt.getTime() < ss.getTime()) return;
+        var useEnd = (tt.getTime() > ee.getTime()) ? ee : tt;
+        var sm = ss.getFullYear()*12 + ss.getMonth();
+        var cm = useEnd.getFullYear()*12 + useEnd.getMonth();
+        var months = (cm - sm) + 1;
+        if (months < 0) months = 0;
+        if (per > 0 && months > per) months = per;
+        total += months;
+      });
+      return total;
+    }
+    function tenureFromTotalDays_(totalDays){
+      totalDays = Number(totalDays || 0) || 0;
+      if (totalDays < 0) totalDays = 0;
+      var totalMonths = Math.floor(totalDays / 30);
+      var remDays = totalDays % 30;
+      return { totalMonths: totalMonths, remDays: remDays };
+    }
+    function calcWorkByCutoff_(expRows, agRows, cutoffDate){
+      if (!cutoffDate) return { working_period:'', working_yearcount:'' };
+      var agAcc = agreementAccUpTo_(agRows || [], cutoffDate);
+      var agDays = Number(agAcc.monthDays || 0) + Number(agAcc.extraDays || 0);
+      if (!(agDays > 0)) return { working_period:'', working_yearcount:'' };
+      var baseMonths = experienceMonthsUpTo_(expRows || [], cutoffDate);
+      var totalDays = (baseMonths * 30) + agDays;
+      var ten = tenureFromTotalDays_(totalDays);
+      var periodTxt = fmtMdText_(ten.totalMonths, ten.remDays);
+      var units = (ten.totalMonths * 30) + ten.remDays;
+      var year = Math.floor((Math.max(units, 1) - 1) / 360) + 1;
+      return { working_period: periodTxt, working_yearcount: (year + '년차') };
+    }
+    function isEmployedOnDate_(agRows, refDate){
+      if (!agRows || !agRows.length || !refDate) return false;
+      var t = refDate.getTime();
+      for (var i3=0; i3<agRows.length; i3++){
+        var a = agRows[i3];
+        if (!a || !a.start) continue;
+        var s = a.start.getTime();
+        var e = a.end ? a.end.getTime() : Infinity;
+        if (s <= t && t <= e) return true;
+      }
+      return false;
+    }
+    function earliestStartInYear_(agRows, year){
+      if (!agRows || !agRows.length || !isFinite(year)) return null;
+      var outDate = null;
+      for (var i4=0; i4<agRows.length; i4++){
+        var a = agRows[i4];
+        if (!a || !a.start) continue;
+        if (a.start.getFullYear() !== year) continue;
+        if (!outDate || a.start.getTime() < outDate.getTime()) outDate = a.start;
+      }
+      return outDate;
+    }
+
     var out = [];
     for (var r=1; r<values.length; r++){
       var row = values[r];
@@ -580,6 +769,14 @@ function LEAVE_listEmployeesForSetting(payload){
         continue;
       }
 
+      var agRows = agRowsByEmp[eid0] || [];
+      var exRows = exRowsByEmp[eid0] || [];
+      var jan1Ref = jan1;
+      if (!isEmployedOnDate_(agRows, jan1Ref)){
+        jan1Ref = earliestStartInYear_(agRows, targetYear);
+      }
+      var workJan1 = jan1Ref ? calcWorkByCutoff_(exRows, agRows, jan1Ref) : { working_period:'', working_yearcount:'' };
+
       out.push({
         employee_id: eid0,
         // ✅ 사번=employee_id 로 확정
@@ -589,7 +786,8 @@ function LEAVE_listEmployeesForSetting(payload){
         manage: String(pick(row, ['manage']) || ''),
         status: status,
         // ✅ 실시간 계산 (employee.html 로직 기반)
-        work: calcWork_(agMap[eid0] || null, exMap[eid0] || 0)
+        work: calcWork_(agMap[eid0] || null, exMap[eid0] || 0),
+        work_jan1: workJan1
       });
     }
 
@@ -1171,15 +1369,27 @@ function LEAVE_getLeaveSettings(payload){
 function LEAVE_listYears(payload){
   payload = payload || {};
   var onlyActive = (payload.only_active !== false); // default true
+  function fallbackYears_(){
+    var start = 2025;
+    var now = new Date();
+    var out = [start];
+    var y = start;
+    while (now >= new Date(y, 9, 1)){ // 9 = October
+      if (out.indexOf(y + 1) < 0) out.push(y + 1);
+      y++;
+      if (y - start > 20) break; // 안전장치
+    }
+    return out.map(function(n){ return String(n) + '년'; });
+  }
 
   try{
     var ss = LEAVE_ss_();
     var sh = ss.getSheetByName('Leave');
-    if (!sh) return { ok:true, years:[] };
+    if (!sh) return { ok:true, years: fallbackYears_() };
 
     var lastRow = sh.getLastRow();
     var lastCol = sh.getLastColumn();
-    if (lastRow < 2 || lastCol < 1) return { ok:true, years:[] };
+    if (lastRow < 2 || lastCol < 1) return { ok:true, years: fallbackYears_() };
 
     var values = sh.getRange(1,1,lastRow,lastCol).getValues();
     var head = (values[0] || []).map(function(v){ return String(v||'').trim(); });
@@ -1214,6 +1424,12 @@ function LEAVE_listYears(payload){
 
     var nums = Object.keys(map).map(function(k){ return Number(k); }).filter(function(n){ return isFinite(n); });
     nums.sort(function(a,b){ return a-b; });
+    if (!nums.length){
+      return {
+        ok: true,
+        years: fallbackYears_()
+      };
+    }
     return { ok:true, years: nums.map(function(n){ return map[n]; }) };
   }catch(err){
     return { ok:false, error:(err && err.message) ? err.message : String(err) };
